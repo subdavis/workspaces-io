@@ -39,13 +39,9 @@ def init_fastapi_users(app: FastAPI):
     app.include_router(api.fastapi_users.get_users_router(), prefix="/users", tags=["users"])
 
 
-def create_all():
-    database.Base.metadata.create_all(database.engine)
-
-
 def create_app(env: typing.Mapping[str, str]) -> FastAPI:
-    create_all()
-    app = FastAPI(title="FAST VIAME", version=__version__,)
+    app = FastAPI(title="FastAPI MinIO Workspaces", version=__version__,)
     app.include_router(api.router, prefix="/api")
     init_fastapi_users(app)
+    crud.register_handlers(app)
     return app

@@ -25,4 +25,7 @@ setup(
     zip_safe=False,
     install_requires=deps,
     include_package_data=True,
+    entry_points={
+        'console_scripts':['fast-create-tables=fastapi_minio_workspaces.dev_cli:main'],
+    },
 )

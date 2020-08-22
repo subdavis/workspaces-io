@@ -1,4 +1,8 @@
+from typing import List
+import uuid
+
 import boto3
+from botocore import UNSIGNED
 from botocore.client import Config
 from fastapi import Depends
 from fastapi_users import FastAPIUsers
@@ -6,7 +10,7 @@ from fastapi.routing import APIRouter
 from fastapi_users.authentication import JWTAuthentication
 from fastapi_users.db import SQLAlchemyUserDatabase
 
-from . import crud, database, models, schemas, settings
+from . import crud, database, models, schemas, settings, dbutils
 
 router = APIRouter()
 user_db = SQLAlchemyUserDatabase(schemas.UserDB, database.database, models.User.__table__)
@@ -19,7 +23,7 @@ fastapi_users = FastAPIUsers(
 
 
 def get_db():
-    db = database.SessionLocal()
+    db = database.SessionLocal(query_cls=dbutils.Query)
     try:
         yield db
     finally:
@@ -46,8 +50,15 @@ def get_boto_sts():
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
     )
 
+@router.get('/workspace/', response_model=List[schemas.WorkspaceListItem], tags=['workspace'])
+def list_workspaces(
+    user: schemas.UserDB = Depends(fastapi_users.get_current_user),
+	db: database.SessionLocal = Depends(get_db),
+):
+    return crud.workspace_list(db, user)
 
-@router.post('/workspace/', response_model=schemas.WorspaceDB)
+
+@router.post('/workspace/', response_model=schemas.WorspaceDB, tags=['workspace'])
 def create_workspace(
 	workspace: schemas.WorkspaceCreate,
 	user: schemas.UserDB = Depends(fastapi_users.get_current_user),
@@ -55,3 +66,31 @@ def create_workspace(
 	boto_s3: boto3.Session = Depends(get_boto_s3),
 ):
 	return crud.workspace_create(db, boto_s3, workspace, user)
+
+
+@router.get('/token/', response_model=List[schemas.S3TokenDB], tags=["token"])
+def list_tokens(
+    user: schemas.UserDB = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.token_list(db, user)
+
+
+@router.post('/token/', response_model=schemas.S3TokenDB, tags=["token"])
+def create_token(
+    token: schemas.S3TokenCreate,
+    db: database.SessionLocal = Depends(get_db),
+    boto_sts: boto3.Session = Depends(get_boto_sts),
+    user: schemas.UserDB = Depends(fastapi_users.get_current_user),
+):
+    return crud.token_create(db, boto_sts, user, token)
+
+
+@router.delete('/token/{token_id}', tags=["token"])
+def revoke_token(
+    token_id: str,
+    db: database.SessionLocal = Depends(get_db),
+    boto_sts: boto3.Session = Depends(get_boto_sts),
+    user: schemas.UserDB = Depends(fastapi_users.get_current_user),
+):
+    return crud.token_revoke(db, boto_sts, uuid.UUID(token_id))

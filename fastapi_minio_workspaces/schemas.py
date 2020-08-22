@@ -1,9 +1,15 @@
+import datetime
 import enum
-from typing import Optional
+from typing import Optional, List
 import uuid
 
 from fastapi_users import models as fastapi_users_models
 from pydantic import BaseModel
+
+
+class DBBaseModel(BaseModel):
+    id: uuid.UUID
+    created: datetime.datetime
 
 
 class ShareType(enum.Enum):
@@ -20,6 +26,9 @@ class ShareType(enum.Enum):
 
 class UserBase(fastapi_users_models.BaseUser):
     username: str
+
+    class Config:
+        orm_mode = True
 
 
 class UserCreate(UserBase, fastapi_users_models.BaseUserCreate):
@@ -39,7 +48,7 @@ class WorkspaceBase(BaseModel):
     name: str
 
 
-class WorkspaceListItem(WorkspaceBase):
+class WorkspaceListItem(DBBaseModel, WorkspaceBase):
     permission: Optional[ShareType]
 
 
@@ -47,7 +56,7 @@ class WorkspaceCreate(WorkspaceBase):
     pass
 
 
-class WorspaceDB(WorkspaceBase):
+class WorspaceDB(DBBaseModel, WorkspaceBase):
     id: uuid.UUID
     public: bool
     bucket: str
@@ -56,3 +65,41 @@ class WorspaceDB(WorkspaceBase):
 
     class Config:
         orm_mode = True
+
+
+class S3TokenBase(BaseModel):
+    expiration: Optional[datetime.datetime]
+    workspace_id: Optional[uuid.UUID]
+    owner_id: uuid.UUID
+
+
+class S3TokenCreate(S3TokenBase):
+    pass
+
+
+class S3TokenDB(DBBaseModel, S3TokenBase):
+    access_key_id: str
+    secret_access_key: str
+    session_token: str
+    owner: UserBase
+
+    class Config:
+        orm_mode = True
+
+
+class ShareBase(BaseModel):
+    workspace_id: uuid.UUID
+    sharee_id: uuid.UUID
+    permission: ShareType
+    expiration: datetime.datetime
+
+
+class ShareCreate(ShareBase):
+    pass
+
+
+class ShareDB(DBBaseModel, ShareBase):
+    creator_id: uuid.UUID
+    workspace: WorkspaceListItem
+    creator: UserBase
+    sharee: UserBase
