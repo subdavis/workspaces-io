@@ -19,6 +19,10 @@ def register_handlers(app: FastAPI):
     async def integrity_exception_handler(r: Request, exc: IntegrityError):
         return JSONResponse(status_code=409, content={"message": "Integrity Error"})
 
+    @app.exception_handler(PermissionError)
+    async def permissions_exception_handler(r: Request, exc: PermissionError):
+        return JSONResponse(status_code=403, content={"message": str(exc)})
+
 
 def on_after_register(db: Session, user: schemas.UserDB):
     print(f"User {user.id} has registered.")
@@ -31,6 +35,7 @@ def on_after_forgot_password(db: Session, user: schemas.UserDB):
 def workspace_list(
     db: Session, requester: schemas.UserDB,
 ) -> List[schemas.WorkspaceListItem]:
+    """Show workspaces that the requester owns or has a share for"""
     query = """
     SELECT
         workspace.id as id,
@@ -55,6 +60,7 @@ def workspace_create(
     workspace: schemas.WorkspaceCreate,
     owner: schemas.UserDB,
 ) -> models.Workspace:
+    """Create a workspace for owner, including an empty parent in s3"""
     db_workspace = models.Workspace(
         **workspace.dict(), owner_id=owner.id, bucket=settings.DEFAULT_BUCKET
     )
@@ -78,6 +84,7 @@ def workspace_create(
 
 
 def token_list(db: Session, requester: schemas.UserDB) -> List[models.S3Token]:
+    """List tokens for requester"""
     return (
         db.query(models.S3Token).filter(models.S3Token.owner_id == requester.id).all()
     )
@@ -89,6 +96,7 @@ def token_create(
     requester: schemas.UserDB,
     token: schemas.S3TokenCreate,
 ) -> models.S3Token:
+    """Create s3 sts token for requester if they have permissions"""
     existing: Union[models.S3Token, None] = (
         db.query(models.S3Token)
         .filter(
@@ -108,7 +116,7 @@ def token_create(
         db.add(token_db)
         new_token = b3.assume_role(
             RoleArn="arn:xxx:xxx:xxx:xxxx",  # Not meaningful for Minio
-            RoleSessionName='foo',  # Not meaningful for Minio
+            RoleSessionName="foo",  # Not meaningful for Minio
             Policy=json.dumps(s3utils.makePolicy(requester, workspace)),
             DurationSeconds=3600,
         )
@@ -121,9 +129,33 @@ def token_create(
 
 
 def token_revoke(db: Session, token_id: uuid.UUID):
+    """
+    Remove token from DB.  Outstanding tokens in AWS/MinIO will continue
+    to function until they expire naturally
+    """
     db.delete(db.query(models.S3Token).get_or_404(token_id))
     db.commit()
 
 
-def share_create(db: Session, b3: boto3.Session, share: schemas.ShareCreate):
-    pass
+def share_create(
+    db: Session, creator: schemas.UserDB, share: schemas.ShareCreate,
+) -> models.Share:
+    """
+    Share share.workspace_id with share.sharee_id if creator has permission"""
+    workspace_db: models.Workspace = db.query(models.Workspace).get_or_404(
+        share.workspace_id
+    )
+    if workspace_db.owner_id != creator.id:
+        raise PermissionError("Only the owner can share a workspace")
+    # TODO: check if creator has an owner-type share themselves for workspace
+    share_db = models.Share(**share.dict(), creator_id=creator.id)
+    db.add(share_db)
+    db.commit()
+    return share_db
+
+
+def share_list(
+    db: Session, user: schemas.UserDB,
+):
+    """List shared-by and shared-with user"""
+    return db.query(models.Share).filter(models.Share.creator_id == user.id).all()

@@ -94,3 +94,12 @@ def revoke_token(
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),
 ):
     return crud.token_revoke(db, boto_sts, uuid.UUID(token_id))
+
+
+@router.post('/share', response_model=schemas.ShareDB, tags=['share'])
+def create_workspace_share(
+    share: schemas.ShareCreate,
+    user: schemas.UserDB = Depends(fastapi_users.get_current_user),
+	db: database.SessionLocal = Depends(get_db),
+):
+    return crud.share_create(db, user, share)

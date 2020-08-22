@@ -26,8 +26,10 @@ class User(Base, SQLAlchemyBaseUserTable):
 class Workspace(BaseModel):
     """
     A workspace is a directory-like ARN in s3.
+
     * public workspaces, that all system users can READ,
       arn:aws:s3:::{bucketname}/public/{user}/{name}
+
     * private workspaces, that only the owner can READ,
       arn:aws:s3:::{bucketname}/private/{user}/{name}
 
@@ -71,7 +73,9 @@ class Share(BaseModel):
 class S3Token(BaseModel):
     """
     There are two kinds of tokens that users might request
+
     * A general purpose token to use anything they own.
+
     * A specific workspace token for a single shared workspace.
       If a user needs concurrent access to many shared workspaces,
       they must have many outstanding tokens.
