@@ -16,7 +16,7 @@ def getWorkspaceKey(workspace: models.Workspace):
     Determine object path for a given workspace
     """
     root = "public" if workspace.public else "private"
-    return f"{root}/{workspace.owner.username}/{sanitize(workspace.name)}/"
+    return f"{root}/{workspace.owner.username}/{sanitize(workspace.name)}"
 
 
 def makeRoleSessionName(user: schemas.UserDB, workspace: Optional[models.Workspace]):
@@ -25,30 +25,85 @@ def makeRoleSessionName(user: schemas.UserDB, workspace: Optional[models.Workspa
 
 def makePolicy(user: schemas.UserDB, workspace: Optional[models.Workspace]):
     """
-    Make a policy for the given user to access s4
+    Make a policy for the given user to access s3 based on
+    https://aws.amazon.com/premiumsupport/knowledge-center/s3-folder-user-access/
     """
     resourceBase = f"arn:aws:s3:::{settings.DEFAULT_BUCKET}"
-    resources = []
+    statements = []
     if workspace is None:
         # This is a blanket user policy
-        resources = [
-            f"{resourceBase}/public/{user.username}/*",
-            f"{resourceBase}/private/{user.username}/*",
-        ]
+        statements.append(
+            {
+                "Action": ["s3:ListAllMyBuckets", "s3:GetBucketLocation"],
+                "Effect": "Allow",
+                "Resource": ["arn:aws:s3:::*"],
+            }
+        )
+        # General public access
+        statements.append(
+            {
+                "Action": ["s3:ListBucket"],
+                "Effect": "Allow",
+                "Resource": [resourceBase],
+                "Condition": {
+                    "StringLike": {"s3:prefix": "public", "s3:delimiter": "/"}
+                },
+            }
+        )
+        statements.append(
+            {
+                "Action": ["s3:ListBucket"],
+                "Effect": "Allow",
+                "Resource": [resourceBase],
+                "Condition": {"StringLike": {"s3:prefix": "public/*"}},
+            }
+        )
+        statements.append(
+            {
+                "Effect": "Allow",
+                "Action": ["s3:GetObject"],
+                "Resource": [f"{resourceBase}/public/*"],
+            }
+        )
+        # Private user access
+        statements.append(
+            {
+                "Action": ["s3:ListBucket"],
+                "Effect": "Allow",
+                "Resource": [resourceBase],
+                "Condition": {
+                    "StringLike": {
+                        "s3:prefix": f"private/{user.username}",
+                        "s3:delimiter": "/",
+                    }
+                },
+            }
+        )
+        statements.append(
+            {
+                "Action": ["s3:ListBucket"],
+                "Effect": "Allow",
+                "Resource": [resourceBase],
+                "Condition": {
+                    "StringLike": {"s3:prefix": f"private/{user.username}/*"}
+                },
+            }
+        )
+        statements.append(
+            {
+                "Effect": "Allow",
+                "Action": ["s3:*"],
+                "Resource": [f"{resourceBase}/private/{user.username}/*"],
+            }
+        )
     else:
         # This is a specific workspace share policy
-        workspaceKey = getWorkspaceKey(workspace)
-        resources = [f"{resourceBase}/{workspaceKey}*"]
+        # TODO
+        pass
 
     return {
         "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Action": ["s3:GetObject", "s3:PutObject", "s3:ListBucket"],
-                "Effect": "Allow",
-                "Resource": resources,
-            },
-        ],
+        "Statement": statements,
     }
 
 

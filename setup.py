@@ -5,6 +5,7 @@ from setuptools import setup
 deps = [
     "boto3",
     "click",
+    "click-aliases",
     "colorama",
     "databases[postgresql]",
     "fastapi",
@@ -29,7 +30,7 @@ setup(
     entry_points={
         "console_scripts": [
             "fast-create-tables=fastapi_minio_workspaces.dev_cli:main",
-            "fmi=fastapi_minio_workspaces.cli:cli",
+            "fmm=fastapi_minio_workspaces.cli:cli",
         ],
     },
 )

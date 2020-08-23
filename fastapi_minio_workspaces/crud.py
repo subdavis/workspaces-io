@@ -46,9 +46,10 @@ def workspace_list(
         workspace.owner_id as owner_id,
         share.permission as permission
     FROM workspace
-    JOIN share ON share.workspace_id = workspace.id
+    LEFT JOIN share ON share.workspace_id = workspace.id
     WHERE workspace.owner_id = :owner_id
         OR share.sharee_id = :owner_id
+    ORDER BY workspace.name;
     """
     results = db.execute(text(query), {"owner_id": requester.id,}).fetchall()
     return results
@@ -69,7 +70,7 @@ def workspace_create(
         owner=db_owner,
     )
     db.add(db_workspace)
-    key = s3utils.getWorkspaceKey(db_workspace)
+    key = s3utils.getWorkspaceKey(db_workspace) + "/"
 
     def makeWorkspace():
         b3.put_object(ACL="private", Body=b"", Bucket=db_workspace.bucket, Key=key)
@@ -101,11 +102,22 @@ def token_create(
     token: schemas.S3TokenCreate,
 ) -> models.S3Token:
     """Create s3 sts token for requester if they have permissions"""
+    if token.workspace_id:
+        workspace: models.Workspace = db.query(models.Workspace).get_or_404(
+            token.workspace_id
+        )
+        if workspace.owner_id == requester.id:
+            target_workspace = None
+            target_workspace_id = None
+        else:
+            target_workspace = workspace
+            target_workspace_id = workspace.id
+
     existing: Union[models.S3Token, None] = (
         db.query(models.S3Token)
         .filter(
             and_(
-                models.S3Token.workspace_id == token.workspace_id,
+                models.S3Token.workspace_id == target_workspace_id,
                 models.S3Token.owner_id == requester.id,
             )
         )
@@ -113,37 +125,20 @@ def token_create(
     )
 
     if existing and existing.expiration > datetime.datetime.utcnow():
+        existing.workspace = workspace
         return existing
     else:
         permissions = schemas.ShareType.OWN
-        workspace = None
-        share = None
-
-        if token.workspace_id:
-            # user is possibly asking for a workspace they didn't create
-            workspace: models.Workspace = db.query(models.Workspace).get_or_404(
-                token.workspace_id
-            )
-            if workspace.owner_id == requester.id:
-                # user specified their own workspace, ignore that parameter and
-                # return the default blanket token
-                workspace = None
-            else:
-                # look for a share
-                share: models.Share = db.query(models.Share).filter(
-                    and_(
-                        models.Share.workspace_id == workspace.id,
-                        models.Share.sharee_id == requester.id,
-                    )
-                )
-
+        if target_workspace_id:
+            # TODO: base permissions on share
+            pass
         token_args = dict(token.dict(), owner_id=requester.id)
         token_db = existing or models.S3Token(**token_args)
         db.add(token_db)
         new_token = b3.assume_role(
             RoleArn="arn:xxx:xxx:xxx:xxxx",  # Not meaningful for Minio
             RoleSessionName="foo",  # Not meaningful for Minio
-            Policy=json.dumps(s3utils.makePolicy(requester, workspace)),
+            Policy=json.dumps(s3utils.makePolicy(requester, target_workspace)),
             DurationSeconds=3600,
         )
         token_db.access_key_id = new_token["Credentials"]["AccessKeyId"]

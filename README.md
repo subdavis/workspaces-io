@@ -13,6 +13,20 @@ Problems with this approach
 * It's not clear how this could be packaged in a re-usable way for multiple applications.  Concrete implementations will no doubt want to attach additional data to users and workspaces (at minimum) and structuring the code to allow for extension of the base models isn't easy to do. [fastapi_users](https://github.com/frankie567/fastapi-users) attempted to do exactly this, but their implementation left much to be desired.
 * For whatever reason, [you can't explicitly revoke STS credentials](https://stackoverflow.com/questions/47026661/explicitly-expire-tokens-acquired-from-aws-security-token-service).  That's how AWS does it so MinIO won't implement it either.  This means that share revocation has a big asterisk: anyone with outstanding credentials can continue to modify data in s3 until that share expires.
 
+## Usage
+
+Example of current capabilities
+
+``` sh
+fmm register email@domain.com user
+fmm login user
+
+fmm workspace create myspace
+fmm token fetch
+fmm s3 list <workspace_id>
+fmm workspace share <workspace_id> <other_user_id>
+```
+
 ## Dev setup
 
 ``` sh
@@ -41,7 +55,7 @@ boto3 client can be used for `s3` and `sts` access, but a non-root minio user mu
 # Create alias
 mc alias set local http://localhost:9000 minio minio1234
 # Create user
-mc admin user add backend backend1234
+mc admin user add local backend backend1234
 # Give user access to all buckets
 mc admin policy set local readwrite user=backend
 ```

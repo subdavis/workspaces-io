@@ -1,7 +1,9 @@
 import json
+from collections.abc import Iterable
 from json.decoder import JSONDecodeError
-import click
+from typing import List
 
+import click
 from requests import Response
 
 

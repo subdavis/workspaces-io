@@ -64,7 +64,8 @@ class WorkspaceDB(DBBaseModel, WorkspaceBase):
     public: bool
     bucket: str
     name: str
-    owner_id: int
+    owner_id: uuid.UUID
+    owner: UserBase
 
 
 class S3TokenBase(BaseModel):
@@ -82,7 +83,7 @@ class S3TokenDB(DBBaseModel, S3TokenBase):
     secret_access_key: str
     session_token: str
     owner: UserBase
-    workspace: WorkspaceDB
+    workspace: Optional[WorkspaceDB]
 
 
 class ShareBase(BaseModel):
