@@ -1,17 +1,17 @@
 import datetime
 import json
-from typing import Optional, Union, List
 import uuid
+from typing import List, Optional, Union
 
 import boto3
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.sql import text
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import text
 
-from . import models, schemas, settings, s3utils
+from . import models, s3utils, schemas, settings
 
 
 def register_handlers(app: FastAPI):
@@ -158,4 +158,10 @@ def share_list(
     db: Session, user: schemas.UserDB,
 ):
     """List shared-by and shared-with user"""
-    return db.query(models.Share).filter(models.Share.creator_id == user.id).all()
+    return (
+        db.query(models.Share)
+        .filter(
+            or_(models.Share.creator_id == user.id, models.Share.sharee_id == user.id)
+        )
+        .all()
+    )
