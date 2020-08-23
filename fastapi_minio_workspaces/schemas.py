@@ -89,17 +89,21 @@ class S3TokenDB(DBBaseModel, S3TokenBase):
 
 class ShareBase(BaseModel):
     workspace_id: uuid.UUID
-    sharee_id: uuid.UUID
     permission: ShareType
     expiration: datetime.datetime
 
 
 class ShareCreate(ShareBase):
+    sharee_id: uuid.UUID
+
+
+class ShareUpdate(ShareBase):
     pass
 
 
 class ShareDB(DBBaseModel, ShareBase):
     creator_id: uuid.UUID
+    sharee_id: uuid.UUID
     workspace: WorkspaceListItem
     creator: UserBase
     sharee: UserBase

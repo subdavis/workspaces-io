@@ -111,7 +111,28 @@ def token_create(
     if existing and existing.expiration > datetime.datetime.utcnow():
         return existing
     else:
-        workspace = db.query(models.Workspace).get(token.workspace_id)
+        permissions = schemas.ShareType.OWN
+        workspace = None
+        share = None
+
+        if token.workspace_id:
+            # user is possibly asking for a workspace they didn't create
+            workspace: models.Workspace = db.query(models.Workspace).get_or_404(
+                token.workspace_id
+            )
+            if workspace.owner_id == requester.id:
+                # user specified their own workspace, ignore that parameter and
+                # return the default blanket token
+                workspace = None
+            else:
+                # look for a share
+                share: models.Share = db.query(models.Share).filter(
+                    and_(
+                        models.Share.workspace_id == workspace.id,
+                        models.Share.sharee_id == requester.id,
+                    )
+                )
+
         token_db = existing or models.S3Token(**token.dict())
         db.add(token_db)
         new_token = b3.assume_role(
@@ -154,9 +175,7 @@ def share_create(
     return share_db
 
 
-def share_list(
-    db: Session, user: schemas.UserDB,
-):
+def share_list(db: Session, user: schemas.UserDB,) -> List[models.Share]:
     """List shared-by and shared-with user"""
     return (
         db.query(models.Share)
@@ -165,3 +184,13 @@ def share_list(
         )
         .all()
     )
+
+
+def share_revoke(db: Session, share: schemas.ShareDB):
+    # TODO: delete any tokens that depend on this share.
+    pass
+
+
+def share_update(db: Session, share: schemas.ShareUpdate):
+    # TODO: delete any tokens that depend on this share.
+    pass

@@ -15,7 +15,7 @@ Problems with this approach
 
 ## Dev setup
 
-```sh
+``` sh
 # run dependent services
 docker-compose up -d
 
@@ -37,7 +37,7 @@ uvicorn fastapi_minio_workspaces.asgi:app --reload
 
 boto3 client can be used for `s3` and `sts` access, but a non-root minio user must be created.
 
-```sh
+``` sh
 # Create alias
 mc alias set local http://localhost:9000 minio minio1234
 # Create user

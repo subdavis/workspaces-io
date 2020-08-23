@@ -1,10 +1,7 @@
 import os
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
-# common dependencies
-# todo: fully test unified dependencies
-# todo: somehow bootstrap building all the sub-dependencies in this project
 deps = [
     "boto3",
     "databases[postgresql]",
