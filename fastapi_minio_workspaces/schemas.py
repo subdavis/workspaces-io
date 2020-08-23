@@ -11,17 +11,20 @@ class DBBaseModel(BaseModel):
     id: uuid.UUID
     created: datetime.datetime
 
+    class Config:
+        orm_mode = True
 
-class ShareType(enum.Enum):
+
+class ShareType(str, enum.Enum):
     """
     READ holders can read
     WRITE holders can read and write
     OWN holders can read, write, delete, and share
     """
 
-    READ = 1
-    READWRITE = 2
-    OWN = 3
+    READ = "read"
+    READWRITE = "readwrite"
+    OWN = "own"
 
 
 class UserBase(fastapi_users_models.BaseUser):
@@ -49,48 +52,43 @@ class WorkspaceBase(BaseModel):
 
 
 class WorkspaceListItem(DBBaseModel, WorkspaceBase):
-    permission: Optional[ShareType]
+    permission: Optional[str]
 
 
 class WorkspaceCreate(WorkspaceBase):
     pass
 
 
-class WorspaceDB(DBBaseModel, WorkspaceBase):
+class WorkspaceDB(DBBaseModel, WorkspaceBase):
     id: uuid.UUID
     public: bool
     bucket: str
     name: str
     owner_id: int
 
-    class Config:
-        orm_mode = True
-
 
 class S3TokenBase(BaseModel):
     expiration: Optional[datetime.datetime]
     workspace_id: Optional[uuid.UUID]
-    owner_id: uuid.UUID
 
 
 class S3TokenCreate(S3TokenBase):
-    pass
+    owner_id: Optional[uuid.UUID]
 
 
 class S3TokenDB(DBBaseModel, S3TokenBase):
+    owner_id: uuid.UUID
     access_key_id: str
     secret_access_key: str
     session_token: str
     owner: UserBase
-
-    class Config:
-        orm_mode = True
+    workspace: WorkspaceDB
 
 
 class ShareBase(BaseModel):
     workspace_id: uuid.UUID
     permission: ShareType
-    expiration: datetime.datetime
+    expiration: Optional[datetime.datetime]
 
 
 class ShareCreate(ShareBase):

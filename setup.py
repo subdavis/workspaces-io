@@ -4,6 +4,8 @@ from setuptools import setup
 
 deps = [
     "boto3",
+    "click",
+    "colorama",
     "databases[postgresql]",
     "fastapi",
     "fastapi-users",
@@ -12,6 +14,7 @@ deps = [
     "psycopg2-binary",
     "pydantic",
     "requests",
+    "requests-toolbelt",
     "sqlalchemy",
 ]
 
@@ -24,6 +27,9 @@ setup(
     install_requires=deps,
     include_package_data=True,
     entry_points={
-        "console_scripts": ["fast-create-tables=fastapi_minio_workspaces.dev_cli:main"],
+        "console_scripts": [
+            "fast-create-tables=fastapi_minio_workspaces.dev_cli:main",
+            "fmi=fastapi_minio_workspaces.cli:cli",
+        ],
     },
 )

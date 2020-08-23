@@ -59,7 +59,7 @@ def get_boto_sts():
 
 
 @router.get(
-    "/workspace/", response_model=List[schemas.WorkspaceListItem], tags=["workspace"]
+    "/workspace", response_model=List[schemas.WorkspaceListItem], tags=["workspace"]
 )
 def list_workspaces(
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),
@@ -68,7 +68,7 @@ def list_workspaces(
     return crud.workspace_list(db, user)
 
 
-@router.post("/workspace/", response_model=schemas.WorspaceDB, tags=["workspace"])
+@router.post("/workspace", response_model=schemas.WorkspaceDB, tags=["workspace"])
 def create_workspace(
     workspace: schemas.WorkspaceCreate,
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),
@@ -78,7 +78,7 @@ def create_workspace(
     return crud.workspace_create(db, boto_s3, workspace, user)
 
 
-@router.get("/token/", response_model=List[schemas.S3TokenDB], tags=["token"])
+@router.get("/token", response_model=List[schemas.S3TokenDB], tags=["token"])
 def list_tokens(
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
@@ -86,7 +86,7 @@ def list_tokens(
     return crud.token_list(db, user)
 
 
-@router.post("/token/", response_model=schemas.S3TokenDB, tags=["token"])
+@router.post("/token", response_model=schemas.S3TokenDB, tags=["token"])
 def create_token(
     token: schemas.S3TokenCreate,
     db: database.SessionLocal = Depends(get_db),

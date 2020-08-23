@@ -28,10 +28,10 @@ def makePolicy(user: schemas.UserDB, workspace: Optional[models.Workspace]):
     Make a policy for the given user to access s4
     """
     resourceBase = f"arn:aws:s3:::{settings.DEFAULT_BUCKET}"
-    resouces = []
+    resources = []
     if workspace is None:
         # This is a blanket user policy
-        resouces = [
+        resources = [
             f"{resourceBase}/public/{user.username}/*",
             f"{resourceBase}/private/{user.username}/*",
         ]
@@ -39,13 +39,14 @@ def makePolicy(user: schemas.UserDB, workspace: Optional[models.Workspace]):
         # This is a specific workspace share policy
         workspaceKey = getWorkspaceKey(workspace)
         resources = [f"{resourceBase}/{workspaceKey}*"]
+
     return {
         "Version": "2012-10-17",
         "Statement": [
             {
-                "Action": ["s3:GetObject", "s3:PutObject"],
+                "Action": ["s3:GetObject", "s3:PutObject", "s3:ListBucket"],
                 "Effect": "Allow",
-                "Resource": resouces,
+                "Resource": resources,
             },
         ],
     }

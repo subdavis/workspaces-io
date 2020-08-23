@@ -46,7 +46,7 @@ def workspace_list(
         workspace.owner_id as owner_id,
         share.permission as permission
     FROM workspace
-    LEFT JOIN share ON share.workspace_id = workspace.id
+    JOIN share ON share.workspace_id = workspace.id
     WHERE workspace.owner_id = :owner_id
         OR share.sharee_id = :owner_id
     """
@@ -61,8 +61,12 @@ def workspace_create(
     owner: schemas.UserDB,
 ) -> models.Workspace:
     """Create a workspace for owner, including an empty parent in s3"""
+    db_owner = db.query(models.User).get_or_404(owner.id)
     db_workspace = models.Workspace(
-        **workspace.dict(), owner_id=owner.id, bucket=settings.DEFAULT_BUCKET
+        **workspace.dict(),
+        owner_id=owner.id,
+        bucket=settings.DEFAULT_BUCKET,
+        owner=db_owner,
     )
     db.add(db_workspace)
     key = s3utils.getWorkspaceKey(db_workspace)
@@ -133,7 +137,8 @@ def token_create(
                     )
                 )
 
-        token_db = existing or models.S3Token(**token.dict())
+        token_args = dict(token.dict(), owner_id=requester.id)
+        token_db = existing or models.S3Token(**token_args)
         db.add(token_db)
         new_token = b3.assume_role(
             RoleArn="arn:xxx:xxx:xxx:xxxx",  # Not meaningful for Minio

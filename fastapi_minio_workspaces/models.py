@@ -3,8 +3,7 @@ import enum
 import uuid
 
 from fastapi_users.db import SQLAlchemyBaseUserTable
-from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
-                        String)
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import relationship
@@ -58,6 +57,7 @@ class Share(BaseModel):
     """
 
     __tablename__ = "share"
+    __table_args__ = (UniqueConstraint("workspace_id", "creator_id", "sharee_id"),)
 
     workspace_id = Column(
         UUID(as_uuid=True), ForeignKey("workspace.id"), nullable=False
@@ -68,6 +68,7 @@ class Share(BaseModel):
     expiration = Column(DateTime, nullable=True)
 
     sharee = relationship(User, backref="shares")
+    creator = relationship(User, backref="shares_created")
     workspace = relationship(Workspace, backref="shares")
 
 

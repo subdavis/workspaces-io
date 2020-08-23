@@ -31,23 +31,23 @@ def init_fastapi_users(app: FastAPI):
 
     app.include_router(
         api.fastapi_users.get_auth_router(api.jwt_authentication),
-        prefix="/auth/jwt",
+        prefix="/api/auth/jwt",
         tags=["auth"],
     )
     app.include_router(
         api.fastapi_users.get_register_router(on_after_register),
-        prefix="/auth",
+        prefix="/api/auth",
         tags=["auth"],
     )
     app.include_router(
         api.fastapi_users.get_reset_password_router(
             settings.SECRET, after_forgot_password=on_after_forgot_password
         ),
-        prefix="/auth",
+        prefix="/api/auth",
         tags=["auth"],
     )
     app.include_router(
-        api.fastapi_users.get_users_router(), prefix="/users", tags=["users"]
+        api.fastapi_users.get_users_router(), prefix="/api/users", tags=["users"]
     )
 
 
