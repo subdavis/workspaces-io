@@ -7,6 +7,7 @@ A simple FastAPI server to manage workspaces and multi-user sharing within MinIO
 * workspaces are directory-style keys in s3
 * user access is brokered through short-lived STS credentials and S3 access policy
 * users get a key for their own workspaces, and an additional key for each share
+* users can interact with their data using the full power of `minio/mc` wrapped in smart token caching and switching.  Users can even move data between their owned and shared workspaces seamlessly by requesting new multi-workspace tokens on-the-fly.
 
 Problems with this approach
 
@@ -23,7 +24,6 @@ fmm login user
 
 fmm workspace create myspace
 fmm token fetch
-fmm s3 list <workspace_id>
 fmm workspace share <workspace_id> <other_user_id>
 ```
 

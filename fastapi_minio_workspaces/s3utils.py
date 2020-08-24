@@ -23,7 +23,11 @@ def makeRoleSessionName(user: schemas.UserDB, workspace: Optional[models.Workspa
     return f"{user.id}::{workspace}"
 
 
-def makePolicy(user: schemas.UserDB, workspace: Optional[models.Workspace]):
+def makePolicy(
+    user: schemas.UserDB,
+    workspace: Optional[models.Workspace],
+    sharetype: schemas.ShareType,
+):
     """
     Make a policy for the given user to access s3 based on
     https://aws.amazon.com/premiumsupport/knowledge-center/s3-folder-user-access/
@@ -98,8 +102,44 @@ def makePolicy(user: schemas.UserDB, workspace: Optional[models.Workspace]):
         )
     else:
         # This is a specific workspace share policy
-        # TODO
-        pass
+        # General public access
+        workspacekey = getWorkspaceKey(workspace)
+        statements.append(
+            {
+                "Action": ["s3:ListBucket"],
+                "Effect": "Allow",
+                "Resource": [resourceBase],
+                "Condition": {
+                    "StringLike": {"s3:prefix": workspacekey, "s3:delimiter": "/"}
+                },
+            }
+        )
+        statements.append(
+            {
+                "Action": ["s3:ListBucket"],
+                "Effect": "Allow",
+                "Resource": [resourceBase],
+                "Condition": {"StringLike": {"s3:prefix": f"{workspacekey}/*"}},
+            }
+        )
+        statements.append(
+            {
+                "Effect": "Allow",
+                "Action": ["s3:GetObject"],
+                "Resource": [f"{resourceBase}/{workspacekey}/*"],
+            }
+        )
+        if (
+            sharetype is schemas.ShareType.READWRITE
+            or sharetype is schemas.ShareType.OWN
+        ):
+            statements.append(
+                {
+                    "Effect": "Allow",
+                    "Action": ["s3:PutObject", "s3:DeleteObject"],
+                    "Resource": [f"{resourceBase}/{workspacekey}/*"],
+                }
+            )
 
     return {
         "Version": "2012-10-17",

@@ -31,7 +31,7 @@ def make(cli: click.Group):
     @click.option(
         "--permission",
         type=click.Choice(schemas.ShareType),
-        default=schemas.ShareType.READ,
+        default=schemas.ShareType.READ.value,
     )
     @click.option("--expire", type=click.DateTime())
     @click.pass_obj

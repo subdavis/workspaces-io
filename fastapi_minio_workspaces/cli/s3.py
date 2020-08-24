@@ -23,17 +23,23 @@ def make(cli: click.Group):
     @click.argument("path", default="")
     @click.pass_obj
     def workspace_list_contents(ctx, workspace_id, path):
+        if "public" in workspace_id:
+            prefix = workspace_id
+            workspace_id = None
         # TODO: cache tokens locally rather than fetching from server
         token_r = ctx["session"].post("token", json={"workspace_id": workspace_id})
+
         if token_r.ok:
-            workspace = schemas.WorkspaceDB.parse_obj(token_r.json()["workspace"])
+            if workspace_id:
+                workspace = schemas.WorkspaceDB.parse_obj(token_r.json()["workspace"])
+                prefix = s3utils.getWorkspaceKey(workspace)
             command = (
                 *COMMON_ARGS,
                 "list-objects-v2",
                 "--bucket",
-                workspace.bucket,
+                "fast",
                 "--prefix",
-                os.path.join(s3utils.getWorkspaceKey(workspace), path),
+                os.path.join(prefix, path),
             )
             os.execvp(command[0], command)
         else:

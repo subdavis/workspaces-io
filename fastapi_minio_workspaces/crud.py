@@ -102,14 +102,14 @@ def token_create(
     token: schemas.S3TokenCreate,
 ) -> models.S3Token:
     """Create s3 sts token for requester if they have permissions"""
+    target_workspace_id = None
+    target_workspace = None
+    workspace = None
     if token.workspace_id:
         workspace: models.Workspace = db.query(models.Workspace).get_or_404(
             token.workspace_id
         )
-        if workspace.owner_id == requester.id:
-            target_workspace = None
-            target_workspace_id = None
-        else:
+        if workspace.owner_id != requester.id:
             target_workspace = workspace
             target_workspace_id = workspace.id
 
@@ -125,20 +125,32 @@ def token_create(
     )
 
     if existing and existing.expiration > datetime.datetime.utcnow():
-        existing.workspace = workspace
+        if workspace:
+            existing.workspace = workspace
         return existing
     else:
         permissions = schemas.ShareType.OWN
         if target_workspace_id:
             # TODO: base permissions on share
-            pass
+            share: models.Share = db.query(models.Share).filter(
+                and_(
+                    models.Share.workspace_id == target_workspace_id,
+                    models.Share.sharee_id == requester.id,
+                )
+            ).first()
+            if share is not None:
+                permissions = share.permission
         token_args = dict(token.dict(), owner_id=requester.id)
         token_db = existing or models.S3Token(**token_args)
         db.add(token_db)
         new_token = b3.assume_role(
             RoleArn="arn:xxx:xxx:xxx:xxxx",  # Not meaningful for Minio
-            RoleSessionName="foo",  # Not meaningful for Minio
-            Policy=json.dumps(s3utils.makePolicy(requester, target_workspace)),
+            RoleSessionName=str(
+                target_workspace_id or requester.id
+            ),  # Not meaningful for Minio
+            Policy=json.dumps(
+                s3utils.makePolicy(requester, target_workspace, permissions)
+            ),
             DurationSeconds=3600,
         )
         token_db.access_key_id = new_token["Credentials"]["AccessKeyId"]
