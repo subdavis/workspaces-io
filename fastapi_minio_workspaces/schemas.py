@@ -51,10 +51,6 @@ class WorkspaceBase(BaseModel):
     name: str
 
 
-class WorkspaceListItem(DBBaseModel, WorkspaceBase):
-    permission: Optional[str]
-
-
 class WorkspaceCreate(WorkspaceBase):
     pass
 
@@ -118,6 +114,6 @@ class ShareUpdate(ShareBase):
 class ShareDB(DBBaseModel, ShareBase):
     creator_id: uuid.UUID
     sharee_id: uuid.UUID
-    workspace: WorkspaceListItem
+    workspace: WorkspaceDB
     creator: UserBase
     sharee: UserBase

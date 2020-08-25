@@ -19,7 +19,18 @@ def make(cli: click.Group):
         if name:
             params["name"] = name
         r = ctx["session"].get("workspace", params=params)
-        exit_with(handle_request_error(r))
+        if r.ok:
+            for ws in r.json():
+                root = "public" if ws["public"] else "private"
+                click.secho(f"[{ws['created']}] ", fg="green", nl=False)
+                click.secho(f"{ws['id']} ", fg="yellow", nl=False)
+                click.secho(
+                    f"{root}/{ws['owner']['username']}/{ws['name']}/",
+                    fg="cyan",
+                    bold=True,
+                )
+        else:
+            exit_with(handle_request_error(r))
 
     @workspace.command(name="create", aliases=["c"])
     @click.argument("name")

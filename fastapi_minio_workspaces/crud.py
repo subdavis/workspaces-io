@@ -34,7 +34,7 @@ def on_after_forgot_password(db: Session, user: schemas.UserDB):
 
 def workspace_list(
     db: Session, requester: schemas.UserDB, name: Optional[str] = None
-) -> List[schemas.WorkspaceListItem]:
+) -> List[schemas.WorkspaceDB]:
     """Show workspaces that the requester owns or has a share for"""
     q = (
         db.query(models.Workspace)

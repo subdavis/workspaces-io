@@ -58,9 +58,7 @@ def get_boto_sts():
     )
 
 
-@router.get(
-    "/workspace", response_model=List[schemas.WorkspaceListItem], tags=["workspace"]
-)
+@router.get("/workspace", response_model=List[schemas.WorkspaceDB], tags=["workspace"])
 def list_workspaces(
     name: Optional[str] = None,
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),

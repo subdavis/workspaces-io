@@ -16,7 +16,7 @@ def make(cli: click.Group):
         )
         if r.ok:
             token = r.json()["access_token"]
-            click.echo(click.style("Login success\n", fg="green", bold=True))
+            click.echo(click.style("Login success", fg="green", bold=True))
             conf.token = token
             save_config(conf, ctx["configPath"])
         else:
