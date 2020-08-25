@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 import boto3
 from botocore import UNSIGNED
@@ -62,10 +62,11 @@ def get_boto_sts():
     "/workspace", response_model=List[schemas.WorkspaceListItem], tags=["workspace"]
 )
 def list_workspaces(
+    name: Optional[str] = None,
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
-    return crud.workspace_list(db, user)
+    return crud.workspace_list(db, user, name=name)
 
 
 @router.post("/workspace", response_model=schemas.WorkspaceDB, tags=["workspace"])
@@ -94,6 +95,18 @@ def create_token(
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),
 ):
     return crud.token_create(db, boto_sts, user, token)
+
+
+@router.post(
+    "/token/search", response_model=schemas.S3TokenSearchResponse, tags=["token"]
+)
+def search_token(
+    terms: List[schemas.S3TokenSearch],
+    db: database.SessionLocal = Depends(get_db),
+    boto_sts: boto3.Session = Depends(get_boto_sts),
+    user: schemas.UserDB = Depends(fastapi_users.get_current_user),
+):
+    return crud.token_search(db, boto_sts, user, terms)
 
 
 @router.delete("/token/{token_id}", tags=["token"])

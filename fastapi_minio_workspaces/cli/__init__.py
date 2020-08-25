@@ -9,7 +9,7 @@ from click_aliases import ClickAliasedGroup
 from requests.exceptions import RequestException
 from requests_toolbelt.sessions import BaseUrlSession
 
-from . import auth, s3token, workspace, s3
+from . import auth, config as conf, s3token, workspace, mc
 
 
 class FmmSession(BaseUrlSession):
@@ -34,15 +34,31 @@ class FmmSession(BaseUrlSession):
 @click.option(
     "--api-url", default="http://localhost:8000/api", envvar="FMM_ENDPOINT_URL"
 )
+@click.option(
+    "--config",
+    default=os.path.join(os.path.expanduser("~"), ".config", "fmm.json"),
+    envvar="FMM_CONFIG_PATH",
+    type=click.Path(dir_okay=False, file_okay=True, writable=True, resolve_path=True),
+)
 @click.option("--token", envvar="FMM_TOKEN")
 @click.version_option()
 @click.pass_context
-def cli(ctx, api_url, token):
-    session = FmmSession(api_url, token)
-    ctx.obj = {"session": session}
+def cli(ctx, api_url, config, token):
+    context = {
+        "configPath": config,
+    }
+    if os.path.exists(config):
+        with open(config) as config_file:
+            context["config"] = conf.load_config(config_file.read())
+    else:
+        context["config"] = conf.make()
+    if not token:
+        token = context["config"].token
+    context["session"] = FmmSession(api_url, token)
+    ctx.obj = context
 
 
 workspace.make(cli)
 auth.make(cli)
 s3token.make(cli)
-s3.make(cli)
+mc.make(cli)

@@ -25,6 +25,7 @@ def makeRoleSessionName(user: schemas.UserDB, workspace: Optional[models.Workspa
 
 def makePolicy(
     user: schemas.UserDB,
+    bucket: str,
     workspace: Optional[models.Workspace],
     sharetype: schemas.ShareType,
 ):
@@ -32,7 +33,7 @@ def makePolicy(
     Make a policy for the given user to access s3 based on
     https://aws.amazon.com/premiumsupport/knowledge-center/s3-folder-user-access/
     """
-    resourceBase = f"arn:aws:s3:::{settings.DEFAULT_BUCKET}"
+    resourceBase = f"arn:aws:s3:::{bucket}"
     statements = []
     if workspace is None:
         # This is a blanket user policy

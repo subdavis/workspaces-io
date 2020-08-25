@@ -3,9 +3,8 @@ import enum
 import uuid
 
 from fastapi_users.db import SQLAlchemyBaseUserTable
-from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
-                        String)
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
@@ -88,15 +87,18 @@ class S3Token(BaseModel):
     # users may only have a single outstanding token for a workspace
     __table_args__ = (UniqueConstraint("workspace_id", "owner_id"),)
 
-    access_key_id = Column(String)
-    secret_access_key = Column(String)
-    session_token = Column(String)
+    access_key_id = Column(String, nullable=False)
+    secret_access_key = Column(String, nullable=False)
+    session_token = Column(String, nullable=False)
     expiration = Column(
-        DateTime, default=datetime.datetime.now() + datetime.timedelta(days=7)
+        DateTime,
+        default=datetime.datetime.now() + datetime.timedelta(days=7),
+        nullable=False,
     )
-
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspace.id"))
-    owner_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
+    policy = Column(JSONB, nullable=False)
+    bucket = Column(String, nullable=False)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspace.id"), nullable=True)
+    owner_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
 
     workspace = relationship(Workspace, backref="s3_tokens")
     owner = relationship(User, backref="s3_tokens")

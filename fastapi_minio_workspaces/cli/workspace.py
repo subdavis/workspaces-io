@@ -11,10 +11,14 @@ def make(cli: click.Group):
     def workspace():
         pass
 
-    @workspace.command(name="list", aliases=["l"])
+    @workspace.command(name="list", aliases=["ls", "l"])
+    @click.option("--name", type=click.STRING, required=False)
     @click.pass_obj
-    def list_workspaces(ctx):
-        r = ctx["session"].get("workspace")
+    def list_workspaces(ctx, name):
+        params = {}
+        if name:
+            params["name"] = name
+        r = ctx["session"].get("workspace", params=params)
         exit_with(handle_request_error(r))
 
     @workspace.command(name="create", aliases=["c"])

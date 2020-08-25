@@ -1,7 +1,10 @@
 import click
 from click_aliases import ClickAliasedGroup
 
+from fastapi_minio_workspaces.schemas import S3TokenDB
+
 from .util import exit_with, handle_request_error
+from .config import save_config
 
 
 def make(cli: click.Group):
@@ -19,30 +22,10 @@ def make(cli: click.Group):
         r = ctx["session"].post("token", json=body)
 
         if r.ok:
-            response = r.json()
-            access_key_id = response["access_key_id"]
-            secret_access_key = response["secret_access_key"]
-            session_token = response["session_token"]
-
-            click.echo(
-                click.style(
-                    f"export AWS_ACCESS_KEY_ID={access_key_id}", bold=True, fg="green"
-                )
-            )
-            click.echo(
-                click.style(
-                    f"export AWS_SECRET_ACCESS_KEY={secret_access_key}",
-                    bold=True,
-                    fg="green",
-                )
-            )
-            click.echo(
-                click.style(
-                    f"export AWS_SESSION_TOKEN={session_token}", bold=True, fg="green"
-                )
-            )
-
-            exit_with(handle_request_error(r))
+            response = S3TokenDB(**r.json())
+            ctx["config"].s3tokens[str(response.id)] = response
+            save_config(ctx["config"], ctx["configPath"])
+            click.echo(click.style("Token fetch success\n", fg="green", bold=True))
         else:
             exit_with(handle_request_error(r))
 

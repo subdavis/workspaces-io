@@ -74,7 +74,12 @@ class S3TokenBase(BaseModel):
 
 
 class S3TokenCreate(S3TokenBase):
-    owner_id: Optional[uuid.UUID]
+    pass
+
+
+class S3TokenSearch(BaseModel):
+    workspace_name: str
+    owner_name: str
 
 
 class S3TokenDB(DBBaseModel, S3TokenBase):
@@ -82,8 +87,18 @@ class S3TokenDB(DBBaseModel, S3TokenBase):
     access_key_id: str
     secret_access_key: str
     session_token: str
+    policy: dict
+    bucket: str
     owner: UserBase
     workspace: Optional[WorkspaceDB]
+
+
+class S3TokenSearchResponse(BaseModel):
+    token: S3TokenDB
+    workspaces: List[WorkspaceDB]
+
+    class Config:
+        orm_mode = True
 
 
 class ShareBase(BaseModel):

@@ -27,6 +27,18 @@ fmm token fetch
 fmm workspace share <workspace_id> <other_user_id>
 ```
 
+Future plans for integration with mc, generally involve wrapping and inspecting arguments to dynamically generate a set of credentials meeting the dependencies of the action.
+
+Support `ls, mv, cp, rm, diff, cat, tree, head, mirror, watch`
+
+``` sh
+# list the contents of a workspace
+mow mc ls myworkspace
+
+# move some data from your workspace to a shared workspace
+mow mc mv myworkspace/file.txt otheruser/sharedworkspace/file.txt
+```
+
 ## Dev setup
 
 ``` sh
