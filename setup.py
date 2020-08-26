@@ -20,7 +20,7 @@ deps = [
 ]
 
 setup(
-    name="fastapi-minio-workspaces",
+    name="workspacesio",
     version="0.1.0",
     script_name="setup.py",
     python_requires=">3.7",
@@ -29,8 +29,8 @@ setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "fast-create-tables=fastapi_minio_workspaces.dev_cli:main",
-            "fmm=fastapi_minio_workspaces.cli:cli",
+            "fast-create-tables=workspacesio.dev_cli:main",
+            "wio=workspacesio.cli:cli",
         ],
     },
 )

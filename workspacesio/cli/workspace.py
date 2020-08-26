@@ -1,7 +1,7 @@
 import click
 from click_aliases import ClickAliasedGroup
 
-from fastapi_minio_workspaces import schemas
+from workspacesio import schemas
 
 from .util import exit_with, handle_request_error
 

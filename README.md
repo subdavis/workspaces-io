@@ -1,6 +1,6 @@
-# FastAPI MinIO Workspaces
+# WorkspacesIO
 
-A simple FastAPI server to manage workspaces and multi-user sharing within MinIO.
+A dead-simple FastAPI server to manage workspaces and multi-user sharing within MinIO/S3.
 
 ## Concepts
 
@@ -19,12 +19,12 @@ Problems with this approach
 Example of current capabilities
 
 ``` sh
-fmm register email@domain.com user
-fmm login user
+wio register email@domain.com user
+wio login user
 
-fmm workspace create myspace
-fmm token fetch
-fmm workspace share <workspace_id> <other_user_id>
+wio workspace create myspace
+wio token fetch
+wio workspace share <workspace_id> <other_user_id>
 ```
 
 Future plans for integration with mc, generally involve wrapping and inspecting arguments to dynamically generate a set of credentials meeting the dependencies of the action.
@@ -56,7 +56,7 @@ pip3 install -r dev.requirements.txt
 minws
 
 # run dev server
-uvicorn fastapi_minio_workspaces.asgi:app --reload
+uvicorn workspacesio.asgi:app --reload
 ```
 
 ## MinIO Setup

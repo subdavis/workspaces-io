@@ -3,14 +3,28 @@ import enum
 import uuid
 
 from fastapi_users.db import SQLAlchemyBaseUserTable
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
+                        String, Table)
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
 
 from .database import Base
 from .schemas import ShareType
+
+# Many to Many
+# https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html#many-to-many
+workspace_s3token_association_table = Table(
+    "workspace_s3token_association_table",
+    Base.metadata,
+    Column(
+        "workspace_id", UUID(as_uuid=True), ForeignKey("workspace.id"), nullable=True
+    ),
+    Column(
+        "s3token_id", UUID(as_uuid=True), ForeignKey("minio_token.id"), nullable=False
+    ),
+)
 
 
 class BaseModel(AbstractConcreteBase, Base):
@@ -47,6 +61,11 @@ class Workspace(BaseModel):
     owner_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
 
     owner = relationship(User, backref="workspaces")
+    tokens = relationship(
+        "S3Token",
+        secondary=workspace_s3token_association_table,
+        back_populates="workspaces",
+    )
 
 
 class Share(BaseModel):
@@ -84,8 +103,6 @@ class S3Token(BaseModel):
     """
 
     __tablename__ = "minio_token"
-    # users may only have a single outstanding token for a workspace
-    __table_args__ = (UniqueConstraint("workspace_id", "owner_id"),)
 
     access_key_id = Column(String, nullable=False)
     secret_access_key = Column(String, nullable=False)
@@ -97,8 +114,11 @@ class S3Token(BaseModel):
     )
     policy = Column(JSONB, nullable=False)
     bucket = Column(String, nullable=False)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspace.id"), nullable=True)
     owner_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
 
-    workspace = relationship(Workspace, backref="s3_tokens")
     owner = relationship(User, backref="s3_tokens")
+    workspaces = relationship(
+        "Workspace",
+        secondary=workspace_s3token_association_table,
+        back_populates="tokens",
+    )

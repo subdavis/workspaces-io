@@ -1,7 +1,7 @@
 import datetime
 import enum
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from fastapi_users import models as fastapi_users_models
 from pydantic import BaseModel
@@ -66,16 +66,15 @@ class WorkspaceDB(DBBaseModel, WorkspaceBase):
 
 class S3TokenBase(BaseModel):
     expiration: Optional[datetime.datetime]
-    workspace_id: Optional[uuid.UUID]
 
 
 class S3TokenCreate(S3TokenBase):
-    pass
+    workspaces: List[Union[uuid.UUID, None]]
 
 
 class S3TokenSearch(BaseModel):
-    workspace_name: str
-    owner_name: str
+    workspace_name: Union[str, None]
+    owner_name: Union[str, None]
 
 
 class S3TokenDB(DBBaseModel, S3TokenBase):
@@ -86,7 +85,7 @@ class S3TokenDB(DBBaseModel, S3TokenBase):
     policy: dict
     bucket: str
     owner: UserBase
-    workspace: Optional[WorkspaceDB]
+    workspaces: List[Union[WorkspaceDB, None]]
 
 
 class S3TokenSearchResponse(BaseModel):

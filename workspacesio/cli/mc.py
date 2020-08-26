@@ -1,13 +1,13 @@
 import os
-import sys
 import re
-from typing import Tuple, List
+import sys
+from typing import List, Mapping, Tuple
 
 import click
 
-from fastapi_minio_workspaces import schemas, s3utils
-from .util import exit_with, handle_request_error
+from workspacesio import s3utils, schemas
 
+from .util import exit_with, handle_request_error
 
 COMMON_ARGS = (
     "mc",
@@ -21,7 +21,7 @@ special = re.compile(
 )
 
 
-def find_dependencies(args: List[str]):
+def find_dependencies(args: List[str]) -> List[dict]:
     required_workspaces = []
     for arg in args:
         m = special.match(arg)
@@ -45,13 +45,10 @@ def make(cli: click.Group):
     @click.pass_obj
     def mc(ctx, args):
         dependents = find_dependencies(args)
-        if len(dependents) > 1:
-            click.echo("Greater than 1 workspace not supported")
-
         body = []
         for d in dependents:
-            workspace_name = d["workspace"]
-            owner_name = d["user"]
+            workspace_name = d.get("workspace", None)
+            owner_name = d.get("user", None)
             body.append(
                 {"workspace_name": workspace_name, "owner_name": owner_name,}
             )

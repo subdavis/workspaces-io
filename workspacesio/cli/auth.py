@@ -1,7 +1,7 @@
 import click
 
-from .util import exit_with, handle_request_error
 from .config import save_config
+from .util import exit_with, handle_request_error
 
 
 def make(cli: click.Group):

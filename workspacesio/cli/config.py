@@ -1,10 +1,10 @@
-from typing import List, Optional, Mapping
 import json
+from typing import List, Mapping, Optional
 
 import click
 from pydantic import BaseModel
 
-from fastapi_minio_workspaces import schemas
+from workspacesio import schemas
 
 
 class Config(BaseModel):

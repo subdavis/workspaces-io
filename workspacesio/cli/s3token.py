@@ -1,10 +1,10 @@
 import click
 from click_aliases import ClickAliasedGroup
 
-from fastapi_minio_workspaces.schemas import S3TokenDB
+from workspacesio.schemas import S3TokenDB
 
-from .util import exit_with, handle_request_error
 from .config import save_config
+from .util import exit_with, handle_request_error
 
 
 def make(cli: click.Group):
