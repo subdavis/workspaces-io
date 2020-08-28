@@ -144,7 +144,6 @@ def token_create(
         func.count("*") >= len(foreign_workspaces)
     )
     existing: Optional[models.S3Token] = query.first()
-    print("existing", existing)
 
     if existing and existing.expiration > datetime.datetime.utcnow():
         return existing
@@ -236,7 +235,6 @@ def token_search(
                 raise RuntimeError(f"Multiple workspace matches for {term_parts[0]}")
             # No matches found, try username/workspacename
             pass
-    print(workspaces)
     workspace_id_list = [w.id for w in workspaces.values()]
     if len(workspace_id_list):
         token = token_create(
