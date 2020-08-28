@@ -28,6 +28,7 @@ def main():
         )
     except:
         pass
+
     con.close()
 
     database.Base.metadata.create_all(database.engine)

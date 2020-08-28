@@ -1,5 +1,5 @@
 import json
-from typing import List, Mapping, Optional
+from typing import Dict, List, Optional
 
 import click
 from pydantic import BaseModel
@@ -9,7 +9,7 @@ from workspacesio import schemas
 
 class Config(BaseModel):
     token: Optional[str]
-    s3tokens: Mapping[str, schemas.S3TokenDB]
+    s3tokens: Dict[str, schemas.S3TokenDB]
 
 
 def make() -> Config:

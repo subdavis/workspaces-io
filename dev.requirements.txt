@@ -2,3 +2,4 @@ isort
 uvicorn
 black
 mypy
+uvicorn

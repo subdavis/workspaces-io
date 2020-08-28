@@ -29,17 +29,21 @@ def make(cli: click.Group):
         else:
             exit_with(handle_request_error(r))
 
-    @token.command(name="list", aliases=["l"])
+    @token.command(name="list", aliases=["l", "ls"])
     @click.pass_obj
     def list_token(ctx):
         r = ctx["session"].get("token")
         exit_with(handle_request_error(r))
 
     @token.command(name="delete", aliases=["d"])
-    @click.argument("token_id")
+    @click.option("--all", is_flag=True)
+    @click.argument("token_id", required=False)
     @click.pass_obj
-    def delete_token(ctx, token_id):
-        r = ctx["session"].delete(f"token/{token_id}")
+    def delete_token(ctx, all, token_id):
+        if all:
+            r = ctx["session"].delete("token")
+        else:
+            r = ctx["session"].delete(f"token/{token_id}")
         exit_with(handle_request_error(r))
 
     cli.add_command(token)

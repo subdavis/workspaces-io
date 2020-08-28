@@ -1,12 +1,13 @@
 import datetime
 import json
+import os
 import uuid
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import boto3
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy import all_, and_, func, or_
+from sqlalchemy import and_, any_, func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
@@ -15,17 +16,17 @@ from . import models, s3utils, schemas, settings
 
 
 def register_handlers(app: FastAPI):
-    @app.exception_handler(IntegrityError)
-    async def integrity_exception_handler(r: Request, exc: IntegrityError):
-        return JSONResponse(status_code=409, content={"message": "Integrity Error"})
+    # @app.exception_handler(IntegrityError)
+    # async def integrity_exception_handler(r: Request, exc: IntegrityError):
+    #     return JSONResponse(status_code=409, content={"message": "Integrity Error"})
 
     @app.exception_handler(PermissionError)
     async def permissions_exception_handler(r: Request, exc: PermissionError):
         return JSONResponse(status_code=403, content={"message": str(exc)})
 
-    @app.exception_handler(ValueError)
-    async def value_exception_handler(r: Request, exc: ValueError):
-        return JSONResponse(status_code=400, content={"message": str(exc)})
+    # @app.exception_handler(ValueError)
+    # async def value_exception_handler(r: Request, exc: ValueError):
+    #     return JSONResponse(status_code=400, content={"message": str(exc)})
 
 
 def on_after_register(db: Session, user: schemas.UserDB):
@@ -37,7 +38,11 @@ def on_after_forgot_password(db: Session, user: schemas.UserDB):
 
 
 def workspace_list(
-    db: Session, requester: schemas.UserDB, name: Optional[str] = None
+    db: Session,
+    requester: schemas.UserDB,
+    name: Optional[str] = None,
+    owner: Optional[str] = None,
+    public: bool = False,
 ) -> List[models.Workspace]:
     """Show workspaces that the requester owns or has a share for"""
     q = (
@@ -91,7 +96,14 @@ def workspace_create(
 def token_list(db: Session, requester: schemas.UserDB) -> List[models.S3Token]:
     """List tokens for requester"""
     return (
-        db.query(models.S3Token).filter(models.S3Token.owner_id == requester.id).all()
+        db.query(models.S3Token)
+        .filter(
+            and_(
+                models.S3Token.owner_id == requester.id,
+                models.S3Token.expiration > datetime.datetime.utcnow(),
+            )
+        )
+        .all()
     )
 
 
@@ -100,59 +112,73 @@ def token_create(
     b3: boto3.Session,
     requester: schemas.UserDB,
     token: schemas.S3TokenCreate,
-) -> models.S3Token:
+) -> Optional[models.S3Token]:
     """Create s3 sts token for requester if they have permissions"""
-    existing: Optional[models.S3Token] = (
-        # https://stackoverflow.com/questions/11468572/postgresql-where-all-in-array
-        # jesus helped me write this query
+    # Find all workspaces in the query
+    workspace_query_list: List[models.Workspace] = db.query(models.Workspace,).filter(
+        models.Workspace.id.in_(token.workspaces)
+    ).all()
+    if len(workspace_query_list) == 0:
+        return None
+
+    foreign_workspaces = [w for w in workspace_query_list if w.owner_id != requester.id]
+    includes_owner_permissions = len(workspace_query_list) > len(foreign_workspaces)
+    # TODO: group the workspace query list by server/bucket because a distinct S3 token
+    # is needed for each member of that group.  For now, assume they all share a
+    # common server and bucket
+
+    query = (
         db.query(models.S3Token)
-        .join(models.S3Token.workspaces)
+        .outerjoin(models.Workspace, models.S3Token.workspaces)
         .filter(
             and_(
-                models.Workspace.id.in_(token.workspaces),
                 models.S3Token.owner_id == requester.id,
+                or_(*[models.Workspace.id == w.id for w in foreign_workspaces]),
             )
         )
-        .group_by(models.S3Token.id)
-        .having(func.count("*") == len(token.workspaces))
-        .first()
     )
+    if includes_owner_permissions:
+        query = query.filter(models.S3Token.includes_owner_permissions == True)
+    # https://stackoverflow.com/questions/11468572/postgresql-where-all-in-array
+    query = query.group_by(models.S3Token.id).having(
+        func.count("*") >= len(foreign_workspaces)
+    )
+    existing: Optional[models.S3Token] = query.first()
+    print("existing", existing)
 
     if existing and existing.expiration > datetime.datetime.utcnow():
         return existing
     else:
-        workspaces: models.Workspace = db.query(models.Workspace).filter(
-            models.Workspace.id.in_(token.workspaces)
-        ).all()
         policies: List[Tuple[Union[models.Workspace, None], schemas.ShareType]] = []
-
-        for w in workspaces:
-            if w.owner_id != requester.id:
-                share: models.Share = db.query(models.Share).filter(
-                    and_(
-                        models.Share.workspace_id == w.id,
-                        models.Share.sharee_id == requester.id,
-                    )
-                ).first()
-                if share:
-                    policies.append((w, share.permission))
-                else:
-                    raise PermissionError(
-                        f"User {requester.username} is not permitted to access {w.name}"
-                    )
+        for w in foreign_workspaces:
+            share: models.Share = db.query(models.Share).filter(
+                and_(
+                    models.Share.workspace_id == w.id,
+                    models.Share.sharee_id == requester.id,
+                )
+            ).first()
+            if share:
+                policies.append((w, share.permission))
             else:
-                policies.append((None, schemas.ShareType.OWN))
-        # TODO: give users the ability to set their own default bucket
-        bucket = settings.DEFAULT_BUCKET
+                raise PermissionError(
+                    f"User {requester.username} is not permitted to access {w.name}"
+                )
+        if includes_owner_permissions:
+            policies.append((None, schemas.ShareType.OWN))
+        bucket = workspace_query_list[0].bucket
         policy = s3utils.makePolicy(requester, bucket, policies)
         token_args = dict(
-            owner_id=requester.id, policy={}, bucket="foo", workspaces=workspaces,
+            owner_id=requester.id,
+            policy=policy,
+            bucket=bucket,
+            workspaces=foreign_workspaces,
+            includes_owner_permissions=includes_owner_permissions,
         )
         new_token = b3.assume_role(
             RoleArn="arn:xxx:xxx:xxx:xxxx",  # Not meaningful for Minio
             RoleSessionName=str(requester.id),  # Not meaningful for Minio
             Policy=json.dumps(policy),
-            DurationSeconds=3600,
+            DurationSeconds=900,
         )
         token_db = existing or models.S3Token(**token_args)
         token_db.access_key_id = new_token["Credentials"]["AccessKeyId"]
@@ -173,33 +199,50 @@ def token_revoke(db: Session, token_id: uuid.UUID):
     db.commit()
 
 
+def token_revoke_all(db: Session, user: schemas.UserDB) -> int:
+    """
+    Remove all tokens from DB
+    """
+    all_tokens: List[models.S3Token] = db.query(models.S3Token).filter(
+        models.S3Token.owner_id == user.id
+    ).all()
+    for t in all_tokens:
+        t.workspaces.clear()
+        db.delete(t)
+    db.commit()
+    return len(all_tokens)
+
+
 def token_search(
     db: Session,
     b3: boto3.Session,
     requester: schemas.UserDB,
-    terms: List[schemas.S3TokenSearch],
+    search: schemas.S3TokenSearch,
 ) -> schemas.S3TokenSearchResponse:
     """Search for a set of credentials that satisfy the terms"""
-    workspaces: List[models.Workspace] = []
-    workspace_ids: List[Union[str, None]] = []
-    for term in terms:
-        if term.workspace_name is not None:
+    workspaces: Dict[str, models.Workspace] = {}
+    token = None
+    for term in search.search_terms:
+        term_parts = term.split(search.sep)
+        # Look for either 'workspacename' or 'username/workspacename'
+        if len(term_parts) > 0:
             matches: List[models.Workspace] = workspace_list(
-                db, requester, name=term.workspace_name
+                db, requester, name=term_parts[0]
             )
             if len(matches) == 1:
-                workspaces.append(matches[0])
-                workspace_ids.append(matches[0].id)
+                workspaces[term] = matches[0]
+                continue
             elif len(matches) > 1:
-                raise RuntimeError("Unsupported")
-            else:
-                raise ValueError(f"No matches found for {term.workspace_name}")
-        else:
-            workspace_ids.append(None)
-    token = token_create(
-        db, b3, requester, schemas.S3TokenCreate(workspaces=workspace_ids)
-    )
-    return schemas.S3TokenSearchResponse(token=token, workspaces=workspaces)
+                raise RuntimeError(f"Multiple workspace matches for {term_parts[0]}")
+            # No matches found, try username/workspacename
+            pass
+    print(workspaces)
+    workspace_id_list = [w.id for w in workspaces.values()]
+    if len(workspace_id_list):
+        token = token_create(
+            db, b3, requester, schemas.S3TokenCreate(workspaces=workspace_id_list),
+        )
+    return schemas.S3TokenSearchResponse(token=token, workspaces=workspaces,)
 
 
 def share_create(

@@ -1,7 +1,7 @@
 import os
 import re
 import sys
-from typing import List, Mapping, Tuple
+from typing import Dict, List, Tuple
 
 import click
 
@@ -9,34 +9,42 @@ from workspacesio import s3utils, schemas
 
 from .util import exit_with, handle_request_error
 
-COMMON_ARGS = (
-    "mc",
-    "--endpoint-url",
-    "http://localhost:9000",
-    "s3api",
-)
+SUPPORTED_MINIO_COMMANDS = [
+    "ls",
+    "cp",
+    "mirror",
+    "cat",
+    "head",
+    "pipe",
+    "share",
+    "find",
+    "sql",
+    "stat",
+    "mv",
+    "tree",
+    "du",
+    "diff",
+    "rm",
+    "watch",
+]
 
-special = re.compile(
-    "\/?(?P<scope>(public)|(private))(\/(?P<user>[^\/]*)(\/((?P<ws>[^\/]*))(\/(?P<path>.*))?)?)?"
-)
+
+def isrealpath(s: str) -> bool:
+    return os.path.exists(os.path.abspath(os.path.expanduser(s)))
 
 
-def find_dependencies(args: List[str]) -> List[dict]:
-    required_workspaces = []
-    for arg in args:
-        m = special.match(arg)
-        if m is not None:
-            groups = m.groups()
-            required_workspaces.append(
-                {
-                    "scope": groups[0],
-                    "user": groups[4],
-                    "workspace": groups[6],
-                    "path": groups[9],
-                    "arg": arg,
-                }
-            )
-    return required_workspaces
+def transform_arguments(args: List[str]):
+    """attempt to """
+    if len(args) < 2 or not (args[0] in SUPPORTED_MINIO_COMMANDS):
+        return []
+    possible_workspaces = []
+    for arg in args[1:]:
+        if arg.startswith("-"):
+            continue
+        if isrealpath(arg):
+            continue
+        possible_workspaces.append(arg)
+    return possible_workspaces
 
 
 def make(cli: click.Group):
@@ -44,31 +52,21 @@ def make(cli: click.Group):
     @click.argument("args", nargs=-1)
     @click.pass_obj
     def mc(ctx, args):
-        dependents = find_dependencies(args)
-        body = []
-        for d in dependents:
-            workspace_name = d.get("workspace", None)
-            owner_name = d.get("user", None)
-            body.append(
-                {"workspace_name": workspace_name, "owner_name": owner_name,}
-            )
-        r = ctx["session"].post("token/search", json=body)
+        r = ctx["session"].post(
+            "token/search", json={"search_terms": args, "sep": os.sep,}
+        )
         if r.ok:
-            data = r.json()
-            workspaces = data["workspaces"]
-            access_key = data["token"]["access_key_id"]
-            secret = data["token"]["secret_access_key"]
-            session_token = data["token"]["session_token"]
-            mc_env = f"http://{access_key}:{secret}:{session_token}@localhost:9000"
-
+            response = r.json()
             assembled = " ".join(args)
-
-            if len(workspaces):
-                for d in dependents:
-                    path = os.path.join(
-                        f"myalias/{workspaces[0]['bucket']}", d["arg"].lstrip(os.sep)
-                    )
-                    assembled = assembled.replace(d["arg"], path)
+            for arg, workspace in response["workspaces"].items():
+                path = os.path.join(
+                    f"myalias/{workspace['bucket']}", arg.lstrip(os.sep)
+                )
+                assembled = assembled.replace(arg, path)
+            access_key = response["token"]["access_key_id"]
+            secret = response["token"]["secret_access_key"]
+            session_token = response["token"]["session_token"]
+            mc_env = f"http://{access_key}:{secret}:{session_token}@localhost:9000"
             command = (
                 "mc",
                 *assembled.split(" "),

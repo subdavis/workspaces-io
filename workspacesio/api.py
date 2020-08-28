@@ -67,7 +67,12 @@ def list_workspaces(
     return crud.workspace_list(db, user, name=name)
 
 
-@router.post("/workspace", response_model=schemas.WorkspaceDB, tags=["workspace"])
+@router.post(
+    "/workspace",
+    response_model=schemas.WorkspaceDB,
+    tags=["workspace"],
+    status_code=201,
+)
 def create_workspace(
     workspace: schemas.WorkspaceCreate,
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),
@@ -85,7 +90,9 @@ def list_tokens(
     return crud.token_list(db, user)
 
 
-@router.post("/token", response_model=schemas.S3TokenDB, tags=["token"])
+@router.post(
+    "/token", response_model=schemas.S3TokenDB, tags=["token"], status_code=201
+)
 def create_token(
     token: schemas.S3TokenCreate,
     db: database.SessionLocal = Depends(get_db),
@@ -99,7 +106,7 @@ def create_token(
     "/token/search", response_model=schemas.S3TokenSearchResponse, tags=["token"]
 )
 def search_token(
-    terms: List[schemas.S3TokenSearch],
+    terms: schemas.S3TokenSearch,
     db: database.SessionLocal = Depends(get_db),
     boto_sts: boto3.Session = Depends(get_boto_sts),
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),
@@ -111,13 +118,20 @@ def search_token(
 def revoke_token(
     token_id: str,
     db: database.SessionLocal = Depends(get_db),
-    boto_sts: boto3.Session = Depends(get_boto_sts),
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),
 ):
     return crud.token_revoke(db, uuid.UUID(token_id))
 
 
-@router.post("/share", response_model=schemas.ShareDB, tags=["share"])
+@router.delete("/token", tags=["token"], response_model=int)
+def revoke_all_tokens(
+    db: database.SessionLocal = Depends(get_db),
+    user: schemas.UserDB = Depends(fastapi_users.get_current_user),
+):
+    return crud.token_revoke_all(db, user)
+
+
+@router.post("/share", response_model=schemas.ShareDB, tags=["share"], status_code=201)
 def create_workspace_share(
     share: schemas.ShareCreate,
     user: schemas.UserDB = Depends(fastapi_users.get_current_user),

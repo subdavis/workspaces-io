@@ -19,7 +19,7 @@ workspace_s3token_association_table = Table(
     "workspace_s3token_association_table",
     Base.metadata,
     Column(
-        "workspace_id", UUID(as_uuid=True), ForeignKey("workspace.id"), nullable=True
+        "workspace_id", UUID(as_uuid=True), ForeignKey("workspace.id"), nullable=False
     ),
     Column(
         "s3token_id", UUID(as_uuid=True), ForeignKey("minio_token.id"), nullable=False
@@ -114,6 +114,7 @@ class S3Token(BaseModel):
     )
     policy = Column(JSONB, nullable=False)
     bucket = Column(String, nullable=False)
+    includes_owner_permissions = Column(Boolean, nullable=False)
     owner_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
 
     owner = relationship(User, backref="s3_tokens")
@@ -121,4 +122,5 @@ class S3Token(BaseModel):
         "Workspace",
         secondary=workspace_s3token_association_table,
         back_populates="tokens",
+        cascade=["all"],
     )
