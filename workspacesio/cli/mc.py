@@ -58,6 +58,7 @@ def make(cli: click.Group):
         if r.ok:
             response = r.json()
             assembled = " ".join(args)
+            mc_env = ""
             for arg, workspace in response["workspaces"].items():
                 scope = "public" if workspace["public"] else "private"
                 path = os.path.join(
@@ -65,10 +66,11 @@ def make(cli: click.Group):
                     arg.lstrip(os.sep),
                 )
                 assembled = assembled.replace(arg, path)
-            access_key = response["token"]["access_key_id"]
-            secret = response["token"]["secret_access_key"]
-            session_token = response["token"]["session_token"]
-            mc_env = f"http://{access_key}:{secret}:{session_token}@localhost:9000"
+            if response["token"] is not None:
+                access_key = response["token"]["access_key_id"]
+                secret = response["token"]["secret_access_key"]
+                session_token = response["token"]["session_token"]
+                mc_env = f"http://{access_key}:{secret}:{session_token}@localhost:9000"
             command = (
                 "mc",
                 *assembled.split(" "),
