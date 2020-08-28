@@ -53,7 +53,7 @@ pip3 install -e .
 pip3 install -r dev.requirements.txt
 
 # run db migrations
-minws
+fast-create-tables
 
 # run dev server
 uvicorn workspacesio.asgi:app --reload
