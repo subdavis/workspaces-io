@@ -26,7 +26,7 @@ Example of current capabilities
 
 ``` sh
 wio register email@domain.com user
-wio login user
+wio login email@domain.com
 
 wio workspace create myspace
 wio workspace share <workspace_id> <other_user_id>
@@ -42,6 +42,19 @@ wio mc ls myworkspace
 
 # move some data from your workspace to a shared workspace
 wio mc mv myworkspace/file.txt sharedworkspace/file.txt
+```
+
+## MinIO Setup
+
+boto3 client can be used for `s3` and `sts` access, but a non-root minio user must be created.
+
+``` sh
+# Create alias
+mc alias set local http://localhost:9000 minio minio1234
+# Create user
+mc admin user add local backend backend1234
+# Give user access to all buckets
+mc admin policy set local readwrite user=backend
 ```
 
 ## Dev setup
@@ -62,17 +75,4 @@ fast-create-tables
 
 # run dev server
 uvicorn workspacesio.asgi:app --reload
-```
-
-## MinIO Setup
-
-boto3 client can be used for `s3` and `sts` access, but a non-root minio user must be created.
-
-``` sh
-# Create alias
-mc alias set local http://localhost:9000 minio minio1234
-# Create user
-mc admin user add local backend backend1234
-# Give user access to all buckets
-mc admin policy set local readwrite user=backend
 ```
