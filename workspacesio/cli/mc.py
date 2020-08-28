@@ -59,8 +59,10 @@ def make(cli: click.Group):
             response = r.json()
             assembled = " ".join(args)
             for arg, workspace in response["workspaces"].items():
+                scope = "public" if workspace["public"] else "private"
                 path = os.path.join(
-                    f"myalias/{workspace['bucket']}", arg.lstrip(os.sep)
+                    f"myalias/{workspace['bucket']}/{scope}/{workspace['owner']['username']}",
+                    arg.lstrip(os.sep),
                 )
                 assembled = assembled.replace(arg, path)
             access_key = response["token"]["access_key_id"]

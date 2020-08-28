@@ -26,7 +26,7 @@ Example of current capabilities
 
 ``` sh
 wio register email@domain.com user
-wio login user
+wio login email@domain.com
 
 wio workspace create myspace
 wio workspace share <workspace_id> <other_user_id>
