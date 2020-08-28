@@ -74,7 +74,6 @@ class S3TokenCreate(S3TokenBase):
 
 class S3TokenSearch(BaseModel):
     search_terms: List[str]
-    sep: str = "/"
 
 
 class S3TokenDB(DBBaseModel, S3TokenBase):
@@ -89,9 +88,14 @@ class S3TokenDB(DBBaseModel, S3TokenBase):
     workspaces: List[Union[WorkspaceDB, None]]
 
 
+class S3TokenSearchResponseWorkspacePart(BaseModel):
+    path: str
+    workspace: WorkspaceDB
+
+
 class S3TokenSearchResponse(BaseModel):
     token: Optional[S3TokenDB]
-    workspaces: Dict[str, WorkspaceDB]
+    workspaces: Dict[str, S3TokenSearchResponseWorkspacePart]
 
     class Config:
         orm_mode = True

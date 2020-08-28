@@ -13,9 +13,10 @@ def make(cli: click.Group):
 
     @workspace.command(name="list", aliases=["ls", "l"])
     @click.option("--name", type=click.STRING, required=False)
+    @click.option("--public", is_flag=True)
     @click.pass_obj
-    def list_workspaces(ctx, name):
-        params = {}
+    def list_workspaces(ctx, name, public):
+        params = {"public": public}
         if name:
             params["name"] = name
         r = ctx["session"].get("workspace", params=params)

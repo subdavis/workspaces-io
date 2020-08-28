@@ -34,5 +34,12 @@ def make(cli: click.Group):
         )
         exit_with(handle_request_error(r))
 
+    @click.command(name="info")
+    @click.pass_obj
+    def me(ctx):
+        r = ctx["session"].get("me")
+        exit_with(handle_request_error(r))
+
     cli.add_command(login)
     cli.add_command(register)
+    cli.add_command(me)

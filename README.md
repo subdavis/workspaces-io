@@ -42,7 +42,20 @@ wio mc ls myworkspace
 
 # move some data from your workspace to a shared workspace
 wio mc mv myworkspace/file.txt sharedworkspace/file.txt
+
+# list public workspaces
+wio w ls --public
+
+# list data in a public workspace subfolder
+wio mc ls ownername/workspacename/subfolder/
 ```
+
+### Referring to workspaces
+
+You can refer to workspaces either
+
+* directly by `workspacename/`
+* through their owner by `owner/workspacename/`
 
 ## MinIO Setup
 

@@ -52,18 +52,23 @@ def make(cli: click.Group):
     @click.argument("args", nargs=-1)
     @click.pass_obj
     def mc(ctx, args):
-        r = ctx["session"].post(
-            "token/search", json={"search_terms": args, "sep": os.sep,}
-        )
+        r = ctx["session"].post("token/search", json={"search_terms": args,})
         if r.ok:
             response = r.json()
             assembled = " ".join(args)
             mc_env = ""
-            for arg, workspace in response["workspaces"].items():
+            for arg, match in response["workspaces"].items():
+                workspace = match["workspace"]
                 scope = "public" if workspace["public"] else "private"
-                path = os.path.join(
-                    f"myalias/{workspace['bucket']}/{scope}/{workspace['owner']['username']}",
-                    arg.lstrip(os.sep),
+                path = "/".join(
+                    [
+                        "myalias",
+                        workspace["bucket"],
+                        scope,
+                        workspace["owner"]["username"],
+                        workspace["name"],
+                        match["path"].lstrip("/"),
+                    ]
                 )
                 assembled = assembled.replace(arg, path)
             if response["token"] is not None:
@@ -71,6 +76,7 @@ def make(cli: click.Group):
                 secret = response["token"]["secret_access_key"]
                 session_token = response["token"]["session_token"]
                 mc_env = f"http://{access_key}:{secret}:{session_token}@localhost:9000"
+
             command = (
                 "mc",
                 *assembled.split(" "),

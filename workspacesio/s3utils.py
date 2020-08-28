@@ -19,12 +19,12 @@ def getWorkspaceKey(workspace: models.Workspace):
     return f"{root}/{workspace.owner.username}/{sanitize(workspace.name)}"
 
 
-def makeRoleSessionName(user: schemas.UserDB, workspace: Optional[models.Workspace]):
+def makeRoleSessionName(user: schemas.UserBase, workspace: Optional[models.Workspace]):
     return f"{user.id}::{workspace}"
 
 
 def makePolicy(
-    user: schemas.UserDB,
+    user: schemas.UserBase,
     bucket: str,
     policies: List[Tuple[Union[models.Workspace, None], schemas.ShareType]],
 ):
