@@ -3,3 +3,4 @@ uvicorn
 black
 mypy
 uvicorn
+docker-compose
