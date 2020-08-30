@@ -22,9 +22,11 @@ def make(cli: click.Group):
         r = ctx["session"].get("workspace", params=params)
         if r.ok:
             for ws in r.json():
-                root = "public" if ws["public"] else "private"
+                root = ws["root"]["base_path"]
+                scope = ws["root"]["root_type"]
                 click.secho(f"[{ws['created']}] ", fg="green", nl=False)
                 click.secho(f"{ws['id']} ", fg="yellow", nl=False)
+                click.secho(f"({scope}) ", fg="bright_black", nl=False)
                 click.secho(
                     f"{root}/{ws['owner']['username']}/{ws['name']}/",
                     fg="cyan",
@@ -36,9 +38,12 @@ def make(cli: click.Group):
     @workspace.command(name="create", aliases=["c"])
     @click.argument("name")
     @click.option("--public/--private", default=False, is_flag=True)
+    @click.option("--unmanaged", default=False, is_flag=True)
     @click.pass_obj
-    def create_workspace(ctx, name, public):
-        r = ctx["session"].post("workspace", json={"name": name, "public": public,})
+    def create_workspace(ctx, name, public, unmanaged):
+        r = ctx["session"].post(
+            "workspace", json={"name": name, "public": public, "unmanaged": unmanaged,}
+        )
         exit_with(handle_request_error(r))
 
     @workspace.command(name="share", aliases=["s"])

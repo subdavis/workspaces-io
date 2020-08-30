@@ -164,7 +164,7 @@ def list_tokens(
 
 
 @router.post(
-    "/token", response_model=schemas.S3TokenDB, tags=["token"], status_code=201
+    "/token", response_model=List[schemas.S3TokenDB], tags=["token"], status_code=201
 )
 def create_token(
     token: schemas.S3TokenCreate,

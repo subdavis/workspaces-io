@@ -92,11 +92,11 @@ class WorkspaceCreate(WorkspaceBase):
 
 class WorkspaceDB(DBBaseModel, WorkspaceBase):
     id: uuid.UUID
-    bucket: str
     name: str
     owner_id: uuid.UUID
     root_id: uuid.UUID
     owner: UserBase
+    root: WorkspaceRootDB
 
 
 class S3TokenBase(BaseModel):
@@ -117,10 +117,9 @@ class S3TokenDB(DBBaseModel, S3TokenBase):
     secret_access_key: str
     session_token: str
     policy: dict
-    bucket: str
-    includes_owner_permissions: bool
     owner: UserBase
-    workspaces: List[Union[WorkspaceDB, None]]
+    workspaces: List[WorkspaceDB]
+    roots: List[WorkspaceRootDB]
 
 
 class S3TokenSearchResponseWorkspacePart(BaseModel):
@@ -129,7 +128,7 @@ class S3TokenSearchResponseWorkspacePart(BaseModel):
 
 
 class S3TokenSearchResponse(BaseModel):
-    token: Optional[S3TokenDB]
+    tokens: List[S3TokenDB]
     workspaces: Dict[str, S3TokenSearchResponseWorkspacePart]
 
 

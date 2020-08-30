@@ -3,8 +3,16 @@ import enum
 import uuid
 
 from fastapi_users.db import SQLAlchemyBaseUserTable
-from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
-                        String, Table)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import relationship
@@ -26,6 +34,17 @@ workspace_s3token_association_table = Table(
     ),
 )
 
+root_s3token_association_table = Table(
+    "root_s3token_association_table",
+    Base.metadata,
+    Column(
+        "root_id", UUID(as_uuid=True), ForeignKey("workspace_root.id"), nullable=False
+    ),
+    Column(
+        "s3token_id", UUID(as_uuid=True), ForeignKey("minio_token.id"), nullable=False
+    ),
+)
+
 
 class BaseModel(AbstractConcreteBase, Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -37,6 +56,7 @@ class User(Base, SQLAlchemyBaseUserTable):
     username = Column(String)
 
     workspaces = relationship("Workspace", back_populates="owner")
+    created_nodes = relationship("StorageNode", back_populates="creator")
 
 
 class StorageNode(BaseModel):
@@ -58,8 +78,7 @@ class StorageNode(BaseModel):
 
 class WorkspaceRoot(BaseModel):
     """
-    A bucket and optional prefix that defines a boundary of control
-    for this application.
+    A bucket and optional prefix that defines a boundary of control for this application.
 
     :param root_type: str defines the naming convention and access pattern for workspaces in this root.
         `public` allows read access by default, and workspaces are structured `{username}/{workspace_name}`
@@ -77,20 +96,18 @@ class WorkspaceRoot(BaseModel):
 
     storage_node: StorageNode = relationship(StorageNode, back_populates="roots")
     workspaces = relationship("Workspace", back_populates="root")
+    tokens = relationship(
+        "S3Token", secondary=root_s3token_association_table, back_populates="roots"
+    )
 
 
 class Workspace(BaseModel):
     """
-    A workspace is a directory-like ARN in s3.
-
-    * public workspaces, that all system users can READ,
-      arn:aws:s3:::{bucketname}/public/{user}/{name}
-
-    * private workspaces, that only the owner can READ,
-      arn:aws:s3:::{bucketname}/private/{user}/{name}
+    A workspace is a directory-like prefix in s3.
 
     READ/WRITE privileges to public and private workspaces
-    can be shared among users.
+    can be shared among users.  Default privileges are based on
+    the root.root_type
     """
 
     __tablename__ = "workspace"
@@ -160,8 +177,6 @@ class S3Token(BaseModel):
         nullable=False,
     )
     policy = Column(JSONB, nullable=False)
-    bucket = Column(String, nullable=False)
-    includes_owner_permissions = Column(Boolean, nullable=False)
     owner_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
 
     owner = relationship(User, backref="s3_tokens")
@@ -170,6 +185,12 @@ class S3Token(BaseModel):
         secondary=workspace_s3token_association_table,
         back_populates="tokens",
         cascade=["all"],
+    )
+    roots = relationship(
+        "WorkspaceRoot",
+        secondary=root_s3token_association_table,
+        cascade=["all"],
+        back_populates="tokens",
     )
 
 
