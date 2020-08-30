@@ -8,6 +8,7 @@ deps = [
     "click-aliases",
     "colorama",
     "databases[postgresql]",
+    "elasticsearch>=7.0.0,<8.0.0",
     "fastapi",
     "fastapi-users",
     "gunicorn",

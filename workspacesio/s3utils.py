@@ -104,6 +104,13 @@ def makePolicy(
                     "Resource": [f"{resourceBase}/private/{user.username}/*"],
                 }
             )
+            statements.append(
+                {
+                    "Effect": "Allow",
+                    "Action": ["s3:ListBucket", "s3:GetObject"],
+                    "Resource": [f"{resourceBase}/public/{user.username}/*"],
+                }
+            )
         elif workspace is not None:
             # This is a specific workspace share policy
             # General public access

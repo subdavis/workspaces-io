@@ -22,8 +22,23 @@ services:
     ports:
       - "5555:5432"
 
-  redis:
-    image: redis:alpine
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.0
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.9.0
+    container_name: kibana
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://elastic:9200
+      ELASTICSEARCH_HOSTS: http://elastic:9200
+
 
 volumes:
   db:

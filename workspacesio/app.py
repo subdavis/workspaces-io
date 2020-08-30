@@ -52,7 +52,7 @@ def init_fastapi_users(app: FastAPI):
 
 
 def create_app(env: typing.Dict[str, str]) -> FastAPI:
-    app = FastAPI(title="FastAPI MinIO Workspaces", version=__version__,)
+    app = FastAPI(title="WorkspacesIO", version=__version__,)
     app.include_router(api.router, prefix="/api")
     init_fastapi_users(app)
     crud.register_handlers(app)

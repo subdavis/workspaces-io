@@ -19,6 +19,17 @@ Problems with this approach
 * Support multiple MinIO, S3, and other compatible backends.
 * Allow unprivileged users to bring in their own storage.
 * Indexing file names and possibly text contents with ElasticSearch.
+* Implement `nodes` , allowing multiple s3/minio/gcs/whatever backends.  Allow unprivileged users to introduce nodes into the workspace cluster.
+* Implement `roots` , or a root path inside a bucket where workspaces-io manages all the content.  Roots must be created by node operators.
+  + `public` type, that users can create public workspaces in, follow naming conventions
+  + `private` type, that users can create private workspaces in, follow naming conventions
+  + `unmanaged-public` type, that don't support traditional public/private.  This type is intended for "importing" existing data, and efficient for read-only operations.  They can still be edited, but if a user owns a workspace here, they need a workspace-specific key to manage it, which will eat into their token character limit.  This type is recommended for public read-only collections.
+  + `unmanaged-private` type, similar to above, but with no token optimizations of any kind.  Good for bringing one-off workspaces into the application, but use sparingly, because read and write access require one-off token allocation.
+* I still don't know how root-permissions will work.  What determines which users are permitted create privileges on a particular root?  How can a group of users all be root managers?  For now, all public and private roots have global create permissions.  Unmanaged roots have no create permissions, and workspaces in these roots must be crated or imported by the root's node operator.
+* Implement `indexes` at the root level.   Workspaces are only indexed by virtue of which root they're in.   A server could theoretically have different levels of indexing on different roots, allowing users to allocate their workspaces based on the level of indexing they need.
+* Implement `quotas` at multiple levels.  Users have an overall quota, a root-specific quota, and a workspace quota.  Quotas could be unique to individual users.  **QUOTAS are not enforceable** while a user holds a token.  If a user exceeds their quota, this will be noticed later by the notifier and future credentials requests will be blocked.  If it's not obvious by now, this system has a low tolerence/defense for bad faith actors.  Quotas are tools for systems administrators to prevent users from accidentally crippling resourcs.
+  + To _really_ implement quotas and share revokes, some kind of layer 7 middleware would be necessary in front of minio.  You'd literall have to implement an http proxy to inspect every request's token headers.  That sounds exhausting.
+  + I'd do it with something like https://github.com/elazarl/goproxy
 
 ## Usage
 
@@ -87,5 +98,6 @@ pip3 install -r dev.requirements.txt
 fast-create-tables
 
 # run dev server
-uvicorn workspacesio.asgi:app --reload
+# need host arg because minio must be able to post to the server
+uvicorn workspacesio.asgi:app --host 0.0.0.0 --reload
 ```

@@ -3,15 +3,23 @@ import enum
 import uuid
 
 from fastapi_users.db import SQLAlchemyBaseUserTable
-from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
-                        String, Table)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
 
 from .database import Base
-from .schemas import ShareType
+from .schemas import ShareType, RootType
 
 # Many to Many
 # https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html#many-to-many
@@ -36,6 +44,48 @@ class User(Base, SQLAlchemyBaseUserTable):
     __tablename__ = "user"
     username = Column(String)
 
+    workspaces = relationship("Workspace", back_populates="owner")
+
+
+class StorageNode(BaseModel):
+    """
+    An S3 instance operated by some user
+    """
+
+    __tablename__ = "storage_node"
+    __table_args__ = (UniqueConstraint("name"), UniqueConstraint("api_url"))
+
+    name = Column(String, nullable=False)
+    # The API url that Workspaces Server can reference it as.
+    api_url = Column(String, nullable=False)
+    creator_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+
+    creator: User = relationship(User, back_populates="created_nodes")
+    roots = relationship("WorkspaceRoot", back_populates="storage_node")
+
+
+class WorkspaceRoot(BaseModel):
+    """
+    A bucket and optional prefix that defines a boundary of control
+    for this application.
+
+    :param root_type: str defines the naming convention and access pattern for workspaces in this root.
+        `public` allows read access by default, and workspaces are structured `{username}/{workspace_name}`
+        `private` allows only the creator, and has the same structure as `public`
+        `unmanaged` is intended for mapping local directories into minio, and
+    """
+
+    __tablename__ = "workspace_root"
+    __table_args__ = (UniqueConstraint("bucket", "base_path", "node_id"),)
+
+    node_id = Column(UUID(as_uuid=True), ForeignKey("storage_node.id"), nullable=False)
+    root_type = Column(Enum(RootType), nullable=False)
+    bucket = Column(String, nullable=False)
+    base_path = Column(String, default="", nullable=False)
+
+    storage_node: StorageNode = relationship(StorageNode, back_populates="roots")
+    workspaces = relationship("Workspace", back_populates="root")
+
 
 class Workspace(BaseModel):
     """
@@ -55,17 +105,20 @@ class Workspace(BaseModel):
     # workspace names are unique per user
     __table_args__ = (UniqueConstraint("name", "owner_id"),)
 
-    public = Column(Boolean, default=True, nullable=False)
-    bucket = Column(String, nullable=False)
     name = Column(String, nullable=False)
     owner_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+    root_id = Column(
+        UUID(as_uuid=True), ForeignKey("workspace_root.id"), nullable=False
+    )
 
-    owner = relationship(User, backref="workspaces")
+    root: WorkspaceRoot = relationship(WorkspaceRoot, back_populates="workspaces")
+    owner: User = relationship(User, back_populates="workspaces")
     tokens = relationship(
         "S3Token",
         secondary=workspace_s3token_association_table,
         back_populates="workspaces",
     )
+    shares = relationship("Share", back_populates="workspace")
 
 
 class Share(BaseModel):
@@ -81,14 +134,16 @@ class Share(BaseModel):
     workspace_id = Column(
         UUID(as_uuid=True), ForeignKey("workspace.id"), nullable=False
     )
-    creator_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=True)
-    sharee_id = Column(UUID(as_uuid=True), nullable=False)
+    creator_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+    sharee_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
     permission = Column(Enum(ShareType), nullable=False)
     expiration = Column(DateTime, nullable=True)
 
-    sharee = relationship(User, backref="shares")
-    creator = relationship(User, backref="shares_created")
-    workspace = relationship(Workspace, backref="shares")
+    sharee: User = relationship(User, foreign_keys=sharee_id, backref="shares")
+    creator: User = relationship(
+        User, foreign_keys=creator_id, backref="shares_created"
+    )
+    workspace: Workspace = relationship(Workspace, back_populates="shares")
 
 
 class S3Token(BaseModel):
@@ -124,3 +179,18 @@ class S3Token(BaseModel):
         back_populates="tokens",
         cascade=["all"],
     )
+
+
+class ElasticIndex(BaseModel):
+    """
+    An index in elasticsearch is for a root.
+    Roots don't exist yet, so they'll be denormalized onto
+    this record for now
+    """
+
+    __tablename__ = "elastic_index"
+    s3_api_url = Column(String, nullable=False)
+    s3_bucket = Column(String, nullable=False)
+    s3_root = Column(String, nullable=False)
+    public = Column(Boolean, nullable=False, default=True)
+    index_type = Column(String, nullable=False)

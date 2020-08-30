@@ -27,6 +27,12 @@ class ShareType(str, enum.Enum):
     OWN = "own"
 
 
+class RootType(str, enum.Enum):
+    PUBLIC = "public"
+    PRIVATE = "private"
+    UNMANAGED = "unmanaged"
+
+
 class UserBase(fastapi_users_models.BaseUser):
     username: str
 
@@ -46,21 +52,50 @@ class UserDB(UserBase, fastapi_users_models.BaseUserDB):
     pass
 
 
+class StorageNodeBase(BaseModel):
+    name: str
+    api_url: str
+
+
+class StorageNodeCreate(StorageNodeBase):
+    pass
+
+
+class StorageNodeDB(DBBaseModel, StorageNodeBase):
+    creator_id: uuid.UUID
+    creator: UserBase
+
+
+class WorkspaceRootBase(BaseModel):
+    root_type: RootType
+    bucket: str
+    base_path: str
+
+
+class WorkspaceRootCreate(WorkspaceRootBase):
+    node_name: str
+
+
+class WorkspaceRootDB(DBBaseModel, WorkspaceRootBase):
+    node_id: uuid.UUID
+
+
 class WorkspaceBase(BaseModel):
-    public: Optional[bool]
     name: str
 
 
 class WorkspaceCreate(WorkspaceBase):
-    pass
+    public: Optional[bool] = False
+    unmanaged: Optional[bool] = False
+    node_name: Optional[str]
 
 
 class WorkspaceDB(DBBaseModel, WorkspaceBase):
     id: uuid.UUID
-    public: bool
     bucket: str
     name: str
     owner_id: uuid.UUID
+    root_id: uuid.UUID
     owner: UserBase
 
 
@@ -97,9 +132,6 @@ class S3TokenSearchResponse(BaseModel):
     token: Optional[S3TokenDB]
     workspaces: Dict[str, S3TokenSearchResponseWorkspacePart]
 
-    class Config:
-        orm_mode = True
-
 
 class ShareBase(BaseModel):
     workspace_id: uuid.UUID
@@ -121,3 +153,24 @@ class ShareDB(DBBaseModel, ShareBase):
     workspace: WorkspaceDB
     creator: UserBase
     sharee: UserBase
+
+
+class IndexBase(BaseModel):
+    s3_api_url: str
+    s3_bucket: str
+    s3_root: str
+    index_type: str
+
+
+class IndexCreate(IndexBase):
+    pass
+
+
+class IndexDB(DBBaseModel, IndexBase):
+    s3_root: str
+
+
+class IndexCreateResponse(BaseModel):
+    commands: List[str]
+    index: IndexDB
+

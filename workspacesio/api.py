@@ -1,9 +1,10 @@
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import boto3
 from botocore import UNSIGNED
 from botocore.client import Config
+from elasticsearch import Elasticsearch
 from fastapi import Depends
 from fastapi.routing import APIRouter
 from fastapi_users import FastAPIUsers
@@ -11,10 +12,11 @@ from fastapi_users.authentication import JWTAuthentication
 from fastapi_users.db import SQLAlchemyUserDatabase
 
 from . import crud, database, dbutils, models, schemas, settings
+from .notifications.schemas import BucketEventNotification
 
 router = APIRouter()
 user_db = SQLAlchemyUserDatabase(
-    schemas.UserBase, database.database, models.User.__table__
+    schemas.UserDB, database.database, models.User.__table__
 )
 jwt_authentication = JWTAuthentication(
     secret=settings.SECRET, lifetime_seconds=3600, tokenUrl="/auth/jwt/login"
@@ -25,7 +27,7 @@ fastapi_users = FastAPIUsers(
     schemas.UserBase,
     schemas.UserCreate,
     schemas.UserUpdate,
-    schemas.UserBase,
+    schemas.UserDB,
 )
 
 
@@ -58,9 +60,47 @@ def get_boto_sts():
     )
 
 
-@router.get("/me", response_model=schemas.UserBase, tags=["user"])
-def get_me(user: schemas.UserBase = Depends(fastapi_users.get_current_user)):
-    return user
+def get_elastic_client():
+    client = Elasticsearch(settings.ES_NODES)
+    try:
+        yield client
+    finally:
+        client.close()
+
+
+@router.get("/node", response_model=List[schemas.StorageNodeDB], tags=["node"])
+def list_nodes(
+    _: schemas.UserBase = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.node_search(db)
+
+
+@router.post("/node", response_model=schemas.StorageNodeDB, tags=["node"])
+def create_node(
+    params: schemas.StorageNodeCreate,
+    creator: schemas.UserBase = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.node_create(db, creator, params)
+
+
+@router.get("/node/root", response_model=List[schemas.WorkspaceRootDB], tags=["node"])
+def list_node_roots(
+    node_name: Optional[str] = None,
+    _: schemas.UserBase = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.root_search(db, node_name=node_name)
+
+
+@router.post("/node/root", response_model=schemas.WorkspaceRootDB, tags=["node"])
+def create_node_root(
+    params: schemas.WorkspaceRootCreate,
+    creator: schemas.UserBase = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.root_create(db, creator, params)
 
 
 @router.get("/workspace", response_model=List[schemas.WorkspaceDB], tags=["workspace"])
@@ -72,6 +112,19 @@ def list_workspaces(
     db: database.SessionLocal = Depends(get_db),
 ):
     return crud.workspace_search(db, user, name=name, public=public, owner_id=owner_id)
+
+
+@router.get(
+    "/workspace/{workspace_id}",
+    response_model=Optional[schemas.WorkspaceDB],
+    tags=["workspace"],
+)
+def get_workspace(
+    workspace_id: str,
+    user: schemas.UserBase = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.workspace_get(db, user, workspace_id)
 
 
 @router.post(
@@ -87,6 +140,20 @@ def create_workspace(
     boto_s3: boto3.Session = Depends(get_boto_s3),
 ):
     return crud.workspace_create(db, boto_s3, workspace, user)
+
+
+@router.post(
+    "/workspace/share",
+    response_model=schemas.ShareDB,
+    tags=["workspace"],
+    status_code=201,
+)
+def create_workspace_share(
+    share: schemas.ShareCreate,
+    user: schemas.UserBase = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.share_create(db, user, share)
 
 
 @router.get("/token", response_model=List[schemas.S3TokenDB], tags=["token"])
@@ -138,10 +205,33 @@ def revoke_all_tokens(
     return crud.token_revoke_all(db, user)
 
 
-@router.post("/share", response_model=schemas.ShareDB, tags=["share"], status_code=201)
-def create_workspace_share(
-    share: schemas.ShareCreate,
+@router.post(
+    "/index",
+    tags=["index"],
+    status_code=201,
+    response_model=schemas.IndexCreateResponse,
+)
+def create_index(
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
+    boto_s3: boto3.Session = Depends(get_boto_s3),
+    es: Elasticsearch = Depends(get_elastic_client),
 ):
-    return crud.share_create(db, user, share)
+    return crud.index_create(db, boto_s3, es)
+
+
+@router.post(
+    "/minio/events", tags=["hooks"], status_code=200,
+)
+def create_event(
+    body: BucketEventNotification,
+    db: database.SessionLocal = Depends(get_db),
+    es: Elasticsearch = Depends(get_elastic_client),
+):
+    return crud.handle_bucket_event(db, es, body)
+
+
+@router.head("/minio/events", tags=["hooks"], status_code=200)
+def head_event():
+    """Minio issues HEAD on startup, I can't find documentation on how I should respond"""
+    pass
