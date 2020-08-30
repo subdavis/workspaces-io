@@ -8,3 +8,9 @@ class Query(orm.Query):
         if not inst:
             raise HTTPException(code=404)
         return inst
+
+    def first_or_404(self):
+        inst = self.first()
+        if not inst:
+            raise HTTPException(code=404)
+        return inst

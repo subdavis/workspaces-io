@@ -2,8 +2,8 @@ import datetime
 import hashlib
 import json
 import os
-import uuid
 import urllib.parse
+import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
 import boto3
@@ -85,12 +85,50 @@ def match_terms(
     return None, None
 
 
+def node_search(db: Session) -> List[models.StorageNode]:
+    return db.query(models.StorageNode).all()
+
+
+def node_create(
+    db: Session, creator: schemas.UserDB, params: schemas.StorageNodeCreate
+) -> models.StorageNode:
+    storage_node_db = models.StorageNode(**params.dict(), creator_id=creator.id)
+    db.add(storage_node_db)
+    db.commit()
+    return storage_node_db
+
+
+def root_search(db: Session, node_name: Optional[str]) -> List[models.WorkspaceRoot]:
+    q = db.query(models.WorkspaceRoot)
+    if node_name:
+        q = q.filter(models.WorkspaceRoot.storage_node.has(name=node_name))
+    return q.all()
+
+
+def root_create(
+    db: Session,
+    b3: boto3.Session,
+    creator: schemas.UserDB,
+    params: schemas.WorkspaceRootCreate,
+) -> models.WorkspaceRoot:
+    node: models.StorageNode = (
+        db.query(models.StorageNode)
+        .filter(models.StorageNode.name == params.node_name)
+        .first_or_404()
+    )
+    root_db = models.WorkspaceRoot(**params.dict(), node_id=node.id)
+    b3.create_bucket(ACL="private", Bucket=root_db.bucket)
+    db.add(root_db)
+    db.commit()
+    return root_db
+
+
 def workspace_search(
     db: Session,
     requester: schemas.UserBase,
     name: Optional[str] = None,
     owner_id: Union[str, uuid.UUID, None] = None,
-    public: bool = False,
+    public: Optional[bool] = False,
 ) -> List[models.Workspace]:
     """Show workspaces that are public,
     the requester owns, or has a share for, that meet the optional
@@ -105,7 +143,9 @@ def workspace_search(
         q = q.filter(models.Workspace.name == name)
         public = True
     if public:
-        main_filter = or_(main_filter, models.Workspace.public == True)
+        main_filter = or_(
+            main_filter, models.Workspace.root.has(root_type=schemas.RootType.PUBLIC)
+        )
     q = q.filter(main_filter)
     if owner_id is not None:
         q = q.filter(models.Workspace.owner_id == owner_id)
@@ -114,8 +154,12 @@ def workspace_search(
     return q.all()
 
 
-def workspace_get(db: Session, workspace_id: str) -> Optional[models.Workspace]:
-    return db.query(models.Workspace).get_or_404(workspace_id)
+def workspace_get(
+    db: Session, user: schemas.UserDB, workspace_id: str
+) -> Optional[models.Workspace]:
+    ws: models.Workspace = db.query(models.Workspace).get_or_404(workspace_id)
+    # TODO: check if user has permissions for workspace
+    return ws
 
 
 def workspace_create(
@@ -125,28 +169,25 @@ def workspace_create(
     owner: schemas.UserBase,
 ) -> models.Workspace:
     """Create a workspace for owner, including an empty parent in s3"""
-    db_owner = db.query(models.User).get_or_404(owner.id)
+    db_owner: models.User = db.query(models.User).get_or_404(owner.id)
+    # TODO: heuristic to decide which root to put a workspace in
+    root_type: schemas.RootType = (
+        schemas.RootType.PUBLIC if workspace.public else schemas.RootType.PRIVATE
+    )
+    db_root_q = db.query(models.WorkspaceRoot).filter(
+        models.WorkspaceRoot.root_type == root_type
+    )
+    if workspace.node_name:
+        db_root_q = db_root.filter(
+            models.WorkspaceRoot.storage_node.has(name=workspace.node_name)
+        )
+    db_root: models.WorkspaceRoot = db_root_q.first_or_404()
     db_workspace = models.Workspace(
-        **workspace.dict(),
-        owner_id=owner.id,
-        bucket=settings.DEFAULT_BUCKET,
-        owner=db_owner,
+        name=workspace.name, owner_id=owner.id, root_id=db_root.id
     )
     db.add(db_workspace)
     key = s3utils.getWorkspaceKey(db_workspace) + "/"
-
-    def makeWorkspace():
-        b3.put_object(ACL="private", Body=b"", Bucket=db_workspace.bucket, Key=key)
-
-    def makeBucket():
-        b3.create_bucket(ACL="private", Bucket=db_workspace.bucket)
-
-    try:
-        makeWorkspace()
-    except b3.exceptions.NoSuchBucket:
-        makeBucket()
-        makeWorkspace()
-
+    b3.put_object(ACL="private", Body=b"", Bucket=db_root.bucket, Key=key)
     db.commit()
     return db_workspace
 

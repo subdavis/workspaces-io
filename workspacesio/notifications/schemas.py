@@ -7,8 +7,8 @@ https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.h
 https://github.com/minio/minio-dotnet/issues/332
 """
 import datetime
-from typing import List, Optional
 import uuid
+from typing import List, Optional
 
 from pydantic import BaseModel
 

@@ -173,4 +173,3 @@ class IndexDB(DBBaseModel, IndexBase):
 class IndexCreateResponse(BaseModel):
     commands: List[str]
     index: IndexDB
-

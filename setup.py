@@ -28,10 +28,5 @@ setup(
     zip_safe=False,
     install_requires=deps,
     include_package_data=True,
-    entry_points={
-        "console_scripts": [
-            "fast-create-tables=workspacesio.dev_cli:main",
-            "wio=workspacesio.cli:cli",
-        ],
-    },
+    entry_points={"console_scripts": ["wio=workspacesio.cli:cli",],},
 )

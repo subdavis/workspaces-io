@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import boto3
 from botocore import UNSIGNED
@@ -99,8 +99,9 @@ def create_node_root(
     params: schemas.WorkspaceRootCreate,
     creator: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
+    boto_s3: boto3.Session = Depends(get_boto_s3),
 ):
-    return crud.root_create(db, creator, params)
+    return crud.root_create(db, boto_s3, creator, params)
 
 
 @router.get("/workspace", response_model=List[schemas.WorkspaceDB], tags=["workspace"])
@@ -115,9 +116,7 @@ def list_workspaces(
 
 
 @router.get(
-    "/workspace/{workspace_id}",
-    response_model=Optional[schemas.WorkspaceDB],
-    tags=["workspace"],
+    "/workspace/{workspace_id}", response_model=schemas.WorkspaceDB, tags=["workspace"],
 )
 def get_workspace(
     workspace_id: str,

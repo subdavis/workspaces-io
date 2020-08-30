@@ -17,4 +17,3 @@ SQLALCHEMY_DATABASE_URL = (
 )
 
 ES_NODES = [{"host": "localhost"}]
-

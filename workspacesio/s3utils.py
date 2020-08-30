@@ -15,7 +15,9 @@ def getWorkspaceKey(workspace: models.Workspace):
     """
     Determine object path for a given workspace
     """
-    root = "public" if workspace.public else "private"
+    root = (
+        "public" if workspace.root.root_type == schemas.RootType.PUBLIC else "private"
+    )
     return f"{root}/{workspace.owner.username}/{sanitize(workspace.name)}"
 
 

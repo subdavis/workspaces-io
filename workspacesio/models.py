@@ -3,23 +3,15 @@ import enum
 import uuid
 
 from fastapi_users.db import SQLAlchemyBaseUserTable
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    Enum,
-    ForeignKey,
-    Integer,
-    String,
-    Table,
-)
+from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
+                        String, Table)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
 
 from .database import Base
-from .schemas import ShareType, RootType
+from .schemas import RootType, ShareType
 
 # Many to Many
 # https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html#many-to-many
@@ -111,8 +103,8 @@ class Workspace(BaseModel):
         UUID(as_uuid=True), ForeignKey("workspace_root.id"), nullable=False
     )
 
-    root: WorkspaceRoot = relationship(WorkspaceRoot, back_populates="workspaces")
-    owner: User = relationship(User, back_populates="workspaces")
+    root = relationship(WorkspaceRoot, back_populates="workspaces")
+    owner = relationship(User, back_populates="workspaces")
     tokens = relationship(
         "S3Token",
         secondary=workspace_s3token_association_table,
