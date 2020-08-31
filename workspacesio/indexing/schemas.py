@@ -11,6 +11,27 @@ import uuid
 from typing import List, Optional
 
 from pydantic import BaseModel
+from workspacesio.schemas import DBBaseModel
+
+
+class IndexBase(BaseModel):
+    s3_api_url: str
+    s3_bucket: str
+    s3_root: str
+    index_type: str
+
+
+class IndexCreate(IndexBase):
+    pass
+
+
+class IndexDB(DBBaseModel, IndexBase):
+    s3_root: str
+
+
+class IndexCreateResponse(BaseModel):
+    commands: List[str]
+    index: IndexDB
 
 
 class EventUserIdentity(BaseModel):

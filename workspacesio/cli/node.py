@@ -16,7 +16,15 @@ def make(cli: click.Group):
     @click.pass_obj
     def ls(ctx):
         r = ctx["session"].get("node")
-        exit_with(handle_request_error(r))
+        if r.ok:
+            for node in r.json():
+                api_url = node["api_url"]
+                click.secho(f"[{node['created']}] ", fg="green", nl=False)
+                click.secho(f"{node['id']} ", fg="yellow", nl=False)
+                click.secho(f"{api_url} ", fg="bright_black", nl=False)
+                click.secho(f"{node['name']}", fg="cyan", bold=True)
+        else:
+            exit_with(handle_request_error(r))
 
     @node.command(name="create", aliases=["c"])
     @click.argument("name", type=click.STRING)

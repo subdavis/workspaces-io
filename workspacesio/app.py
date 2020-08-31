@@ -4,7 +4,17 @@ import typing
 from fastapi import Depends, FastAPI, Request
 from sqlalchemy.orm import Session
 
-from . import __version__, api, crud, database, models, schemas, settings
+from . import (
+    __version__,
+    api,
+    crud,
+    database,
+    models,
+    schemas,
+    settings,
+    depends,
+    indexing,
+)
 
 
 def init_fastapi_users(app: FastAPI):
@@ -30,7 +40,7 @@ def init_fastapi_users(app: FastAPI):
         await database.database.disconnect()
 
     app.include_router(
-        api.fastapi_users.get_auth_router(api.jwt_authentication),
+        api.fastapi_users.get_auth_router(depends.jwt_authentication),
         prefix="/api/auth/jwt",
         tags=["auth"],
     )
@@ -54,6 +64,7 @@ def init_fastapi_users(app: FastAPI):
 def create_app(env: typing.Dict[str, str]) -> FastAPI:
     app = FastAPI(title="WorkspacesIO", version=__version__,)
     app.include_router(api.router, prefix="/api")
+    app.include_router(indexing.api.router, prefix="/api")
     init_fastapi_users(app)
     crud.register_handlers(app)
     return app
