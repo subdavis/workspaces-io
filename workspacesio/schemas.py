@@ -159,4 +159,3 @@ class ShareDB(DBBaseModel, ShareBase):
     workspace: WorkspaceDB
     creator: UserBase
     sharee: UserBase
-

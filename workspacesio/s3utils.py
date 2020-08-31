@@ -1,9 +1,9 @@
 """
 Helper functions for working with S3 and STS
 """
-from typing import List, Optional, Tuple, Union, Set
 import posixpath
 import uuid
+from typing import List, Optional, Set, Tuple, Union
 
 from . import models, schemas, settings
 

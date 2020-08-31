@@ -6,11 +6,11 @@ import hashlib
 import boto3
 from botocore.client import Config
 from elasticsearch import Elasticsearch
-from fastapi_users.db import SQLAlchemyUserDatabase
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import JWTAuthentication
+from fastapi_users.db import SQLAlchemyUserDatabase
 
-from . import database, dbutils, settings, models, schemas
+from . import database, dbutils, models, schemas, settings
 
 user_db = SQLAlchemyUserDatabase(
     schemas.UserDB, database.database, models.User.__table__

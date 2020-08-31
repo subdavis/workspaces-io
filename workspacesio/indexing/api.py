@@ -7,10 +7,11 @@ from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import JWTAuthentication
 from fastapi_users.db import SQLAlchemyUserDatabase
 
-from workspacesio.depends import get_db, get_boto, get_elastic_client, fastapi_users
 from workspacesio import database, schemas
+from workspacesio.depends import fastapi_users, get_boto, get_db, get_elastic_client
 
-from . import crud, schemas as indexing_schemas
+from . import crud
+from . import schemas as indexing_schemas
 
 router = APIRouter()
 

@@ -2,15 +2,12 @@ import uuid
 from typing import List, Optional, Tuple, Union
 
 import boto3
-
 from elasticsearch import Elasticsearch
 from fastapi import Depends
 from fastapi.routing import APIRouter
 
-
 from . import crud, database, schemas, settings
-from .depends import get_boto, get_db, fastapi_users
-
+from .depends import fastapi_users, get_boto, get_db
 
 router = APIRouter()
 
@@ -154,4 +151,3 @@ def revoke_all_tokens(
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
 ):
     return crud.token_revoke_all(db, user)
-

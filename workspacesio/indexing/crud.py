@@ -2,16 +2,18 @@ import hashlib
 import json
 import urllib
 
-
 import boto3
 import elasticsearch
 from sqlalchemy import and_, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
+
 from workspacesio import models, schemas
 from workspacesio.depends import Boto3ClientCache
-from . import schemas as indexing_schemas, models as indexing_models
+
+from . import models as indexing_models
+from . import schemas as indexing_schemas
 
 
 def index_create(

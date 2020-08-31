@@ -9,11 +9,11 @@ from . import (
     api,
     crud,
     database,
+    depends,
+    indexing,
     models,
     schemas,
     settings,
-    depends,
-    indexing,
 )
 
 
