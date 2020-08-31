@@ -9,7 +9,7 @@ from fastapi.routing import APIRouter
 
 
 from . import crud, database, schemas
-from .depends import get_boto_s3, get_boto_sts, get_db, fastapi_users
+from .depends import get_boto, get_db, fastapi_users
 
 
 router = APIRouter()
@@ -46,7 +46,7 @@ def create_node_root(
     params: schemas.WorkspaceRootCreate,
     creator: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
-    boto_s3: boto3.Session = Depends(get_boto_s3),
+    boto_s3: boto3.Session = Depends(get_boto),
 ):
     return crud.root_create(db, boto_s3, creator, params)
 
@@ -83,7 +83,7 @@ def create_workspace(
     workspace: schemas.WorkspaceCreate,
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
-    boto_s3: boto3.Session = Depends(get_boto_s3),
+    boto_s3: boto3.Session = Depends(get_boto),
 ):
     return crud.workspace_create(db, boto_s3, workspace, user)
 
@@ -116,7 +116,7 @@ def list_tokens(
 def create_token(
     token: schemas.S3TokenCreate,
     db: database.SessionLocal = Depends(get_db),
-    boto_sts: boto3.Session = Depends(get_boto_sts),
+    boto_sts: boto3.Session = Depends(get_boto),
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
 ):
     return crud.token_create(db, boto_sts, user, token)
@@ -128,7 +128,7 @@ def create_token(
 def search_token(
     terms: schemas.S3TokenSearch,
     db: database.SessionLocal = Depends(get_db),
-    boto_sts: boto3.Session = Depends(get_boto_sts),
+    boto_sts: boto3.Session = Depends(get_boto),
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
 ):
     return crud.token_search(db, boto_sts, user, terms)

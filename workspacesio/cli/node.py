@@ -29,9 +29,21 @@ def make(cli: click.Group):
     @node.command(name="create", aliases=["c"])
     @click.argument("name", type=click.STRING)
     @click.argument("api_url", type=click.STRING)
+    @click.argument("access_key_id", type=click.STRING)
+    @click.argument("secret_access_key", type=click.STRING)
+    @click.option("--region-name", type=click.STRING, default="us-east-1")
     @click.pass_obj
-    def register(ctx, name, api_url):
-        r = ctx["session"].post("node", json={"name": name, "api_url": api_url,})
+    def register(ctx, name, api_url, access_key_id, secret_access_key, region_name):
+        r = ctx["session"].post(
+            "node",
+            json={
+                "name": name,
+                "api_url": api_url,
+                "access_key_id": access_key_id,
+                "secret_access_key": secret_access_key,
+                "region_name": region_name,
+            },
+        )
         exit_with(handle_request_error(r))
 
     @node.command(name="create-root", aliases=["croot"])

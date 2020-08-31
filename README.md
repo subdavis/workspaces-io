@@ -31,6 +31,15 @@ Problems with this approach
   + To _really_ implement quotas and share revokes, some kind of layer 7 middleware would be necessary in front of minio.  You'd literall have to implement an http proxy to inspect every request's token headers.  That sounds exhausting.
   + I'd do it with something like https://github.com/elazarl/goproxy
 
+## Server Config
+
+| ENV Name | Default | description |
+|----------|---------|-------------|
+| `WIO_SECRET` | `fast` | hashing secret for db passwords |
+| `WIO_PUBLIC_NAME` | `http://localhost:8000` | how clients connect to the server |
+| `WIO_DATABASE_URL` | `postgresql://postgres:example@localhost:5555/fast` | postgres connection string |
+| `WIO_ELASTICSEARCH_NODE_1` | `http://localhost:9200` | elasticsearch connection string |
+
 ## Usage
 
 Example of current capabilities

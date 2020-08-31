@@ -7,7 +7,7 @@ from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import JWTAuthentication
 from fastapi_users.db import SQLAlchemyUserDatabase
 
-from workspacesio.depends import get_db, get_boto_s3, get_elastic_client, fastapi_users
+from workspacesio.depends import get_db, get_boto, get_elastic_client, fastapi_users
 from workspacesio import database, schemas
 
 from . import crud, schemas as indexing_schemas
@@ -24,7 +24,7 @@ router = APIRouter()
 def create_index(
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
-    boto_s3: boto3.Session = Depends(get_boto_s3),
+    boto_s3: boto3.Session = Depends(get_boto),
     es: Elasticsearch = Depends(get_elastic_client),
 ):
     return crud.index_create(db, boto_s3, es)

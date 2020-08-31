@@ -10,24 +10,24 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 from workspacesio import models, schemas
-
-from . import schemas as indexing_schemas
+from workspacesio.depends import Boto3ClientCache
+from . import schemas as indexing_schemas, models as indexing_models
 
 
 def index_create(
-    db: Session, b3: boto3.Session, es: elasticsearch.Elasticsearch
-) -> indexing_schemas.IndexCreateResponse:
+    db: Session, b3: Boto3ClientCache, es: elasticsearch.Elasticsearch
+) -> indexing_schemas.IndexDB:
     """Setup notifications and indexing for a root
     * Provide a command for the operator to create the notification stream
     * Verify that the index exists in elasticsearch
     * Insert or update an index record
     """
 
-    public_index: Optional[models.ElasticIndex] = db.query(models.ElasticIndex).filter(
-        models.ElasticIndex.public == True
-    ).first()
+    public_index: Optional[indexing_models.ElasticIndex] = db.query(
+        indexing_models.ElasticIndex
+    ).filter(indexing_models.ElasticIndex.public == True).first()
     if public_index is None:
-        public_index = models.ElasticIndex(
+        public_index = indexing_models.ElasticIndex(
             public=True,
             s3_api_url="http://minio:9000",
             s3_bucket="fast",
@@ -42,13 +42,7 @@ def index_create(
         )
         db.commit()
         db.refresh()
-    # Right now, it's easiest to support webhooks
-    commands = [
-        # wehook ID should come from ROOT, not index.  You only want to subscribe to events once.
-        f"mc admin config set ALIAS notify_webhook:{str(public_index.id)} endpoint=http://varrock:8000/api/minio/events",
-        f"mc event add ALIAS/{public_index.s3_bucket} arn:minio:sqs::{str(public_index.id)}:webhook --prefix {public_index.s3_root} --event delete,put",
-    ]
-    return indexing_schemas.IndexCreateResponse(commands=commands, index=public_index)
+    return public_index
 
 
 def handle_bucket_event(
@@ -64,8 +58,10 @@ def handle_bucket_event(
         # for child buckets
         # For now, find the index
         object_key = urllib.parse.unquote(record.s3.object.key)
-        parent_index: models.ElasticIndex = db.query(models.ElasticIndex).filter(
-            func.strpos(models.ElasticIndex.s3_root, object_key) == 0
+        parent_index: indexing_models.ElasticIndex = db.query(
+            indexing_models.ElasticIndex
+        ).filter(
+            func.strpos(indexing_models.ElasticIndex.s3_root, object_key) == 0
         ).first()
         if parent_index is None:
             raise ValueError(f"no index for object {object_key}")

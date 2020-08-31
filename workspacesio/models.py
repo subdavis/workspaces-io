@@ -71,6 +71,9 @@ class StorageNode(BaseModel):
     # The API url that Workspaces Server can reference it as.
     api_url = Column(String, nullable=False)
     creator_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+    access_key_id = Column(String, nullable=False)
+    secret_access_key = Column(String, nullable=False)
+    region_name = Column(String, nullable=False, default="us-east-1")
 
     creator: User = relationship(User, back_populates="created_nodes")
     roots = relationship("WorkspaceRoot", back_populates="storage_node")
@@ -192,18 +195,3 @@ class S3Token(BaseModel):
         cascade=["all"],
         back_populates="tokens",
     )
-
-
-class ElasticIndex(BaseModel):
-    """
-    An index in elasticsearch is for a root.
-    Roots don't exist yet, so they'll be denormalized onto
-    this record for now
-    """
-
-    __tablename__ = "elastic_index"
-    s3_api_url = Column(String, nullable=False)
-    s3_bucket = Column(String, nullable=False)
-    s3_root = Column(String, nullable=False)
-    public = Column(Boolean, nullable=False, default=True)
-    index_type = Column(String, nullable=False)

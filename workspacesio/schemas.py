@@ -55,6 +55,9 @@ class UserDB(UserBase, fastapi_users_models.BaseUserDB):
 class StorageNodeBase(BaseModel):
     name: str
     api_url: str
+    access_key_id: str
+    secret_access_key: str
+    region_name: str
 
 
 class StorageNodeCreate(StorageNodeBase):

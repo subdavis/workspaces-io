@@ -1,5 +1,4 @@
 import datetime
-import hashlib
 import json
 import os
 import urllib.parse
@@ -16,6 +15,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from . import models, s3utils, schemas, settings
+from .depends import Boto3ClientCache
 
 
 def register_handlers(app: FastAPI):
@@ -212,7 +212,7 @@ def root_search(db: Session, node_name: Optional[str]) -> List[models.WorkspaceR
 
 def root_create(
     db: Session,
-    b3: boto3.Session,
+    b3: Boto3ClientCache,
     creator: schemas.UserDB,
     params: schemas.WorkspaceRootCreate,
 ) -> models.WorkspaceRoot:
@@ -231,7 +231,7 @@ def root_create(
     )
     db.add(root_db)
     db.flush()
-    b3.create_bucket(ACL="private", Bucket=root_db.bucket)
+    b3.get_client("s3", node).create_bucket(ACL="private", Bucket=root_db.bucket)
     db.commit()
     return root_db
 
@@ -277,7 +277,7 @@ def workspace_get(
 
 def workspace_create(
     db: Session,
-    b3: boto3.Session,
+    b3: Boto3ClientCache,
     workspace: schemas.WorkspaceCreate,
     owner: schemas.UserBase,
 ) -> models.Workspace:
@@ -305,7 +305,9 @@ def workspace_create(
     db.add(db_workspace)
     db.flush()
     key = s3utils.getWorkspaceKey(db_workspace) + "/"
-    b3.put_object(ACL="private", Body=b"", Bucket=db_root.bucket, Key=key)
+    b3.get_client("s3", db_root.storage_node).put_object(
+        ACL="private", Body=b"", Bucket=db_root.bucket, Key=key
+    )
     db.commit()
     return db_workspace
 
@@ -326,7 +328,7 @@ def token_list(db: Session, requester: schemas.UserBase) -> List[models.S3Token]
 
 def token_create(
     db: Session,
-    b3: boto3.Session,
+    b3: Boto3ClientCache,
     requester: schemas.UserBase,
     token: schemas.S3TokenCreate,
 ) -> List[models.S3Token]:
@@ -367,7 +369,9 @@ def token_create(
                 workspaces=foreign_workspaces,
                 roots=roots,
             )
-            new_token = b3.assume_role(
+            new_token = b3.get_client(
+                "sts", workspaces[0].root.storage_node
+            ).assume_role(
                 RoleArn="arn:xxx:xxx:xxx:xxxx",  # Not meaningful for Minio
                 RoleSessionName=str(requester.id),  # Not meaningful for Minio
                 Policy=json.dumps(policy),
@@ -409,7 +413,7 @@ def token_revoke_all(db: Session, user: schemas.UserBase) -> int:
 
 def token_search(
     db: Session,
-    b3: boto3.Session,
+    b3: Boto3ClientCache,
     requester: schemas.UserBase,
     search: schemas.S3TokenSearch,
 ) -> schemas.S3TokenSearchResponse:

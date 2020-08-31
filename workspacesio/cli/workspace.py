@@ -39,10 +39,17 @@ def make(cli: click.Group):
     @click.argument("name")
     @click.option("--public/--private", default=False, is_flag=True)
     @click.option("--unmanaged", default=False, is_flag=True)
+    @click.option("--node-name", type=click.STRING, default=None)
     @click.pass_obj
-    def create_workspace(ctx, name, public, unmanaged):
+    def create_workspace(ctx, name, public, unmanaged, node_name):
         r = ctx["session"].post(
-            "workspace", json={"name": name, "public": public, "unmanaged": unmanaged,}
+            "workspace",
+            json={
+                "name": name,
+                "public": public,
+                "unmanaged": unmanaged,
+                "node_name": node_name,
+            },
         )
         exit_with(handle_request_error(r))
 

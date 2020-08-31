@@ -1,6 +1,8 @@
 """
 FastAPI endpoint dependencies
 """
+import hashlib
+
 import boto3
 from botocore.client import Config
 from elasticsearch import Elasticsearch
@@ -26,6 +28,42 @@ fastapi_users = FastAPIUsers(
 )
 
 
+class Boto3ClientCache:
+    """
+    There may be many s3 nodes in the cluser.  Once a client has been established,
+    cache it for future use.  This class works for sts and s3 type clients.
+    """
+
+    def __init__(self):
+        self.cache: Dict[str, boto3.Session] = {}
+
+    def get_client(self, client_type: str, node: models.StorageNode) -> boto3.Session:
+        primary_key = (
+            (
+                f"{client_type}{node.region_name}{node.endpoint_url}"
+                f"{node.access_key_id}{node.secret_access_key}"
+            )
+            .lower()
+            .encode("utf-8")
+        )
+        primary_key_short_sha256 = hashlib.sha256(primary_key).hexdigest()
+        client = self.cache.get(primary_key_short_sha256, None)
+        if client is None:
+            config = Config()
+            if client_type == "s3":
+                config = Config(signature_version="s3v4")
+            client = boto3.client(
+                client_type,
+                region_name=node.region_name,
+                endpoint_url=node.endpoint_url,
+                aws_access_key_id=node.access_key_id,
+                aws_secret_access_key=node.secret_access_key,
+                config=config,
+            )
+            self.cache[primary_key_short_sha256] = client
+        return client
+
+
 def get_db():
     db = database.SessionLocal(query_cls=dbutils.Query)
     try:
@@ -34,25 +72,8 @@ def get_db():
         db.close()
 
 
-def get_boto_s3():
-    yield boto3.client(
-        "s3",
-        region_name=settings.AWS_REGION_NAME,
-        endpoint_url=settings.AWS_ENDPOINT_URL,
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        config=Config(signature_version="s3v4"),
-    )
-
-
-def get_boto_sts():
-    yield boto3.client(
-        "sts",
-        region_name=settings.AWS_REGION_NAME,
-        endpoint_url=settings.AWS_ENDPOINT_URL,
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-    )
+def get_boto():
+    yield Boto3ClientCache()
 
 
 def get_elastic_client():
