@@ -33,6 +33,10 @@ class RootType(str, enum.Enum):
     UNMANAGED = "unmanaged"
 
 
+class ServerInfo(BaseModel):
+    public_address: str
+
+
 class UserBase(fastapi_users_models.BaseUser):
     username: str
 

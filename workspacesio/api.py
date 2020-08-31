@@ -8,11 +8,16 @@ from fastapi import Depends
 from fastapi.routing import APIRouter
 
 
-from . import crud, database, schemas
+from . import crud, database, schemas, settings
 from .depends import get_boto, get_db, fastapi_users
 
 
 router = APIRouter()
+
+
+@router.get("/info", response_model=schemas.ServerInfo, tags=["info"])
+def get_info():
+    return schemas.ServerInfo(public_address=settings.PUBLIC_NAME)
 
 
 @router.get("/node", response_model=List[schemas.StorageNodeDB], tags=["node"])
