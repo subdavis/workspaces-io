@@ -1,4 +1,4 @@
-# WorkspacesIO
+![workspaces logl](docs/images/logo.png)
 
 **DISCLAIMER: The following document represents a vision, not a reflection of current capabilities.  We don't have our dancing shoes on yet.**
 
