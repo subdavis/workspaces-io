@@ -15,6 +15,24 @@ from pydantic import BaseModel
 from workspacesio.schemas import DBBaseModel, WorkspaceRootDB
 
 
+class IndexDocumentBase(BaseModel):
+    time: datetime.datetime
+    size: Optional[int]
+    eTag: str
+    path: str
+
+
+class IndexDocument(IndexDocumentBase):
+    workspace_id: uuid.UUID
+    workspace_name: str
+    owner_id: uuid.UUID
+    owner_name: str
+    bucket: str
+    server: str
+    root: str
+    user_shares: List[uuid.UUID]
+
+
 class IndexBase(BaseModel):
     index_type: str
     root_id: uuid.UUID
@@ -29,8 +47,23 @@ class IndexDB(DBBaseModel, IndexBase):
 
 
 class IndexCreateResponse(BaseModel):
+    """Commands to register hooks with s3/minio"""
+
     commands: List[str]
     index: IndexDB
+
+
+class IndexBulkAdd(BaseModel):
+    """Bulk add records from a workspace into the index"""
+
+    documents: List[IndexDocumentBase]
+    root_id: uuid.UUID
+    workspace_id: uuid.UUID
+
+
+class IndexBulkAddedResponse(BaseModel):
+    index: IndexDB
+    count: int
 
 
 class EventUserIdentity(BaseModel):
@@ -76,22 +109,7 @@ class BucketEventNotification(BaseModel):
     Key: Optional[str]
 
 
-class IndexDocument(BaseModel):
-    time: datetime.datetime
-    size: Optional[int]
-    eTag: str
-    workspace_id: uuid.UUID
-    workspace_name: str
-    owner_id: uuid.UUID
-    owner_name: str
-    bucket: str
-    server: str
-    root: str
-    path: str
-    user_shares: List[uuid.UUID]
-
-
-class UpsertIndexDocument(BaseModel):
+class ElasticUpsertIndexDocument(BaseModel):
     doc: IndexDocument
     doc_as_upsert = True
 

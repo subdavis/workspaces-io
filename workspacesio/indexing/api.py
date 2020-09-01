@@ -46,3 +46,18 @@ def create_event(
 def head_event():
     """Minio issues HEAD on startup, I can't find documentation on how I should respond"""
     pass
+
+
+@router.post(
+    "/index/bulk",
+    tags=["index"],
+    status_code=201,
+    response_model=indexing_schemas.IndexBulkAddedResponse,
+)
+def bulk_add(
+    body: indexing_schemas.IndexBulkAdd,
+    db: database.SessionLocal = Depends(get_db),
+    es: Elasticsearch = Depends(get_elastic_client),
+):
+    # TODO
+    pass

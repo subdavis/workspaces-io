@@ -11,7 +11,7 @@ from requests_toolbelt.sessions import BaseUrlSession
 
 from . import auth
 from . import config as conf
-from . import index, mc, node, s3token, workspace
+from . import index, mc, node, s3token, workspace, root
 
 
 class WioSession(BaseUrlSession):
@@ -66,3 +66,4 @@ s3token.make(cli)
 mc.make(cli)
 index.make(cli)
 node.make(cli)
+root.make(cli)

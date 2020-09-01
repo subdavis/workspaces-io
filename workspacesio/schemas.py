@@ -59,18 +59,22 @@ class UserDB(UserBase, fastapi_users_models.BaseUserDB):
 class StorageNodeBase(BaseModel):
     name: str
     api_url: str
-    access_key_id: str
-    secret_access_key: str
     region_name: str
 
 
 class StorageNodeCreate(StorageNodeBase):
-    pass
+    access_key_id: str
+    secret_access_key: str
 
 
 class StorageNodeDB(DBBaseModel, StorageNodeBase):
     creator_id: uuid.UUID
     creator: UserBase
+
+
+class StorageNodeOperator(StorageNodeDB):
+    access_key_id: str
+    secret_access_key: str
 
 
 class WorkspaceRootBase(BaseModel):
@@ -85,6 +89,11 @@ class WorkspaceRootCreate(WorkspaceRootBase):
 
 class WorkspaceRootDB(DBBaseModel, WorkspaceRootBase):
     node_id: uuid.UUID
+
+
+class RootImport(BaseModel):
+    root: WorkspaceRootDB
+    node: StorageNodeOperator
 
 
 class WorkspaceBase(BaseModel):

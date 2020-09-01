@@ -127,7 +127,7 @@ def handle_bucket_event(
                 + "\n"
             )
             bulk_operations += (
-                indexing_schemas.UpsertIndexDocument(doc=doc).json() + "\n"
+                indexing_schemas.ElasticUpsertIndexDocument(doc=doc).json() + "\n"
             )
 
         elif record.eventName in ["s3:ObjectRemoved:Delete"]:

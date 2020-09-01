@@ -4,8 +4,10 @@ import os
 import urllib.parse
 import uuid
 from typing import Dict, List, Optional, Tuple, Union
+import logging
 
 import boto3
+from botocore.exceptions import ClientError
 import elasticsearch
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -16,6 +18,8 @@ from sqlalchemy.sql import text
 
 from . import models, s3utils, schemas, settings
 from .depends import Boto3ClientCache
+
+logger = logging.getLogger("api")
 
 
 def register_handlers(app: FastAPI):
@@ -231,9 +235,21 @@ def root_create(
     )
     db.add(root_db)
     db.flush()
-    b3.get_client("s3", node).create_bucket(ACL="private", Bucket=root_db.bucket)
+    try:
+        b3.get_client("s3", node).create_bucket(ACL="private", Bucket=root_db.bucket)
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code")
+        logger.warn(error_code)
     db.commit()
     return root_db
+
+
+def root_start_import(db: Session, creator: schemas.UserDB, root_id: str):
+    root: models.WorkspaceRoot = db.query(models.WorkspaceRoot).get_or_404(root_id)
+    node: models.StorageNode = root.storage_node
+    if creator.id != node.creator.id:
+        raise PermissionError("Only node owners can run indexing on their own nodes!")
+    return schemas.RootImport(root=root, node=node)
 
 
 def workspace_search(
@@ -305,9 +321,12 @@ def workspace_create(
     db.add(db_workspace)
     db.flush()
     key = s3utils.getWorkspaceKey(db_workspace) + "/"
-    b3.get_client("s3", db_root.storage_node).put_object(
-        ACL="private", Body=b"", Bucket=db_root.bucket, Key=key
-    )
+    b3client = b3.get_client("s3", db_root.storage_node)
+    try:
+        b3client.put_object(ACL="private", Body=b"", Bucket=db_root.bucket, Key=key)
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code")
+        logging.warning(error_code)
     db.commit()
     return db_workspace
 

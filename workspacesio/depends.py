@@ -2,6 +2,7 @@
 FastAPI endpoint dependencies
 """
 import hashlib
+from typing import Union
 
 import boto3
 from botocore.client import Config
@@ -37,10 +38,12 @@ class Boto3ClientCache:
     def __init__(self):
         self.cache: Dict[str, boto3.Session] = {}
 
-    def get_client(self, client_type: str, node: models.StorageNode) -> boto3.Session:
+    def get_client(
+        self, client_type: str, node: Union[models.StorageNode, schemas.StorageNodeDB]
+    ) -> boto3.Session:
         primary_key = (
             (
-                f"{client_type}{node.region_name}{node.endpoint_url}"
+                f"{client_type}{node.region_name}{node.api_url}"
                 f"{node.access_key_id}{node.secret_access_key}"
             )
             .lower()
@@ -55,7 +58,7 @@ class Boto3ClientCache:
             client = boto3.client(
                 client_type,
                 region_name=node.region_name,
-                endpoint_url=node.endpoint_url,
+                endpoint_url=node.api_url,
                 aws_access_key_id=node.access_key_id,
                 aws_secret_access_key=node.secret_access_key,
                 config=config,

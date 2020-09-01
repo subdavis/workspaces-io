@@ -12,6 +12,17 @@ services:
       MINIO_SECRET_KEY: minio1234
     command: server /data
 
+  secondary_minio:
+    image: minio/minio
+    volumes:
+      - /media/brandon:/data
+    ports:
+      - "9100:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio1234
+    command: server /data
+
   db:
     image: postgres
     restart: always
