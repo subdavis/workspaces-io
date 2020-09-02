@@ -53,6 +53,15 @@ def create_node_root(
     return crud.root_create(db, boto_s3, creator, params)
 
 
+@router.delete("/node/root/{root_id}", tags=["node"])
+def delete_node_root(
+    root_id: str,
+    creator: schemas.UserBase = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.root_delete(db, creator, root_id)
+
+
 @router.post("/node/root/import", response_model=schemas.RootImport, tags=["node"])
 def start_root_import(
     params: schemas.RootImportCreate,

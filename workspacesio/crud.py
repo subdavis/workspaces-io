@@ -231,11 +231,21 @@ def root_create(
     return root_db
 
 
+def root_delete(db: Session, user: schemas.UserDB, root_id: str):
+    root_db: models.WorkspaceRoot = db.query(models.WorkspaceRoot).get_or_404(root_id)
+    if root_db.storage_node.creator_id != user.id:
+        raise PermissionError("Only the node creator can delte roots")
+    # TODO: delete all workspaces in the root
+    db.delete(root_db)
+    db.commit()
+    return True
+
+
 def root_start_import(db: Session, creator: schemas.UserDB, root_id: uuid.UUID):
     root: models.WorkspaceRoot = db.query(models.WorkspaceRoot).get_or_404(root_id)
     node: models.StorageNode = root.storage_node
     if creator.id != node.creator.id:
-        raise PermissionError("Only node owners can run indexing on their own nodes!")
+        raise PermissionError("Only node owners can run indexing on their own nodes")
     return schemas.RootImport(root=root, node=node)
 
 

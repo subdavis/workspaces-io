@@ -15,7 +15,8 @@ def minio_list_root_children(
     root: schemas.WorkspaceRootDB, node: schemas.StorageNodeOperator
 ) -> dict:
     b3client = clientCache.get_minio_sdk_client(node)
-    return b3client.list_objects_v2(root.bucket, prefix=root.base_path)
+    print(root.bucket, root.base_path)
+    return b3client.list_objects_v2(root.bucket, prefix=(root.base_path or ""))
 
 
 def minio_recursive_generate_objects(

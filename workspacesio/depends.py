@@ -89,7 +89,7 @@ class Boto3ClientCache:
         url = urllib.parse.urlparse(node.api_url)
         if client is None:
             client = minio.Minio(
-                posixpath.join(url.netloc, url.path),
+                url.netloc,
                 access_key=node.access_key_id,
                 secret_key=node.secret_access_key,
                 secure=False,

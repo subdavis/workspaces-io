@@ -3,6 +3,7 @@ from psycopg2 import sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from . import database, models, settings
+from .indexing import models as indexing_models
 
 
 def main():

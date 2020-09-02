@@ -41,6 +41,13 @@ def make(cli: click.Group):
         )
         exit_with(handle_request_error(r))
 
+    @root.command(name="delete", aliases=["d"])
+    @click.argument("root_id", type=click.STRING)
+    @click.pass_obj
+    def delete_root(ctx, root_id):
+        r = ctx["session"].delete(f"node/root/{root_id}")
+        exit_with(handle_request_error(r))
+
     @root.command(name="import", help="Import all workspaces in a root.")
     @click.argument("root_id")
     @click.option("--index-all", is_flag=True)

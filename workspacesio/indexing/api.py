@@ -11,6 +11,7 @@ from workspacesio import database, schemas
 from workspacesio.depends import fastapi_users, get_boto, get_db, get_elastic_client
 
 from . import crud
+from . import models as indexing_models
 from . import schemas as indexing_schemas
 
 router = APIRouter()
