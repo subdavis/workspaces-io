@@ -13,6 +13,7 @@ deps = [
     "fastapi-users",
     "gunicorn",
     "jinja2",
+    "minio",
     "psycopg2-binary",
     "pydantic",
     "requests",

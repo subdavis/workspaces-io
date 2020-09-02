@@ -2,9 +2,12 @@
 FastAPI endpoint dependencies
 """
 import hashlib
+import posixpath
+import urllib.parse
 from typing import Union
 
 import boto3
+import minio
 from botocore.client import Config
 from elasticsearch import Elasticsearch
 from fastapi_users import FastAPIUsers
@@ -38,9 +41,12 @@ class Boto3ClientCache:
     def __init__(self):
         self.cache: Dict[str, boto3.Session] = {}
 
-    def get_client(
-        self, client_type: str, node: Union[models.StorageNode, schemas.StorageNodeDB]
-    ) -> boto3.Session:
+    @staticmethod
+    def _get_primary_key(
+        client_type: str, node: Union[models.StorageNode, schemas.StorageNodeOperator]
+    ) -> str:
+        if not client_type in ["s3", "sts"]:
+            raise ValueError(f"{client_type} unsupported by cache")
         primary_key = (
             (
                 f"{client_type}{node.region_name}{node.api_url}"
@@ -49,7 +55,14 @@ class Boto3ClientCache:
             .lower()
             .encode("utf-8")
         )
-        primary_key_short_sha256 = hashlib.sha256(primary_key).hexdigest()
+        return hashlib.sha256(primary_key).hexdigest()
+
+    def get_client(
+        self,
+        client_type: str,
+        node: Union[models.StorageNode, schemas.StorageNodeOperator],
+    ) -> boto3.Session:
+        primary_key_short_sha256 = Boto3ClientCache._get_primary_key(client_type, node)
         client = self.cache.get(primary_key_short_sha256, None)
         if client is None:
             config = Config()
@@ -62,6 +75,24 @@ class Boto3ClientCache:
                 aws_access_key_id=node.access_key_id,
                 aws_secret_access_key=node.secret_access_key,
                 config=config,
+            )
+            self.cache[primary_key_short_sha256] = client
+        return client
+
+    def get_minio_sdk_client(
+        self, node: Union[models.StorageNode, schemas.StorageNodeOperator]
+    ) -> minio.Minio:
+        primary_key_short_sha256 = (
+            Boto3ClientCache._get_primary_key("s3", node) + "minio"
+        )
+        client = self.cache.get(primary_key_short_sha256, None)
+        url = urllib.parse.urlparse(node.api_url)
+        if client is None:
+            client = minio.Minio(
+                posixpath.join(url.netloc, url.path),
+                access_key=node.access_key_id,
+                secret_key=node.secret_access_key,
+                secure=False,
             )
             self.cache[primary_key_short_sha256] = client
         return client

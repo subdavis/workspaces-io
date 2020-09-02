@@ -1,14 +1,14 @@
 import datetime
 import json
+import logging
 import os
 import urllib.parse
 import uuid
 from typing import Dict, List, Optional, Tuple, Union
-import logging
 
 import boto3
-from botocore.exceptions import ClientError
 import elasticsearch
+from botocore.exceptions import ClientError
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import and_, any_, func, or_
@@ -100,6 +100,7 @@ def segment_workspaces(
         foreign_workspaces,
         # https://stackoverflow.com/questions/10024646/how-to-get-list-of-objects-with-unique-attribute
         [
+            # type: ignore
             seen_roots.add(w.root_id) or w.root
             for w in requester_workspaces
             if w.root_id not in seen_roots
@@ -115,20 +116,6 @@ def get_token_for_workspace_constellation(
 ) -> Optional[models.S3Token]:
     """
     Workspace constellation must all be from the same server
-    """
-    raw_query = """
-    SELECT token.id as token_id
-    FROM minio_token mt
-    LEFT JOIN workspace_s3token_association_table wsa
-        ON wsa.s3token_id = mt.id
-    JOIN workspace w
-        ON w.id = wsa.workspace_id
-        AND w.owner_id = ANY(:foreign_ids)
-    LEFT JOIN root_s3token_association_table rsa
-        ON rsa.s3token_id = mt.id
-    JOIN workspace_root wr
-        ON wr.id = rsa.root_id
-    ...
     """
     query = db.query(models.S3Token)
     filters = []
@@ -244,7 +231,7 @@ def root_create(
     return root_db
 
 
-def root_start_import(db: Session, creator: schemas.UserDB, root_id: str):
+def root_start_import(db: Session, creator: schemas.UserDB, root_id: uuid.UUID):
     root: models.WorkspaceRoot = db.query(models.WorkspaceRoot).get_or_404(root_id)
     node: models.StorageNode = root.storage_node
     if creator.id != node.creator.id:
@@ -299,35 +286,61 @@ def workspace_create(
 ) -> models.Workspace:
     """Create a workspace for owner, including an empty root object in s3"""
     db_owner: models.User = db.query(models.User).get_or_404(owner.id)
-    # TODO: heuristic to decide which root to put a workspace in
-    root_type: schemas.RootType = (
-        schemas.RootType.PUBLIC if workspace.public else schemas.RootType.PRIVATE
-    )
-    # find roots that are compatible with the workspace's management style
-    db_root_q = db.query(models.WorkspaceRoot).filter(
-        models.WorkspaceRoot.root_type == root_type
-    )
-    # if the user has asked to be placed in a particular node
-    if workspace.node_name:
-        db_root_q = db_root_q.filter(
-            models.WorkspaceRoot.storage_node.has(name=workspace.node_name)
+    db_root: models.WorkspaceRoot
+
+    if workspace.base_path:
+        if not workspace.root_id:
+            raise ValueError("Must specify root_id for unmanaged creation request")
+        # if the user has specified a base_path, they are requesting to be
+        # allocated to an unmanaged root.
+        db_root = db.query(models.WorkspaceRoot).get_or_404(workspace.root_id)
+        if db_root.root_type != schemas.RootType.UNMANAGED:
+            raise PermissionError(
+                "Chosen root is not unmanaged.  Cannot place workspace here."
+            )
+    else:
+        # TODO: heuristic to decide which root to put a workspace in
+        root_type: schemas.RootType = (
+            schemas.RootType.PUBLIC if workspace.public else schemas.RootType.PRIVATE
         )
-    db_root: models.WorkspaceRoot = db_root_q.first()
+        # find roots that are compatible with the workspace's management style
+        db_root_q = db.query(models.WorkspaceRoot).filter(
+            models.WorkspaceRoot.root_type == root_type
+        )
+        # if the user has asked to be placed in a particular node
+        if workspace.node_name:
+            db_root_q = db_root_q.filter(
+                models.WorkspaceRoot.storage_node.has(name=workspace.node_name)
+            )
+        # if the user has explicitly supplied the root id
+        elif workspace.root_id:
+            db_root_q = db_root_q.filter(models.WorkspaceRoot.id == workspace.root_id)
+        db_root = db_root_q.first()
+
     if db_root is None:
         raise ValueError(f"No available roots found.  Contact your administrator")
+    if (
+        db_root.root_type == schemas.RootType.UNMANAGED
+        and db_root.storage_node.creator_id != owner.id
+    ):
+        raise PermissionError(f"Only the node operator can create unmanaged workspaces")
     db_workspace = models.Workspace(
         name=workspace.name, owner_id=owner.id, root_id=db_root.id
     )
     db.add(db_workspace)
     db.flush()
-    key = s3utils.getWorkspaceKey(db_workspace) + "/"
-    b3client = b3.get_client("s3", db_root.storage_node)
+    if db_root.root_type != schemas.RootType.UNMANAGED:
+        key = s3utils.getWorkspaceKey(db_workspace) + "/"
+        b3client = b3.get_client("s3", db_root.storage_node)
+        try:
+            b3client.put_object(ACL="private", Body=b"", Bucket=db_root.bucket, Key=key)
+        except ClientError as e:
+            error_code = e.response.get("Error", {}).get("Code")
+            logging.warning(error_code)
     try:
-        b3client.put_object(ACL="private", Body=b"", Bucket=db_root.bucket, Key=key)
-    except ClientError as e:
-        error_code = e.response.get("Error", {}).get("Code")
-        logging.warning(error_code)
-    db.commit()
+        db.commit()
+    except IntegrityError as e:
+        return db_workspace
     return db_workspace
 
 

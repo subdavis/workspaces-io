@@ -32,3 +32,5 @@ wio login other@domain.com --password pass
 wio w c primary --public
 wio w c secondary
 
+wio login main@domain.com --password pass
+

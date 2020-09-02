@@ -123,6 +123,8 @@ class Workspace(BaseModel):
     root_id = Column(
         UUID(as_uuid=True), ForeignKey("workspace_root.id"), nullable=False
     )
+    # base_path set only if they live in an unmanaged root.
+    base_path = Column(String, default=None, nullable=True)
 
     root = relationship(WorkspaceRoot, back_populates="workspaces")
     owner = relationship(User, back_populates="workspaces")

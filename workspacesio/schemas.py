@@ -91,6 +91,10 @@ class WorkspaceRootDB(DBBaseModel, WorkspaceRootBase):
     node_id: uuid.UUID
 
 
+class RootImportCreate(BaseModel):
+    root_id: uuid.UUID
+
+
 class RootImport(BaseModel):
     root: WorkspaceRootDB
     node: StorageNodeOperator
@@ -98,12 +102,14 @@ class RootImport(BaseModel):
 
 class WorkspaceBase(BaseModel):
     name: str
+    base_path: Optional[str]
 
 
 class WorkspaceCreate(WorkspaceBase):
     public: Optional[bool] = False
     unmanaged: Optional[bool] = False
     node_name: Optional[str]
+    root_id: Optional[uuid.UUID]
 
 
 class WorkspaceDB(DBBaseModel, WorkspaceBase):

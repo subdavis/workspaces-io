@@ -1,6 +1,7 @@
 import hashlib
 import json
 import urllib
+from typing import Optional
 
 import boto3
 import elasticsearch

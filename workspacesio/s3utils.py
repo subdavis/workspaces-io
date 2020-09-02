@@ -15,11 +15,12 @@ def sanitize(name: str):
 
 def getWorkspaceKey(workspace: models.Workspace):
     """
-    Determine object path for a given workspace
+    Determine full object prefix for a given workspace
     """
-    return posixpath.join(
-        workspace.root.base_path, workspace.owner.username, sanitize(workspace.name)
-    ).strip("/")
+    inner_path = workspace.base_path or posixpath.join(
+        workspace.owner.username, sanitize(workspace.name)
+    )
+    return posixpath.join(workspace.root.base_path, inner_path,).strip("/")
 
 
 def makeRoleSessionName(user: schemas.UserBase, workspace: Optional[models.Workspace]):
@@ -100,7 +101,10 @@ def makePolicy(
                         ],
                     }
                 )
-        elif w.root.root_type == schemas.RootType.PRIVATE:
+        elif w.root.root_type in [schemas.RootType.PRIVATE, schemas.RootType.UNMANAGED]:
+            inner_path = user.username
+            if w.root.root_type == schemas.RootType.UNMANAGED:
+                inner_path = w.base_path
             # this is a public workspace, grant read on public root
             statements += [
                 {
@@ -109,9 +113,7 @@ def makePolicy(
                     "Resource": [resourceBase],
                     "Condition": {
                         "StringLike": {
-                            "s3:prefix": posixpath.join(
-                                w.root.base_path, user.username
-                            ),
+                            "s3:prefix": posixpath.join(w.root.base_path, inner_path),
                             "s3:delimiter": "/",
                         }
                     },
@@ -123,7 +125,7 @@ def makePolicy(
                     "Condition": {
                         "StringLike": {
                             "s3:prefix": posixpath.join(
-                                w.root.base_path, user.username, "*"
+                                w.root.base_path, inner_path, "*"
                             ),
                         }
                     },
@@ -132,9 +134,7 @@ def makePolicy(
                     "Effect": "Allow",
                     "Action": ["s3:*"],
                     "Resource": [
-                        posixpath.join(
-                            resourceBase, w.root.base_path, user.username, "*"
-                        ),
+                        posixpath.join(resourceBase, w.root.base_path, inner_path, "*"),
                     ],
                 },
             ]
