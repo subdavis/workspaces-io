@@ -1,7 +1,9 @@
 import click
 from click_aliases import ClickAliasedGroup
+from tqdm import tqdm
 
 from workspacesio import schemas
+from workspacesio.indexing.producers import minio_recursive_generate_objects
 
 from .util import exit_with, handle_request_error
 
@@ -26,12 +28,13 @@ def make(cli: click.Group):
                 scope = ws["root"]["root_type"]
                 click.secho(f"[{ws['created']}] ", fg="green", nl=False)
                 click.secho(f"{ws['id']} ", fg="yellow", nl=False)
-                click.secho(f"({scope}) ", fg="bright_black", nl=False)
                 click.secho(
-                    f"{root}/{ws['owner']['username']}/{ws['name']}/",
+                    f"{root}/{ws['owner']['username']}/{ws['name']}/ ",
                     fg="cyan",
                     bold=True,
+                    nl=False,
                 )
+                click.secho(f"({scope})", fg="bright_black")
         else:
             exit_with(handle_request_error(r))
 
@@ -51,6 +54,13 @@ def make(cli: click.Group):
                 "node_name": node_name,
             },
         )
+        exit_with(handle_request_error(r))
+
+    @workspace.command(name="delete")
+    @click.argument("workspace_id", type=click.STRING)
+    @click.pass_obj
+    def delete_workspace(ctx, workspace_id):
+        r = ctx["session"].delete(f"workspace/{workspace_id}")
         exit_with(handle_request_error(r))
 
     @workspace.command(name="share", aliases=["s"])
@@ -75,3 +85,24 @@ def make(cli: click.Group):
         exit_with(handle_request_error(r))
 
     cli.add_command(workspace)
+
+    @workspace.command(name="index")
+    @click.argument("workspace_id", type=click.STRING)
+    @click.pass_obj
+    def index_workspace(ctx, workspace_id):
+        r = ctx["session"].get(f"workspace/{workspace_id}")
+        if not r.ok:
+            exit_with(handle_request_error(r))
+        workspace = schemas.WorkspaceDB(**r.json())
+        r = ctx["session"].post(
+            "node/root/import", json={"root_id": str(workspace.root_id)}
+        )
+        if not r.ok:
+            exit_with(handle_request_error(r))
+        rdata = schemas.RootImport(**r.json())
+        pbar = tqdm([workspace])
+        for w in pbar:
+            for obj in minio_recursive_generate_objects(
+                node=rdata.node, root=rdata.root, workspace=w
+            ):
+                pbar.set_description(f"{obj.bucket_name}:::{obj.object_name}")

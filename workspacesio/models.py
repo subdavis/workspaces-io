@@ -184,6 +184,9 @@ class S3Token(BaseModel):
     )
     policy = Column(JSONB, nullable=False)
     owner_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+    storage_node_id = Column(
+        UUID(as_uuid=True), ForeignKey("storage_node.id"), nullable=False
+    )
 
     owner = relationship(User, backref="s3_tokens")
     workspaces = relationship(

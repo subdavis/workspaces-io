@@ -19,6 +19,7 @@ deps = [
     "requests",
     "requests-toolbelt",
     "sqlalchemy",
+    "tqdm",
 ]
 
 setup(

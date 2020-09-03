@@ -53,35 +53,29 @@ def make(cli: click.Group):
     @click.pass_obj
     def mc(ctx, args):
         r = ctx["session"].post("token/search", json={"search_terms": args,})
-        exit_with(handle_request_error(r))
-        # if r.ok:
-        #     response = r.json()
-        #     assembled = " ".join(args)
-        #     mc_env = ""
-        #     for arg, match in response["workspaces"].items():
-        #         workspace = match["workspace"]
-        #         scope = "public" if workspace["public"] else "private"
-        #         path = "/".join(
-        #             [
-        #                 "myalias",
-        #                 workspace["bucket"],
-        #                 scope,
-        #                 workspace["owner"]["username"],
-        #                 workspace["name"],
-        #                 match["path"].lstrip("/"),
-        #             ]
-        #         )
-        #         assembled = assembled.replace(arg, path)
-        #     if response["token"] is not None:
-        #         access_key = response["token"]["access_key_id"]
-        #         secret = response["token"]["secret_access_key"]
-        #         session_token = response["token"]["session_token"]
-        #         mc_env = f"http://{access_key}:{secret}:{session_token}@localhost:9000"
+        if r.ok:
+            response = r.json()
+            assembled = " ".join(args)
+            mc_env = ""
+            for arg, match in response["workspaces"].items():
+                workspace = schemas.WorkspaceDB(**match["workspace"])
+                scope = workspace.root.root_type.lower()
+                key = s3utils.getWorkspaceKey(workspace)
+                path = "/".join(
+                    ["myalias", workspace.root.bucket, key, match["path"].lstrip("/"),]
+                )
+                assembled = assembled.replace(arg, path)
+            if len(response["tokens"]) == 1:
+                token = response["tokens"][0]
+                access_key = token["access_key_id"]
+                secret = token["secret_access_key"]
+                session_token = token["session_token"]
+                mc_env = f"http://{access_key}:{secret}:{session_token}@localhost:9000"
 
-        #     command = (
-        #         "mc",
-        #         *assembled.split(" "),
-        #     )
-        #     os.execvpe(command[0], command, dict(os.environ, MC_HOST_myalias=mc_env))
-        # else:
-        #     exit_with(handle_request_error(r))
+            command = (
+                "mc",
+                *assembled.split(" "),
+            )
+            os.execvpe(command[0], command, dict(os.environ, MC_HOST_myalias=mc_env))
+        else:
+            exit_with(handle_request_error(r))

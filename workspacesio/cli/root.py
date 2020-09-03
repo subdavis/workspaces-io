@@ -57,10 +57,11 @@ def make(cli: click.Group):
         if not r.ok:
             exit_with(handle_request_error(r))
         rdata = schemas.RootImport(**r.json())
-        root_contents = minio_list_root_children(root=rdata.root, node=rdata.node)
+        root_contents = minio_list_root_children(node=rdata.node, root=rdata.root)
         workspace_list: List[schemas.WorkspaceDB] = []
         for folder in root_contents:
             prefix = folder.object_name.rstrip("/")
+            print(prefix)
             workspace = ctx["session"].post(
                 "workspace",
                 json={
@@ -72,7 +73,7 @@ def make(cli: click.Group):
                     "root_id": str(rdata.root.id),
                 },
             )
-            if not workspace.ok:
+            if not workspace.ok and workspace.status_code != 409:
                 exit_with(handle_request_error(workspace))
             workspace_list.append(schemas.WorkspaceDB(**workspace.json()))
 

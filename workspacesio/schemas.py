@@ -135,6 +135,7 @@ class S3TokenSearch(BaseModel):
 
 class S3TokenDB(DBBaseModel, S3TokenBase):
     owner_id: uuid.UUID
+    storage_node_id: uuid.UUID
     access_key_id: str
     secret_access_key: str
     session_token: str

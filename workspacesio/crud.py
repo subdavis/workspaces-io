@@ -335,10 +335,26 @@ def workspace_create(
     ):
         raise PermissionError(f"Only the node operator can create unmanaged workspaces")
     db_workspace = models.Workspace(
-        name=workspace.name, owner_id=owner.id, root_id=db_root.id
+        name=workspace.name,
+        owner_id=owner.id,
+        root_id=db_root.id,
+        base_path=workspace.base_path,
     )
-    db.add(db_workspace)
-    db.flush()
+    try:
+        db.add(db_workspace)
+        db.flush()
+    except IntegrityError as e:
+        db.rollback()
+        db_workspace = (
+            db.query(models.Workspace)
+            .filter(
+                and_(
+                    models.Workspace.name == db_workspace.name,
+                    models.Workspace.owner_id == owner.id,
+                )
+            )
+            .first()
+        )
     if db_root.root_type != schemas.RootType.UNMANAGED:
         key = s3utils.getWorkspaceKey(db_workspace) + "/"
         b3client = b3.get_client("s3", db_root.storage_node)
@@ -347,11 +363,15 @@ def workspace_create(
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code")
             logging.warning(error_code)
-    try:
-        db.commit()
-    except IntegrityError as e:
-        return db_workspace
+    db.commit()
     return db_workspace
+
+
+def workspace_delete(db: Session, user: schemas.UserDB, workspace_id: str):
+    worksapce_db = db.query(models.Workspace).get_or_404(workspace_id)
+    # TODO: remove shares and indexes
+    db.delete(worksapce_db)
+    db.commit()
 
 
 def token_list(db: Session, requester: schemas.UserBase) -> List[models.S3Token]:
@@ -410,6 +430,7 @@ def token_create(
                 policy=policy,
                 workspaces=foreign_workspaces,
                 roots=roots,
+                storage_node_id=node_id,
             )
             new_token = b3.get_client(
                 "sts", workspaces[0].root.storage_node

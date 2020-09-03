@@ -108,6 +108,15 @@ def create_workspace(
     return crud.workspace_create(db, boto_s3, workspace, user)
 
 
+@router.delete("/workspace/{workspace_id}", tags=["workspace"])
+def delete_workspace(
+    workspace_id: str,
+    user: schemas.UserBase = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.workspace_delete(db, user, workspace_id)
+
+
 @router.post(
     "/workspace/share",
     response_model=schemas.ShareDB,

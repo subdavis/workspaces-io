@@ -67,7 +67,7 @@ def makePolicy(
         resourceBase = f"arn:aws:s3:::{bucket}"
 
         if w.root.root_type == schemas.RootType.PUBLIC:
-            basepath = w.root.base_path
+            basepath = w.root.base_path or ""
             statements += [
                 # {
                 #     "Action": ["s3:ListBucket"],
@@ -104,7 +104,7 @@ def makePolicy(
         elif w.root.root_type in [schemas.RootType.PRIVATE, schemas.RootType.UNMANAGED]:
             inner_path = user.username
             if w.root.root_type == schemas.RootType.UNMANAGED:
-                inner_path = w.base_path
+                inner_path = w.base_path or ""
             # this is a public workspace, grant read on public root
             statements += [
                 {

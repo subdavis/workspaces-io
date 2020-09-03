@@ -12,7 +12,7 @@ clientCache = depends.Boto3ClientCache()
 
 
 def minio_list_root_children(
-    root: schemas.WorkspaceRootDB, node: schemas.StorageNodeOperator
+    node: schemas.StorageNodeOperator, root: schemas.WorkspaceRootDB
 ) -> dict:
     b3client = clientCache.get_minio_sdk_client(node)
     print(root.bucket, root.base_path)
@@ -20,12 +20,14 @@ def minio_list_root_children(
 
 
 def minio_recursive_generate_objects(
-    node: schemas.StorageNodeOperator, workspace: schemas.WorkspaceDB
+    node: schemas.StorageNodeOperator,
+    root: schemas.WorkspaceRootDB,
+    workspace: schemas.WorkspaceDB,
 ) -> Iterable[minio.Object]:
     b3client = clientCache.get_minio_sdk_client(node)
     start_after: Union[str, None] = ""
-    bucket = workspace.root.bucket
-    prefix = posixpath.join(workspace.root.base_path, workspace.base_path or "")
+    bucket = root.bucket
+    prefix = posixpath.join(root.base_path, workspace.base_path or "")
     while start_after is not None:
         object_list = b3client.list_objects_v2(bucket, prefix=prefix, recursive=True,)
         for obj in object_list:
