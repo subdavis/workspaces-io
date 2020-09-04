@@ -42,12 +42,12 @@ def makePolicy(
     :param workspaces: only add these to policy if they're public or owned by user
     :param foregin_workspaces: add these according to their shares
     """
-    if len(workspaces) == 0:
+    if len(workspaces) == 0 and len(foreign_workspaces) == 0:
         raise ValueError("No workspaces found")
 
     # Some sets to prevent duplicate policies from being added
     # such as if two different public workspaces come from the same root
-    node_ids: Set[uuid.UUID] = {workspaces[0].root.storage_node.id}
+    node_id: Union[uuid.UUID, None] = None
     root_ids: Set[uuid.UUID] = set()
     workspace_ids: Set[uuid.UUID] = set()
     statements: List[dict] = [
@@ -58,25 +58,21 @@ def makePolicy(
         }
     ]
     for w in workspaces:
-        if not w.root.storage_node.id in node_ids:
+        if node_id is not None and w.root.storage_node.id != node_id:
             raise ValueError("Multiple nodes found in workspace list")
+        elif node_id is None:
+            node_id = w.root.storage_node.id
         if w.root_id in root_ids:
             continue
         root_ids.add(w.root_id)
         bucket = w.root.bucket
         resourceBase = f"arn:aws:s3:::{bucket}"
+        workspacekey = getWorkspaceKey(w)
+        usernamekey = workspacekey.rstrip(w.name)
 
         if w.root.root_type == schemas.RootType.PUBLIC:
             basepath = w.root.base_path or ""
             statements += [
-                # {
-                #     "Action": ["s3:ListBucket"],
-                #     "Effect": "Allow",
-                #     "Resource": [resourceBase],
-                #     "Condition": {
-                #         "StringLike": {"s3:prefix": "public", "s3:delimiter": "/"}
-                #     },
-                # },
                 {
                     "Action": ["s3:ListBucket"],
                     "Effect": "Allow",
@@ -96,26 +92,17 @@ def makePolicy(
                     {
                         "Effect": "Allow",
                         "Action": ["s3:*"],
-                        "Resource": [
-                            posixpath.join(resourceBase, basepath, user.username, "*")
-                        ],
+                        "Resource": [posixpath.join(resourceBase, usernamekey, "*")],
                     }
                 )
-        elif w.root.root_type in [schemas.RootType.PRIVATE, schemas.RootType.UNMANAGED]:
-            inner_path = user.username
-            if w.root.root_type == schemas.RootType.UNMANAGED:
-                inner_path = w.base_path or ""
-            # this is a public workspace, grant read on public root
+        elif w.root.root_type == schemas.RootType.PRIVATE:
             statements += [
                 {
                     "Action": ["s3:ListBucket"],
                     "Effect": "Allow",
                     "Resource": [resourceBase],
                     "Condition": {
-                        "StringLike": {
-                            "s3:prefix": posixpath.join(w.root.base_path, inner_path),
-                            "s3:delimiter": "/",
-                        }
+                        "StringLike": {"s3:prefix": usernamekey, "s3:delimiter": "/",}
                     },
                 },
                 {
@@ -123,24 +110,20 @@ def makePolicy(
                     "Effect": "Allow",
                     "Resource": [resourceBase],
                     "Condition": {
-                        "StringLike": {
-                            "s3:prefix": posixpath.join(
-                                w.root.base_path, inner_path, "*"
-                            ),
-                        }
+                        "StringLike": {"s3:prefix": posixpath.join(usernamekey, "*"),}
                     },
                 },
                 {
                     "Effect": "Allow",
                     "Action": ["s3:*"],
-                    "Resource": [
-                        posixpath.join(resourceBase, w.root.base_path, inner_path, "*"),
-                    ],
+                    "Resource": [posixpath.join(resourceBase, usernamekey, "*"),],
                 },
             ]
     for w, share in foreign_workspaces:
-        if not w.root.storage_node.id in node_ids:
+        if node_id is not None and w.root.storage_node.id != node_id:
             raise ValueError("Multiple nodes found in workspace list")
+        elif node_id is None:
+            node_id = w.root.storage_node.id
         bucket = w.root.bucket
         resourceBase = f"arn:aws:s3:::{bucket}"
         workspacekey = getWorkspaceKey(w)
@@ -168,7 +151,8 @@ def makePolicy(
             },
         ]
         if (
-            share.permission is schemas.ShareType.READWRITE
+            (share is None and w.owner_id == user.id)
+            or share.permission is schemas.ShareType.READWRITE
             or share.permission is schemas.ShareType.OWN
         ):
             statements.append(

@@ -1,9 +1,15 @@
 import click
 from click_aliases import ClickAliasedGroup
 from tqdm import tqdm
+from typing import List
 
 from workspacesio import schemas
-from workspacesio.indexing.producers import minio_recursive_generate_objects
+from workspacesio.indexing import schemas as indexing_schemas
+from workspacesio.indexing.producers import (
+    minio_recursive_generate_objects,
+    minio_buffer_objects,
+    minio_transform_object,
+)
 
 from .util import exit_with, handle_request_error
 
@@ -102,7 +108,14 @@ def make(cli: click.Group):
         rdata = schemas.RootImport(**r.json())
         pbar = tqdm([workspace])
         for w in pbar:
-            for obj in minio_recursive_generate_objects(
-                node=rdata.node, root=rdata.root, workspace=w
+            for batch in minio_buffer_objects(
+                minio_recursive_generate_objects(
+                    node=rdata.node, root=rdata.root, workspace=w
+                ),
+                buffer_size=10,
             ):
-                pbar.set_description(f"{obj.bucket_name}:::{obj.object_name}")
+                documents: List[indexing_schemas.IndexDocumentBase] = []
+                for obj in batch:
+                    documents.append(minio_transform_object(obj))
+                print(documents)
+                break

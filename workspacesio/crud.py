@@ -64,7 +64,7 @@ def segment_workspaces(
     db: Session, workspaces: List[models.Workspace], requester: schemas.UserDB
 ) -> Tuple[
     List[models.Workspace],
-    List[Tuple[models.Workspace, models.Share]],
+    List[Tuple[models.Workspace, Optional[models.Share]]],
     List[models.WorkspaceRoot],
 ]:
     # foreign workspaces are the matches that have an owner other than the requester
@@ -92,6 +92,12 @@ def segment_workspaces(
                 raise PermissionError(
                     f"User {requester.username} is not permitted to access {w.name}"
                 )
+        elif (
+            w.owner_id == requester.id
+            and w.root.root_type == schemas.RootType.UNMANAGED
+        ):
+            # An unmanaged workspace is always foreign: there's no common pattern
+            foreign_workspaces.append((w, None,))
         else:
             requester_workspaces.append(w)
     seen_roots = set()
@@ -393,7 +399,7 @@ def token_create(
     b3: Boto3ClientCache,
     requester: schemas.UserBase,
     token: schemas.S3TokenCreate,
-) -> List[models.S3Token]:
+) -> List[Tuple[models.StorageNode, models.S3Token]]:
     """Create s3 sts token for requester if they have permissions"""
     # Find all workspaces in the query
     workspace_query_list: List[models.Workspace] = db.query(models.Workspace,).filter(
@@ -410,6 +416,11 @@ def token_create(
         my_workspaces, foreign_workspaces, roots = segment_workspaces(
             db=db, workspaces=workspaces, requester=requester
         )
+        storage_node: models.StorageNode
+        if len(roots) > 0:
+            storage_node = roots[0].storage_node
+        elif len(foreign_workspaces) > 0:
+            storage_node = foreign_workspaces[0][0].root.storage_node
         existing = get_token_for_workspace_constellation(
             db=db,
             requester_id=requester.id,
@@ -417,7 +428,7 @@ def token_create(
             foreign_workspaces=[f[0] for f in foreign_workspaces],
         )
         if existing and existing.expiration > datetime.datetime.utcnow():
-            tokens.append(existing)
+            tokens.append((storage_node, existing,))
             continue
         else:
             policy = s3utils.makePolicy(
@@ -428,7 +439,7 @@ def token_create(
             token_args = dict(
                 owner_id=requester.id,
                 policy=policy,
-                workspaces=foreign_workspaces,
+                workspaces=[f[0] for f in foreign_workspaces],
                 roots=roots,
                 storage_node_id=node_id,
             )
@@ -447,7 +458,7 @@ def token_create(
             token_db.expiration = new_token["Credentials"]["Expiration"]
             db.add(token_db)
             db.commit()
-            tokens.append(token_db)
+            tokens.append((storage_node, token_db,))
     return tokens
 
 
@@ -482,7 +493,7 @@ def token_search(
 ) -> schemas.S3TokenSearchResponse:
     """Search for a set of credentials that satisfy the terms"""
     workspaces: Dict[str, schemas.S3TokenSearchResponseWorkspacePart] = {}
-    tokens: List[models.S3Token] = []
+    tokens: List[Tuple[models.StorageNode, models.S3Token]] = []
     for path in search.search_terms:
         match, interior_path = match_terms(db, requester, path)
         if match:

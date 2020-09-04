@@ -1,7 +1,7 @@
 import datetime
 import enum
 import uuid
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Tuple
 
 from fastapi_users import models as fastapi_users_models
 from pydantic import BaseModel
@@ -142,7 +142,6 @@ class S3TokenDB(DBBaseModel, S3TokenBase):
     policy: dict
     owner: UserBase
     workspaces: List[WorkspaceDB]
-    roots: List[WorkspaceRootDB]
 
 
 class S3TokenSearchResponseWorkspacePart(BaseModel):
@@ -151,7 +150,7 @@ class S3TokenSearchResponseWorkspacePart(BaseModel):
 
 
 class S3TokenSearchResponse(BaseModel):
-    tokens: List[S3TokenDB]
+    tokens: List[Tuple[StorageNodeDB, S3TokenDB]]
     workspaces: Dict[str, S3TokenSearchResponseWorkspacePart]
 
 

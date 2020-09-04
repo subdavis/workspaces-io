@@ -2,7 +2,7 @@ import os
 import re
 import sys
 from typing import Dict, List, Tuple
-
+import urllib.parse
 import click
 
 from workspacesio import s3utils, schemas
@@ -66,12 +66,15 @@ def make(cli: click.Group):
                 )
                 assembled = assembled.replace(arg, path)
             if len(response["tokens"]) == 1:
-                token = response["tokens"][0]
+                token = response["tokens"][0][1]
                 access_key = token["access_key_id"]
                 secret = token["secret_access_key"]
                 session_token = token["session_token"]
-                mc_env = f"http://{access_key}:{secret}:{session_token}@localhost:9000"
-
+                api_url = response["tokens"][0][0]["api_url"]
+                url = urllib.parse.urlparse(api_url)
+                mc_env = (
+                    f"{url.scheme}://{access_key}:{secret}:{session_token}@{url.netloc}"
+                )
             command = (
                 "mc",
                 *assembled.split(" "),
