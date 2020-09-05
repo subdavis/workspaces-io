@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 deps = [
     "boto3",
@@ -20,6 +20,7 @@ deps = [
     "requests-toolbelt",
     "sqlalchemy",
     "tqdm",
+    "uvicorn",
 ]
 
 setup(
@@ -30,6 +31,7 @@ setup(
     zip_safe=False,
     install_requires=deps,
     include_package_data=True,
+    packages=find_packages(exclude=["test"]),
     entry_points={
         "console_scripts": [
             "wio=workspacesio.cli:cli",

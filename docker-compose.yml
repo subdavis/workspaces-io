@@ -25,9 +25,9 @@ services:
 
   db:
     image: postgres
-    restart: always
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_USER: wio
+      POSTGRES_PASSWORD: workspaces
     volumes:
       - db:/var/lib/postgresql/data
     ports:
@@ -50,7 +50,18 @@ services:
       ELASTICSEARCH_URL: http://elastic:9200
       ELASTICSEARCH_HOSTS: http://elastic:9200
 
-
+  workspaces:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      WIO_DATABASE_URL: postgres://wio:workspaces@db:5432
+      WIO_ELASTICSEARCH_NODE_1: http://elastic:9200
+    
 volumes:
   db:
   minio:
