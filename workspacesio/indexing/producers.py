@@ -2,7 +2,7 @@
 Produce sources for indexing given some root
 """
 import posixpath
-from typing import List, Union, Iterable
+from typing import Iterable, List, Union
 
 import minio
 

@@ -1,13 +1,14 @@
+from typing import List
+
 import click
 from click_aliases import ClickAliasedGroup
 from tqdm import tqdm
-from typing import List
 
 from workspacesio import schemas
 from workspacesio.indexing import schemas as indexing_schemas
 from workspacesio.indexing.producers import (
-    minio_recursive_generate_objects,
     minio_buffer_objects,
+    minio_recursive_generate_objects,
     minio_transform_object,
 )
 

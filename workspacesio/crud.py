@@ -71,7 +71,7 @@ def segment_workspaces(
     # that the requester DOES have a share for.  If the workspace is public and unshared,
     # Access is covered by the default policy
     requester_workspaces: List[models.Workspace] = []
-    foreign_workspaces: List[Tuple[models.Workspace, models.Share]] = []
+    foreign_workspaces: List[Tuple[models.Workspace, Optional[models.Share]]] = []
     for w in workspaces:
         if w.owner_id != requester.id:
             share: models.Share = db.query(models.Share).filter(
@@ -409,7 +409,7 @@ def token_create(
     if len(workspace_query_list) == 0:
         return []
 
-    tokens: List[models.S3Token] = []
+    tokens: List[Tuple[models.StorageNode, models.S3Token]] = []
     groups = group_workspaces_by_node(workspace_query_list)
 
     for node_id, workspaces in groups.items():

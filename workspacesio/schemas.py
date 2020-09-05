@@ -1,7 +1,7 @@
 import datetime
 import enum
 import uuid
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from fastapi_users import models as fastapi_users_models
 from pydantic import BaseModel

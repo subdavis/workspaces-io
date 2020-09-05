@@ -13,7 +13,7 @@ def sanitize(name: str):
     return name
 
 
-def getWorkspaceKey(workspace: models.Workspace):
+def getWorkspaceKey(workspace: Union[models.Workspace, schemas.WorkspaceDB]):
     """
     Determine full object prefix for a given workspace
     """
@@ -30,7 +30,7 @@ def makeRoleSessionName(user: schemas.UserBase, workspace: Optional[models.Works
 def makePolicy(
     user: schemas.UserBase,
     workspaces: List[models.Workspace],
-    foreign_workspaces: List[Tuple[models.Workspace, models.Share]],
+    foreign_workspaces: List[Tuple[models.Workspace, Optional[models.Share]]],
 ):
     """
     Make a policy for the given user to access s3 based on
@@ -150,11 +150,19 @@ def makePolicy(
                 "Resource": [posixpath.join(resourceBase, workspacekey, "*")],
             },
         ]
-        if (
-            (share is None and w.owner_id == user.id)
-            or share.permission is schemas.ShareType.READWRITE
-            or share.permission is schemas.ShareType.OWN
-        ):
+        if share is not None:
+            if (
+                share.permission is schemas.ShareType.READWRITE
+                or share.permission is schemas.ShareType.OWN
+            ):
+                statements.append(
+                    {
+                        "Effect": "Allow",
+                        "Action": ["s3:PutObject", "s3:DeleteObject"],
+                        "Resource": [posixpath.join(resourceBase, workspacekey, "*")],
+                    }
+                )
+        if share is None and w.owner_id == user.id:
             statements.append(
                 {
                     "Effect": "Allow",

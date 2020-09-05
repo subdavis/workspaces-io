@@ -1,8 +1,9 @@
 import os
 import re
 import sys
-from typing import Dict, List, Tuple
 import urllib.parse
+from typing import Dict, List, Tuple
+
 import click
 
 from workspacesio import s3utils, schemas
