@@ -55,7 +55,7 @@ def minio_transform_object(
     workspace: schemas.WorkspaceDB, root: schemas.WorkspaceRootDB, obj: minio.Object
 ) -> indexing_schemas.IndexDocumentBase:
     """Turn an object into a index document"""
-    common = posixpath.join(root.bucket, s3utils.getWorkspaceKey(workspace))
+    common = s3utils.getWorkspaceKey(workspace)
     assert (
         posixpath.commonprefix([common, obj.object_name]) is common
     ), f"{common} not in {obj.object_name}"

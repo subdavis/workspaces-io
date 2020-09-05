@@ -18,7 +18,7 @@ from workspacesio.schemas import DBBaseModel, WorkspaceRootDB
 class IndexDocumentBase(BaseModel):
     time: datetime.datetime
     size: Optional[int]
-    eTag: str
+    eTag: Optional[str]
     path: str
 
 
@@ -46,18 +46,10 @@ class IndexDB(DBBaseModel, IndexBase):
     root: WorkspaceRootDB
 
 
-class IndexCreateResponse(BaseModel):
-    """Commands to register hooks with s3/minio"""
-
-    commands: List[str]
-    index: IndexDB
-
-
 class IndexBulkAdd(BaseModel):
     """Bulk add records from a workspace into the index"""
 
     documents: List[IndexDocumentBase]
-    root_id: uuid.UUID
     workspace_id: uuid.UUID
 
 
@@ -119,14 +111,14 @@ INDEX_DOCUMENT_MAPPING = {
         "time": {"type": "date"},
         "size": {"type": "double"},
         "eTag": {"type": "text"},
-        "workspace_id": {"type": "text"},
-        "workspace_name": {"type": "text"},
-        "owner_id": {"type": "text"},
-        "owner_name": {"type": "text"},
-        "bucket": {"type": "text"},
-        "server": {"type": "text"},
+        "workspace_id": {"type": "keyword",},
+        "workspace_name": {"type": "keyword"},
+        "owner_id": {"type": "keyword"},
+        "owner_name": {"type": "keyword"},
+        "bucket": {"type": "keyword"},
+        "server": {"type": "keyword"},
         "root": {"type": "text"},
         "path": {"type": "text"},
-        "user_shares": {"type": "text"},
+        "user_shares": {"type": "keyword"},
     }
 }

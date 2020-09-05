@@ -75,11 +75,14 @@ def start_root_import(
 def list_workspaces(
     name: Optional[str] = None,
     owner_id: Optional[str] = None,
+    like: Optional[str] = None,
     public: Optional[bool] = False,
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
-    return crud.workspace_search(db, user, name=name, public=public, owner_id=owner_id)
+    return crud.workspace_search(
+        db, user, name=name, public=public, owner_id=owner_id, like=like
+    )
 
 
 @router.get(

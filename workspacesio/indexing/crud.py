@@ -10,42 +10,102 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from workspacesio import models, schemas
+from workspacesio import models, schemas, s3utils
 from workspacesio.depends import Boto3ClientCache
 
 from . import models as indexing_models
 from . import schemas as indexing_schemas
 
 
+def make_record_primary_key(
+    api_url: str, bucket: str, workspace_prefix: str, path: str,
+):
+    primary_key = "".join([api_url, bucket, workspace_prefix, path]).encode("utf-8")
+    return hashlib.sha256(primary_key).hexdigest()[-16:]
+
+
 def index_create(
-    db: Session, b3: Boto3ClientCache, es: elasticsearch.Elasticsearch
+    db: Session, es: elasticsearch.Elasticsearch, user: schemas.UserDB, root_id: str,
 ) -> indexing_schemas.IndexDB:
     """Setup notifications and indexing for a root
-    * Provide a command for the operator to create the notification stream
     * Verify that the index exists in elasticsearch
     * Insert or update an index record
     """
 
-    public_index: Optional[indexing_models.ElasticIndex] = db.query(
+    index_db: Optional[indexing_models.ElasticIndex] = db.query(
         indexing_models.ElasticIndex
-    ).filter(indexing_models.ElasticIndex.public == True).first()
-    if public_index is None:
-        public_index = indexing_models.ElasticIndex(
-            public=True,
-            s3_api_url="http://minio:9000",
-            s3_bucket="fast",
-            s3_root="public".lstrip("/"),
-            index_type="default",
-        )
-        index_name = public_index.index_type
-        db.add(public_index)
+    ).filter(indexing_models.ElasticIndex.root_id == root_id).first()
+    if index_db is None:
+        root: models.WorkspaceRoot = db.query(models.WorkspaceRoot).get_or_404(root_id)
+        if root.storage_node.creator_id != user.id:
+            raise PermissionError("User must be node operator to create index")
+        index_db = indexing_models.ElasticIndex(root_id=root.id, index_type="default",)
+        index_name = index_db.index_type
+        db.add(index_db)
         db.flush()
         es.indices.create(
             index_name, body={"mappings": indexing_schemas.INDEX_DOCUMENT_MAPPING}
         )
         db.commit()
-        db.refresh()
-    return public_index
+        db.refresh(index_db)
+    return index_db
+
+
+def bulk_index_add(
+    db: Session,
+    ec: elasticsearch.Elasticsearch,
+    user: schemas.UserDB,
+    docs: indexing_schemas.IndexBulkAdd,
+):
+    workspace: models.Workspace = db.query(models.Workspace).get_or_404(
+        docs.workspace_id
+    )
+    root: models.WorkspaceRoot = workspace.root
+    bulk_operations = ""
+    index: indexing_models.ElasticIndex = db.query(indexing_models.ElasticIndex).filter(
+        indexing_models.ElasticIndex.root_id == root.id
+    ).first()
+    if index is None:
+        raise ValueError(
+            f"index does not exist for workspace {workspace.name}::{workspace.id}"
+        )
+    for doc in docs.documents:
+        workspacekey = s3utils.getWorkspaceKey(workspace)
+        upsertdoc = indexing_schemas.IndexDocument(
+            time=doc.time,
+            size=doc.size,
+            eTag=doc.eTag or "",
+            workspace_id=workspace.id,
+            workspace_name=workspace.name,
+            owner_id=workspace.owner_id,
+            owner_name=workspace.owner.username,
+            bucket=root.bucket,
+            server=root.storage_node.api_url,
+            root=workspacekey,
+            path=doc.path,
+            user_shares=[share.sharee.id for share in workspace.shares],
+            # TODO: group shares
+        )
+        bulk_operations += (
+            json.dumps(
+                {
+                    "update": {
+                        "_index": index.index_type,
+                        "_id": make_record_primary_key(
+                            root.storage_node.api_url,
+                            root.bucket,
+                            workspacekey,
+                            doc.path,
+                        ),
+                    }
+                },
+            )
+            + "\n"
+        )
+        bulk_operations += (
+            indexing_schemas.ElasticUpsertIndexDocument(doc=upsertdoc).json() + "\n"
+        )
+    ec.bulk(bulk_operations)
 
 
 def handle_bucket_event(

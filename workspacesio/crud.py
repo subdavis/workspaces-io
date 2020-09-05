@@ -258,6 +258,7 @@ def root_start_import(db: Session, creator: schemas.UserDB, root_id: uuid.UUID):
 def workspace_search(
     db: Session,
     requester: schemas.UserBase,
+    like: Optional[str] = None,
     name: Optional[str] = None,
     owner_id: Union[str, uuid.UUID, None] = None,
     public: Optional[bool] = False,
@@ -273,6 +274,9 @@ def workspace_search(
     if name is not None:
         # when name is specified, automatically include public
         q = q.filter(models.Workspace.name == name)
+        public = True
+    if like is not None:
+        q = q.filter(models.Workspace.name.contains(like))
         public = True
     if public:
         main_filter = or_(

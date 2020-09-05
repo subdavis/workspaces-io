@@ -18,18 +18,18 @@ router = APIRouter()
 
 
 @router.post(
-    "/index",
+    "/index/{root_id}",
     tags=["index"],
     status_code=201,
-    response_model=indexing_schemas.IndexCreateResponse,
+    response_model=indexing_schemas.IndexDB,
 )
 def create_index(
+    root_id: str,
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
-    boto_s3: boto3.Session = Depends(get_boto),
     es: Elasticsearch = Depends(get_elastic_client),
 ):
-    return crud.index_create(db, boto_s3, es)
+    return crud.index_create(db, es, user, root_id)
 
 
 @router.post(
@@ -50,15 +50,15 @@ def head_event():
 
 
 @router.post(
-    "/index/bulk",
+    "/index_bulk",
     tags=["index"],
     status_code=201,
     response_model=indexing_schemas.IndexBulkAddedResponse,
 )
 def bulk_add(
     body: indexing_schemas.IndexBulkAdd,
+    user: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
     es: Elasticsearch = Depends(get_elastic_client),
 ):
-    # TODO
-    pass
+    return crud.bulk_index_add(db, es, user, body)

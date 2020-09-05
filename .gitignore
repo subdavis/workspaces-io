@@ -3,3 +3,4 @@ venv
 *.egg-info/
 **/__pycache__
 mc
+pip-wheel-metadata/

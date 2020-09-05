@@ -1,4 +1,5 @@
 from typing import List
+import json
 
 import click
 from click_aliases import ClickAliasedGroup
@@ -22,12 +23,15 @@ def make(cli: click.Group):
 
     @workspace.command(name="list", aliases=["ls", "l"])
     @click.option("--name", type=click.STRING, required=False)
+    @click.option("--like", type=click.STRING, required=False)
     @click.option("--public", is_flag=True)
     @click.pass_obj
-    def list_workspaces(ctx, name, public):
+    def list_workspaces(ctx, name, like, public):
         params = {"public": public}
         if name:
             params["name"] = name
+        if like:
+            params["like"] = like
         r = ctx["session"].get("workspace", params=params)
         if r.ok:
             for ws in r.json():
@@ -113,10 +117,16 @@ def make(cli: click.Group):
                 minio_recursive_generate_objects(
                     node=rdata.node, root=rdata.root, workspace=w
                 ),
-                buffer_size=10,
+                buffer_size=100,
             ):
                 documents: List[indexing_schemas.IndexDocumentBase] = []
                 for obj in batch:
-                    documents.append(minio_transform_object(obj))
-                print(documents)
-                break
+                    documents.append(
+                        minio_transform_object(workspace=w, root=rdata.root, obj=obj)
+                    )
+                payload = indexing_schemas.IndexBulkAdd(
+                    documents=documents, workspace_id=w.id,
+                )
+                ctx["session"].post(
+                    "index_bulk", data=payload.json(),
+                )

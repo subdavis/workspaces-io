@@ -1,7 +1,7 @@
 import click
 from click_aliases import ClickAliasedGroup
-
-from workspacesio.schemas import S3TokenDB
+from datetime import datetime
+from workspacesio import schemas
 
 from .config import save_config
 from .util import exit_with, handle_request_error
@@ -13,19 +13,25 @@ def make(cli: click.Group):
         pass
 
     @token.command(name="fetch", aliases=["f"])
-    @click.option("--workspace-id", type=click.STRING, default=None)
+    @click.argument("workspaces", type=click.STRING, nargs=-1)
     @click.pass_obj
-    def create_token(ctx, workspace_id):
-        body = {}
-        if workspace_id:
-            body["workspace_id"] = workspace_id
-        r = ctx["session"].post("token", json=body)
-
+    def create_token(ctx, workspaces):
+        if len(workspaces) == 0:
+            return
+        r = ctx["session"].post("token/search", json={"search_terms": workspaces})
         if r.ok:
-            response = S3TokenDB(**r.json())
-            ctx["config"].s3tokens[str(response.id)] = response
-            save_config(ctx["config"], ctx["configPath"])
-            click.echo(click.style("Token fetch success\n", fg="green", bold=True))
+            response = schemas.S3TokenSearchResponse(**r.json())
+            for node, token in response.tokens:
+                click.secho(
+                    f"Credentials for {[w.name for w in token.workspaces]} @  {node.api_url}",
+                    fg="green",
+                )
+                click.secho(
+                    f"Expires in {token.expiration - datetime.utcnow()}\n", fg="yellow"
+                )
+                click.secho(f"export AWS_ACCESS_KEY_ID={token.access_key_id}")
+                click.secho(f"export AWS_SECRET_ACCESS_KEY={token.secret_access_key}")
+                click.secho(f"export AWS_SESSION_TOKEN={token.session_token}\n")
         else:
             exit_with(handle_request_error(r))
 
