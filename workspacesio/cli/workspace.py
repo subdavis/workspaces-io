@@ -1,5 +1,5 @@
-from typing import List
 import json
+from typing import List
 
 import click
 from click_aliases import ClickAliasedGroup

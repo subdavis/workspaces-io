@@ -1,6 +1,8 @@
+from datetime import datetime
+
 import click
 from click_aliases import ClickAliasedGroup
-from datetime import datetime
+
 from workspacesio import schemas
 
 from .config import save_config

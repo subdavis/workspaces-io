@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from workspacesio import models, schemas, s3utils
+from workspacesio import models, s3utils, schemas
 from workspacesio.depends import Boto3ClientCache
 
 from . import models as indexing_models
