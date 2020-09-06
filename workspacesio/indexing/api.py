@@ -32,6 +32,18 @@ def create_index(
     return crud.index_create(db, es, user, root_id)
 
 
+@router.delete(
+    "/index/{root_id}", tags=["index"], response_model=indexing_schemas.IndexDB
+)
+def delete_index(
+    root_id: str,
+    user: schemas.UserBase = Depends(fastapi_users.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+    es: Elasticsearch = Depends(get_elastic_client),
+):
+    return crud.index_delete(db, es, user, root_id)
+
+
 @router.post(
     "/minio/events", tags=["hooks"], status_code=200,
 )

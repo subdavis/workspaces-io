@@ -61,5 +61,9 @@ def minio_transform_object(
     ), f"{common} not in {obj.object_name}"
     inner = obj.object_name.lstrip(common)
     return indexing_schemas.IndexDocumentBase(
-        time=obj.last_modified, size=obj.size, etag=obj.etag, path=inner,
+        time=obj.last_modified,
+        size=obj.size,
+        etag=obj.etag,
+        path=inner,
+        extension=posixpath.splitext(inner)[-1],
     )

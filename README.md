@@ -1,8 +1,6 @@
-![workspaces logl](docs/images/logo.png)
+![workspaces logo](docs/images/logo.png)
 
-**DISCLAIMER: The following document represents a vision, not a reflection of current capabilities.  We don't have our dancing shoes on yet.**
-
-A dead-simple FastAPI service to manage workspaces and flexible multi-user sharing within MinIO/S3.
+A dead-simple [FastAPI](https://fastapi.tiangolo.com/) service to manage multi-user permissions and indexing for S3 and MinIO.
 
 ## Features
 
@@ -12,10 +10,13 @@ A dead-simple FastAPI service to manage workspaces and flexible multi-user shari
 * Permissions-aware indexing and aggregation across the system.
 * Hub-and-spoke architecture.  Run a MinIO node wherever you have data, and it will be available through Workspaces.  Even **regular users** can introduce new nodes into the system and retain full control of their data.
 
-## Limits and Weaknesses
+## Philosophy
 
-* It's not clear how this could be packaged in a re-usable way for multiple applications.  Concrete implementations will no doubt want to attach additional data to users and workspaces (at minimum) and structuring the code to allow for extension of the base models isn't easy to do. [fastapi_users](https://github.com/frankie567/fastapi-users) attempted to do exactly this, but their implementation left much to be desired.
-* For whatever reason, [you can't explicitly revoke STS credentials](https://stackoverflow.com/questions/47026661/explicitly-expire-tokens-acquired-from-aws-security-token-service).  That's how AWS does it so MinIO won't implement it either.  This means that share revocation has a big asterisk: anyone with outstanding credentials can continue to modify data in s3 until that share expires.
+Data management should come to users and the places they already have data.  If your team wants to use powerful industry-standard tools like MinIO and ElasticSearch, but needs permissions management, WorkspacesIO might be an option.
+
+## Caveats
+
+For whatever reason, [you can't explicitly revoke STS credentials](https://stackoverflow.com/questions/47026661/explicitly-expire-tokens-acquired-from-aws-security-token-service).  That's how AWS does it so MinIO won't implement it either.  This means that share revocation has a big asterisk: anyone with outstanding credentials can continue to modify data in s3 until that share expires.
 
 ## FAQ
 
@@ -25,7 +26,7 @@ It's just a folder.  Users manage the heirarchy within.  Permissions are managed
 
 > Who is this for?
 
-WorkspacesIO is for organizations that need to manage large quantities of slow-moving data of the sort that laboratories and research teams accumulate.  Think Samba, CIFS, FTP, SSHFS.  WorksapcesIO can map your existing data while you transition, or run side-by-side with the old guard forever.
+WorkspacesIO is for organizations that need to manage large quantities of slow-moving data of the sort that laboratories and research teams accumulate.  Think Samba, CIFS, FTP, SSHFS.  WorksapcesIO can map your existing data while you transition, or run side-by-side forever.
 
 > What if I want to share a single file?
 
@@ -47,7 +48,7 @@ Not at all.  MinIO's Distributed Mode solves an operational and deeply technical
 
 ### Workspaces and Roots
 
-Workspaces are directory-style prefixes in s3, typically following the convention `{bucket}/{root_prefix}/{username}/{workspace_name}` within s3.
+Workspaces are directory-style prefixes in s3, typically following the convention `{bucket}/{root_prefix}/{username}/{workspace_name}` .
 
 A workspace root is a prefix inside a bucket where workspaces-io manages all sub-keys, a boundary of control.  Roots must be created by node operators.
 
@@ -63,6 +64,7 @@ A workspace root is a prefix inside a bucket where workspaces-io manages all sub
 
 ## Roadmap
 
+* Web client for data exploration.
 * I still don't know how root-permissions will work.  What determines which users are permitted create privileges on a particular root?  How can a group of users all be root managers?  For now, all public and private roots have global create permissions.  Unmanaged roots have no create permissions, and workspaces in these roots must be crated or imported by the root's node operator.
 * Implement `indexes` at the root level.   Workspaces are only indexed by virtue of which root they're in.   A server could theoretically have different levels of indexing on different roots, allowing users to allocate their workspaces based on the level of indexing they need.
 * Implement `quotas` at multiple levels.  Users have an overall quota, a root-specific quota, and a workspace quota.  Quotas could be unique to individual users.  **QUOTAS are not enforceable** while a user holds a token.  If a user exceeds their quota, this will be noticed later by the notifier and future credentials requests will be blocked.  If it's not obvious by now, this system has a low tolerence/defense for bad faith actors.  Quotas are tools for systems administrators to prevent users from accidentally crippling resourcs.
@@ -75,7 +77,7 @@ A workspace root is a prefix inside a bucket where workspaces-io manages all sub
 |----------|---------|-------------|
 | `WIO_SECRET` | `fast` | hashing secret for db passwords |
 | `WIO_PUBLIC_NAME` | `http://localhost:8000` | how clients connect to the server |
-| `WIO_DATABASE_URL` | `postgresql://postgres:example@localhost:5555/fast` | postgres connection string |
+| `WIO_DATABASE_URL` | `postgresql://wio:workspaces@localhost:5555/wio` | postgres connection string |
 | `WIO_ELASTICSEARCH_NODE_1` | `http://localhost:9200` | elasticsearch connection string |
 
 ## Usage
@@ -142,9 +144,17 @@ pip3 install -e .
 pip3 install -r dev.requirements.txt
 
 # run db migrations
-fast-create-tables
+workspaces-create-tables
 
 # run dev server
 # need host arg because minio must be able to post to the server
 uvicorn workspacesio.asgi:app --host 0.0.0.0 --reload
 ```
+
+## Docker
+
+``` sh
+docker-compose up
+```
+
+Initialize the stack by running through the commands in `initialize.sh` .

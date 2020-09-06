@@ -2,6 +2,7 @@ import hashlib
 import json
 import urllib
 from typing import Optional
+import posixpath
 
 import boto3
 import elasticsearch
@@ -10,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from workspacesio import models, s3utils, schemas
+from workspacesio import models, s3utils, schemas, crud
 from workspacesio.depends import Boto3ClientCache
 
 from . import models as indexing_models
@@ -44,10 +45,24 @@ def index_create(
         db.add(index_db)
         db.flush()
         es.indices.create(
-            index_name, body={"mappings": indexing_schemas.INDEX_DOCUMENT_MAPPING}
+            index=index_name, body={"mappings": indexing_schemas.INDEX_DOCUMENT_MAPPING}
         )
         db.commit()
         db.refresh(index_db)
+    return index_db
+
+
+def index_delete(
+    db: Session, es: elasticsearch.Elasticsearch, user: schemas.UserDB, root_id: str,
+):
+    index_db: indexing_models.ElasticIndex = db.query(
+        indexing_models.ElasticIndex
+    ).filter(indexing_models.ElasticIndex.root_id == root_id).first()
+    if index_db is None:
+        raise ValueError("No index with that id")
+    es.indices.delete(index=index_db.index_type, ignore=[404])
+    db.delete(index_db)
+    db.commit()
     return index_db
 
 
@@ -72,17 +87,15 @@ def bulk_index_add(
     for doc in docs.documents:
         workspacekey = s3utils.getWorkspaceKey(workspace)
         upsertdoc = indexing_schemas.IndexDocument(
-            time=doc.time,
-            size=doc.size,
-            eTag=doc.eTag or "",
+            **doc.dict(),
             workspace_id=workspace.id,
             workspace_name=workspace.name,
             owner_id=workspace.owner_id,
             owner_name=workspace.owner.username,
             bucket=root.bucket,
             server=root.storage_node.api_url,
-            root=workspacekey,
-            path=doc.path,
+            root_path=workspacekey,
+            root_id=root.id,
             user_shares=[share.sharee.id for share in workspace.shares],
             # TODO: group shares
         )
@@ -117,43 +130,78 @@ def handle_bucket_event(
     bulk_operations = ""
     for record in event.Records:
         bucket = record.s3.bucket.name
-        # TODO: find the root, which will give us the naming convention
-        # for child buckets
-        # For now, find the index
+
         object_key = urllib.parse.unquote(record.s3.object.key)
-        parent_index: indexing_models.ElasticIndex = db.query(
-            indexing_models.ElasticIndex
-        ).filter(
-            func.strpos(indexing_models.ElasticIndex.s3_root, object_key) == 0
-        ).first()
+        parent_index: indexing_models.ElasticIndex = (
+            db.query(indexing_models.ElasticIndex)
+            .join(models.WorkspaceRoot)
+            .filter(
+                and_(
+                    func.strpos(models.WorkspaceRoot.base_path, object_key) == 0,
+                    models.WorkspaceRoot.bucket == record.s3.bucket.name,
+                )
+            )
+            .first()
+        )
         if parent_index is None:
             raise ValueError(f"no index for object {object_key}")
-        # TODO: skip the part where we extrapolate workspace name, assume it's {scope}/{user}/{workspace}
-        key_parts = object_key.split("/")
-        scope = key_parts[0]
-        user_name = key_parts[1]
-        workspace_name = key_parts[2]
-        workspace_inner_path = "/".join(key_parts[3:])
-        # TODO: server and root will have to be joined.
-        resource_owner: models.User = db.query(models.User).filter(
-            models.User.username == user_name
-        ).first()
-        if resource_owner is None:
-            raise ValueError(f"no owner found for object {object_key}")
-        workspace: models.Workspace = db.query(models.Workspace).filter(
-            and_(
-                models.Workspace.name == workspace_name,
-                models.Workspace.owner == resource_owner,
-            )
-        ).first()
-        if workspace is None:
-            raise ValueError(f"no workspace found for object {object_key}")
 
-        primary_key = (
-            f"{parent_index.s3_api_url}:{parent_index.s3_bucket}"
-            f":{parent_index.s3_root}:{object_key}"
-        ).encode("utf-8")
-        primary_key_short_sha256 = hashlib.sha256(primary_key).hexdigest()[-16:]
+        # Find the workspace
+        workspace: Optional[models.Workspace] = None
+        workspace_prefix = ""
+        workspace_inner_path = ""
+        if parent_index.root.root_type in [
+            schemas.RootType.PRIVATE,
+            schemas.RootType.PRIVATE,
+        ]:
+            # Extrapolate path parts from root type, assume it's {scope}/{user}/{workspace}
+            key_parts = object_key.split("/")
+            scope = key_parts[0]
+            user_name = key_parts[1]
+            workspace_name = key_parts[2]
+            workspace_inner_path = "/".join(key_parts[3:])
+            workspace = (
+                db.query(models.Workspace)
+                .join(models.User)
+                .filter(
+                    and_(
+                        models.Workspace.name == workspace_name,
+                        models.User.username == user_name,
+                    )
+                )
+                .first()
+            )
+            workspace_prefix = f"{scope}/{user_name}/{workspace_name}"
+
+        elif parent_index.root.root_type == schemas.RootType.UNMANAGED:
+            # Search again for matching base
+            workspace_inner_path = object_key.lstrip(
+                parent_index.root.base_path
+            ).lstrip("/")
+            workspace = (
+                db.query(models.Workspace)
+                .filter(
+                    func.strpos(models.Workspace.base_path, workspace_inner_path) == 0
+                )
+                .first()
+            )
+            workspace_prefix = workspace.base_path
+            workspace_inner_path = workspace_inner_path.lstrip(
+                workspace.base_path
+            ).lstrip("/")
+
+        if workspace is None:
+            raise ValueError(f"No workspace found for object {object_key}")
+        resource_owner: models.User = workspace.owner
+        root: models.WorkspaceRoot = workspace.root
+        node: models.StorageNode = root.storage_node
+
+        primary_key_short_sha256 = make_record_primary_key(
+            api_url=node.api_url,
+            bucket=root.bucket,
+            workspace_prefix=workspace_prefix,
+            path=workspace_inner_path,
+        )
         if record.eventName in [
             "s3:ObjectCreated:Put",
             "s3:ObjectCreated:Post",
@@ -170,9 +218,11 @@ def handle_bucket_event(
                 owner_id=resource_owner.id,
                 owner_name=resource_owner.username,
                 bucket=record.s3.bucket.name,
-                server=parent_index.s3_api_url,
-                root=parent_index.s3_root,
+                server=node.api_url,
+                root_path=root.base_path,
+                root_id=root.id,
                 path=workspace_inner_path,
+                extension=posixpath.splitext(workspace_inner_path)[-1],
                 user_shares=[share.sharee.id for share in workspace.shares],
                 # TODO: group shares
             )

@@ -31,9 +31,9 @@ def register_handlers(app: FastAPI):
     async def permissions_exception_handler(r: Request, exc: PermissionError):
         return JSONResponse(status_code=403, content={"message": str(exc)})
 
-    @app.exception_handler(ValueError)
-    async def value_exception_handler(r: Request, exc: ValueError):
-        return JSONResponse(status_code=400, content={"message": str(exc)})
+    # @app.exception_handler(ValueError)
+    # async def value_exception_handler(r: Request, exc: ValueError):
+    #     return JSONResponse(status_code=400, content={"message": str(exc)})
 
 
 def on_after_register(db: Session, user: schemas.UserBase):

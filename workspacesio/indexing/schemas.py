@@ -20,6 +20,7 @@ class IndexDocumentBase(BaseModel):
     size: Optional[int]
     eTag: Optional[str]
     path: str
+    extension: str
 
 
 class IndexDocument(IndexDocumentBase):
@@ -29,7 +30,8 @@ class IndexDocument(IndexDocumentBase):
     owner_name: str
     bucket: str
     server: str
-    root: str
+    root_path: str
+    root_id: uuid.UUID
     user_shares: List[uuid.UUID]
 
 
@@ -117,8 +119,10 @@ INDEX_DOCUMENT_MAPPING = {
         "owner_name": {"type": "keyword"},
         "bucket": {"type": "keyword"},
         "server": {"type": "keyword"},
-        "root": {"type": "text"},
-        "path": {"type": "text"},
+        "root_path": {"type": "text"},
+        "root_id": {"type": "keyword"},
+        "path": {"type": "search_as_you_type"},
+        "extension": {"type": "keyword"},
         "user_shares": {"type": "keyword"},
     }
 }
