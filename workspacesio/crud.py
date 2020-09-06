@@ -74,14 +74,23 @@ def segment_workspaces(
     foreign_workspaces: List[Tuple[models.Workspace, Optional[models.Share]]] = []
     for w in workspaces:
         if w.owner_id != requester.id:
-            share: models.Share = db.query(models.Share).filter(
-                and_(
-                    models.Share.workspace_id == w.id,
-                    models.Share.sharee_id == requester.id,
+            share: models.Share = (
+                db.query(models.Share)
+                .filter(
+                    and_(
+                        models.Share.workspace_id == w.id,
+                        models.Share.sharee_id == requester.id,
+                    )
                 )
-            ).first()
+                .first()
+            )
             if share:
-                foreign_workspaces.append((w, share,))
+                foreign_workspaces.append(
+                    (
+                        w,
+                        share,
+                    )
+                )
             elif w.root.root_type == schemas.RootType.PUBLIC:
                 # it's not the requester's workspace, but it's public-readable
                 requester_workspaces.append(w)
@@ -97,7 +106,12 @@ def segment_workspaces(
             and w.root.root_type == schemas.RootType.UNMANAGED
         ):
             # An unmanaged workspace is always foreign: there's no common pattern
-            foreign_workspaces.append((w, None,))
+            foreign_workspaces.append(
+                (
+                    w,
+                    None,
+                )
+            )
         else:
             requester_workspaces.append(w)
     seen_roots = set()
@@ -156,9 +170,11 @@ def match_terms(
     if len(term_parts) >= 2:
         # if there are at least two terms, there's a chance
         # the first term is a username
-        user: Optional[models.User] = db.query(models.User).filter(
-            models.User.username.ilike(term_parts[0])
-        ).first()
+        user: Optional[models.User] = (
+            db.query(models.User)
+            .filter(models.User.username.ilike(term_parts[0]))
+            .first()
+        )
         if user is not None:
             user_id = user.id
             term_parts = term_parts[1:]
@@ -166,7 +182,10 @@ def match_terms(
         # if there's at least 1 remaining term,
         # it could be a workspace, and user_id could have been set
         matches: List[models.Workspace] = workspace_search(
-            db, requester, name=term_parts[0], owner_id=user_id,
+            db,
+            requester,
+            name=term_parts[0],
+            owner_id=user_id,
         )
         if len(matches) == 1:
             return matches[0], sep.join(term_parts[1:])
@@ -405,9 +424,13 @@ def token_create(
 ) -> List[Tuple[models.StorageNode, models.S3Token]]:
     """Create s3 sts token for requester if they have permissions"""
     # Find all workspaces in the query
-    workspace_query_list: List[models.Workspace] = db.query(models.Workspace,).filter(
-        models.Workspace.id.in_(token.workspaces)
-    ).all()
+    workspace_query_list: List[models.Workspace] = (
+        db.query(
+            models.Workspace,
+        )
+        .filter(models.Workspace.id.in_(token.workspaces))
+        .all()
+    )
 
     if len(workspace_query_list) == 0:
         return []
@@ -431,7 +454,12 @@ def token_create(
             foreign_workspaces=[f[0] for f in foreign_workspaces],
         )
         if existing and existing.expiration > datetime.datetime.utcnow():
-            tokens.append((storage_node, existing,))
+            tokens.append(
+                (
+                    storage_node,
+                    existing,
+                )
+            )
             continue
         else:
             policy = s3utils.makePolicy(
@@ -461,7 +489,12 @@ def token_create(
             token_db.expiration = new_token["Credentials"]["Expiration"]
             db.add(token_db)
             db.commit()
-            tokens.append((storage_node, token_db,))
+            tokens.append(
+                (
+                    storage_node,
+                    token_db,
+                )
+            )
     return tokens
 
 
@@ -478,9 +511,9 @@ def token_revoke_all(db: Session, user: schemas.UserBase) -> int:
     """
     Remove all tokens from DB
     """
-    all_tokens: List[models.S3Token] = db.query(models.S3Token).filter(
-        models.S3Token.owner_id == user.id
-    ).all()
+    all_tokens: List[models.S3Token] = (
+        db.query(models.S3Token).filter(models.S3Token.owner_id == user.id).all()
+    )
     for t in all_tokens:
         t.workspaces.clear()
         db.delete(t)
@@ -501,7 +534,8 @@ def token_search(
         match, interior_path = match_terms(db, requester, path)
         if match:
             workspaces[path] = schemas.S3TokenSearchResponseWorkspacePart(
-                workspace=match, path=interior_path,
+                workspace=match,
+                path=interior_path,
             )
     workspace_id_list = [w.workspace.id for w in workspaces.values()]
     unique_workspace_id_list = list(set(workspace_id_list))
@@ -512,11 +546,16 @@ def token_search(
             requester,
             schemas.S3TokenCreate(workspaces=unique_workspace_id_list),
         )
-    return schemas.S3TokenSearchResponse(tokens=tokens, workspaces=workspaces,)
+    return schemas.S3TokenSearchResponse(
+        tokens=tokens,
+        workspaces=workspaces,
+    )
 
 
 def share_create(
-    db: Session, creator: schemas.UserBase, share: schemas.ShareCreate,
+    db: Session,
+    creator: schemas.UserBase,
+    share: schemas.ShareCreate,
 ) -> models.Share:
     """
     Share share.workspace_id with share.sharee_id if creator has permission"""
@@ -532,7 +571,10 @@ def share_create(
     return share_db
 
 
-def share_list(db: Session, user: schemas.UserBase,) -> List[models.Share]:
+def share_list(
+    db: Session,
+    user: schemas.UserBase,
+) -> List[models.Share]:
     """List shared-by and shared-with user"""
     return (
         db.query(models.Share)

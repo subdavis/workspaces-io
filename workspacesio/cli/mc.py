@@ -49,11 +49,21 @@ def transform_arguments(args: List[str]):
 
 
 def make(cli: click.Group):
-    @cli.command(name="mc", context_settings=dict(ignore_unknown_options=True,))
+    @cli.command(
+        name="mc",
+        context_settings=dict(
+            ignore_unknown_options=True,
+        ),
+    )
     @click.argument("args", nargs=-1)
     @click.pass_obj
     def mc(ctx, args):
-        r = ctx["session"].post("token/search", json={"search_terms": args,})
+        r = ctx["session"].post(
+            "token/search",
+            json={
+                "search_terms": args,
+            },
+        )
         if r.ok:
             response = r.json()
             assembled = " ".join(args)
@@ -63,7 +73,12 @@ def make(cli: click.Group):
                 scope = workspace.root.root_type.lower()
                 key = s3utils.getWorkspaceKey(workspace)
                 path = "/".join(
-                    ["myalias", workspace.root.bucket, key, match["path"].lstrip("/"),]
+                    [
+                        "myalias",
+                        workspace.root.bucket,
+                        key,
+                        match["path"].lstrip("/"),
+                    ]
                 )
                 assembled = assembled.replace(arg, path)
             if len(response["tokens"]) == 1:

@@ -30,7 +30,10 @@ def getWorkspaceKey(
     inner_path = workspace.base_path or posixpath.join(
         workspace.owner.username, sanitize(workspace.name)
     )
-    return posixpath.join(root_base_path, inner_path,).strip("/")
+    return posixpath.join(
+        root_base_path,
+        inner_path,
+    ).strip("/")
 
 
 def makeRoleSessionName(
@@ -39,7 +42,13 @@ def makeRoleSessionName(
     return f"{user.id}::{workspace}"
 
 
-PolicyDoc = TypedDict("PolicyDoc", {"Version": str, "Statement": List[dict],})
+PolicyDoc = TypedDict(
+    "PolicyDoc",
+    {
+        "Version": str,
+        "Statement": List[dict],
+    },
+)
 
 
 def makePolicy(
@@ -117,7 +126,10 @@ def makePolicy(
                     "Effect": "Allow",
                     "Resource": [resourceBase],
                     "Condition": {
-                        "StringLike": {"s3:prefix": usernamekey, "s3:delimiter": "/",}
+                        "StringLike": {
+                            "s3:prefix": usernamekey,
+                            "s3:delimiter": "/",
+                        }
                     },
                 },
                 {
@@ -125,13 +137,17 @@ def makePolicy(
                     "Effect": "Allow",
                     "Resource": [resourceBase],
                     "Condition": {
-                        "StringLike": {"s3:prefix": posixpath.join(usernamekey, "*"),}
+                        "StringLike": {
+                            "s3:prefix": posixpath.join(usernamekey, "*"),
+                        }
                     },
                 },
                 {
                     "Effect": "Allow",
                     "Action": ["s3:*"],
-                    "Resource": [posixpath.join(resourceBase, usernamekey, "*"),],
+                    "Resource": [
+                        posixpath.join(resourceBase, usernamekey, "*"),
+                    ],
                 },
             ]
     for w, share in foreign_workspaces:
@@ -199,7 +215,13 @@ def makeEmptyPolicy():
     }
 
 
-S3V4Headers = TypedDict("S3V4Headers", {"x-amz-date": str, "Authorization": str,})
+S3V4Headers = TypedDict(
+    "S3V4Headers",
+    {
+        "x-amz-date": str,
+        "Authorization": str,
+    },
+)
 
 
 def get_s3v4_headers(

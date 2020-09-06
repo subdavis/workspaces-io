@@ -31,7 +31,11 @@ def minio_recursive_generate_objects(
     b3client = clientCache.get_minio_sdk_client(node)
     bucket = root.bucket
     prefix = posixpath.join(root.base_path, s3utils.getWorkspaceKey(workspace))
-    return b3client.list_objects_v2(bucket, prefix=prefix, recursive=True,)
+    return b3client.list_objects_v2(
+        bucket,
+        prefix=prefix,
+        recursive=True,
+    )
 
 
 def minio_buffer_objects(

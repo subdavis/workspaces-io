@@ -93,7 +93,10 @@ def make(cli: click.Group):
         }
         if expire:
             body["expiration"] = expire
-        r = ctx["session"].post(f"share", json=body,)
+        r = ctx["session"].post(
+            f"share",
+            json=body,
+        )
         exit_with(handle_request_error(r))
 
     cli.add_command(workspace)
@@ -134,8 +137,10 @@ def make(cli: click.Group):
                         )
                     documents.append(doc)
                 payload = indexing_schemas.IndexBulkAdd(
-                    documents=documents, workspace_id=w.id,
+                    documents=documents,
+                    workspace_id=w.id,
                 )
                 ctx["session"].post(
-                    "index_bulk", data=payload.json(),
+                    "index_bulk",
+                    data=payload.json(),
                 )

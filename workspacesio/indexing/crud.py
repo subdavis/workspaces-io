@@ -19,28 +19,39 @@ from . import schemas as indexing_schemas
 
 
 def make_record_primary_key(
-    api_url: str, bucket: str, workspace_prefix: str, path: str,
+    api_url: str,
+    bucket: str,
+    workspace_prefix: str,
+    path: str,
 ):
     primary_key = "".join([api_url, bucket, workspace_prefix, path]).encode("utf-8")
     return hashlib.sha256(primary_key).hexdigest()[-16:]
 
 
 def index_create(
-    db: Session, es: elasticsearch.Elasticsearch, user: schemas.UserDB, root_id: str,
+    db: Session,
+    es: elasticsearch.Elasticsearch,
+    user: schemas.UserDB,
+    root_id: str,
 ) -> indexing_schemas.IndexDB:
     """Setup notifications and indexing for a root
     * Verify that the index exists in elasticsearch
     * Insert or update an index record
     """
 
-    index_db: Optional[indexing_models.ElasticIndex] = db.query(
-        indexing_models.ElasticIndex
-    ).filter(indexing_models.ElasticIndex.root_id == root_id).first()
+    index_db: Optional[indexing_models.ElasticIndex] = (
+        db.query(indexing_models.ElasticIndex)
+        .filter(indexing_models.ElasticIndex.root_id == root_id)
+        .first()
+    )
     if index_db is None:
         root: models.WorkspaceRoot = db.query(models.WorkspaceRoot).get_or_404(root_id)
         if root.storage_node.creator_id != user.id:
             raise PermissionError("User must be node operator to create index")
-        index_db = indexing_models.ElasticIndex(root_id=root.id, index_type="default",)
+        index_db = indexing_models.ElasticIndex(
+            root_id=root.id,
+            index_type="default",
+        )
         index_name = index_db.index_type
         db.add(index_db)
         db.flush()
@@ -53,11 +64,16 @@ def index_create(
 
 
 def index_delete(
-    db: Session, es: elasticsearch.Elasticsearch, user: schemas.UserDB, root_id: str,
+    db: Session,
+    es: elasticsearch.Elasticsearch,
+    user: schemas.UserDB,
+    root_id: str,
 ):
-    index_db: indexing_models.ElasticIndex = db.query(
-        indexing_models.ElasticIndex
-    ).filter(indexing_models.ElasticIndex.root_id == root_id).first()
+    index_db: indexing_models.ElasticIndex = (
+        db.query(indexing_models.ElasticIndex)
+        .filter(indexing_models.ElasticIndex.root_id == root_id)
+        .first()
+    )
     if index_db is None:
         raise ValueError("No index with that id")
     es.indices.delete(index=index_db.index_type, ignore=[404])
@@ -77,9 +93,11 @@ def bulk_index_add(
     )
     root: models.WorkspaceRoot = workspace.root
     bulk_operations = ""
-    index: indexing_models.ElasticIndex = db.query(indexing_models.ElasticIndex).filter(
-        indexing_models.ElasticIndex.root_id == root.id
-    ).first()
+    index: indexing_models.ElasticIndex = (
+        db.query(indexing_models.ElasticIndex)
+        .filter(indexing_models.ElasticIndex.root_id == root.id)
+        .first()
+    )
     if index is None:
         raise ValueError(
             f"index does not exist for workspace {workspace.name}::{workspace.id}"

@@ -86,7 +86,9 @@ def list_workspaces(
 
 
 @router.get(
-    "/workspace/{workspace_id}", response_model=schemas.WorkspaceDB, tags=["workspace"],
+    "/workspace/{workspace_id}",
+    response_model=schemas.WorkspaceDB,
+    tags=["workspace"],
 )
 def get_workspace(
     workspace_id: str,

@@ -45,7 +45,9 @@ def delete_index(
 
 
 @router.post(
-    "/minio/events", tags=["hooks"], status_code=200,
+    "/minio/events",
+    tags=["hooks"],
+    status_code=200,
 )
 def create_event(
     body: indexing_schemas.BucketEventNotification,

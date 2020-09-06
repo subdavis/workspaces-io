@@ -12,7 +12,11 @@ def make(cli: click.Group):
     def login(ctx, email, password):
         conf = ctx["config"]
         r = ctx["session"].post(
-            "auth/jwt/login", {"username": email, "password": password,}
+            "auth/jwt/login",
+            {
+                "username": email,
+                "password": password,
+            },
         )
         if r.ok:
             token = r.json()["access_token"]
@@ -30,7 +34,11 @@ def make(cli: click.Group):
     def register(ctx, email, password, username):
         r = ctx["session"].post(
             "auth/register",
-            json={"email": email, "username": username, "password": password,},
+            json={
+                "email": email,
+                "username": username,
+                "password": password,
+            },
         )
         exit_with(handle_request_error(r))
 

@@ -113,7 +113,9 @@ INDEX_DOCUMENT_MAPPING = {
         "time": {"type": "date"},
         "size": {"type": "double"},
         "eTag": {"type": "text"},
-        "workspace_id": {"type": "keyword",},
+        "workspace_id": {
+            "type": "keyword",
+        },
         "workspace_name": {"type": "keyword"},
         "owner_id": {"type": "keyword"},
         "owner_name": {"type": "keyword"},
