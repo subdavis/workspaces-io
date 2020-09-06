@@ -8,6 +8,7 @@ from tqdm import tqdm
 from workspacesio import schemas
 from workspacesio.indexing import schemas as indexing_schemas
 from workspacesio.indexing.producers import (
+    additional_indexes,
     minio_buffer_objects,
     minio_recursive_generate_objects,
     minio_transform_object,
@@ -99,8 +100,13 @@ def make(cli: click.Group):
 
     @workspace.command(name="index")
     @click.argument("workspace_id", type=click.STRING)
+    @click.option(
+        "--minio-mount",
+        type=click.Path(dir_okay=True, exists=True),
+        help="Path to minio mount on local disk",
+    )
     @click.pass_obj
-    def index_workspace(ctx, workspace_id):
+    def index_workspace(ctx, workspace_id, minio_mount):
         r = ctx["session"].get(f"workspace/{workspace_id}")
         if not r.ok:
             exit_with(handle_request_error(r))
@@ -121,9 +127,12 @@ def make(cli: click.Group):
             ):
                 documents: List[indexing_schemas.IndexDocumentBase] = []
                 for obj in batch:
-                    documents.append(
-                        minio_transform_object(workspace=w, root=rdata.root, obj=obj)
-                    )
+                    doc = minio_transform_object(workspace=w, root=rdata.root, obj=obj)
+                    if minio_mount:
+                        additional_indexes(
+                            root=rdata.root, workspace=w, doc=doc, mount=minio_mount
+                        )
+                    documents.append(doc)
                 payload = indexing_schemas.IndexBulkAdd(
                     documents=documents, workspace_id=w.id,
                 )

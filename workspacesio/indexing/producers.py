@@ -2,12 +2,13 @@
 Produce sources for indexing given some root
 """
 import posixpath
-from typing import Iterable, List, Union
+from typing import Iterable, List, Optional, Union
 
 import minio
 
 from workspacesio import depends, s3utils, schemas
 from workspacesio.indexing import schemas as indexing_schemas
+from workspacesio.indexing import video
 
 clientCache = depends.Boto3ClientCache()
 
@@ -67,3 +68,18 @@ def minio_transform_object(
         path=inner,
         extension=posixpath.splitext(inner)[-1],
     )
+
+
+def additional_indexes(
+    root: schemas.WorkspaceRootDB,
+    workspace: schemas.WorkspaceDB,
+    doc: indexing_schemas.IndexDocumentBase,
+    mount: str,
+) -> bool:
+    """Produce additional indexes on the document if it is supported"""
+
+    if doc.extension in ["mp4", "avi", "mkv", "webm", "wmv"]:
+        video.extract_metadata(
+            doc, posixpath.join(mount, s3utils.getWorkspaceKey(workspace, root))
+        )
+    return True

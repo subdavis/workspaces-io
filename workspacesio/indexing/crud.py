@@ -1,8 +1,8 @@
 import hashlib
 import json
+import posixpath
 import urllib
 from typing import Optional
-import posixpath
 
 import boto3
 import elasticsearch
@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from workspacesio import models, s3utils, schemas, crud
+from workspacesio import crud, models, s3utils, schemas
 from workspacesio.depends import Boto3ClientCache
 
 from . import models as indexing_models
@@ -185,6 +185,9 @@ def handle_bucket_event(
                 )
                 .first()
             )
+            if workspace is None:
+                raise ValueError(f"No workspace found for object {object_key}")
+
             workspace_prefix = workspace.base_path
             workspace_inner_path = workspace_inner_path.lstrip(
                 workspace.base_path

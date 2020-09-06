@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 deps = [
     "boto3",
@@ -11,6 +11,7 @@ deps = [
     "elasticsearch>=7.0.0,<8.0.0",
     "fastapi",
     "fastapi-users",
+    "ffmpeg-python",
     "gunicorn",
     "jinja2",
     "minio",

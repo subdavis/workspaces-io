@@ -106,8 +106,7 @@ def segment_workspaces(
         foreign_workspaces,
         # https://stackoverflow.com/questions/10024646/how-to-get-list-of-objects-with-unique-attribute
         [
-            # type: ignore
-            seen_roots.add(w.root_id) or w.root
+            seen_roots.add(w.root_id) or w.root  # type: ignore
             for w in requester_workspaces
             if w.root_id not in seen_roots
         ],
