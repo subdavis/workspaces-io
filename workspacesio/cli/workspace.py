@@ -1,3 +1,4 @@
+import datetime
 import json
 from typing import List
 
@@ -130,9 +131,20 @@ def make(cli: click.Group):
             ):
                 documents: List[indexing_schemas.IndexDocumentBase] = []
                 for obj in batch:
+                    before = datetime.datetime.utcnow()
+                    obj.time = "ar"
                     doc = minio_transform_object(workspace=w, root=rdata.root, obj=obj)
-                    additional_indexes(
+                    success, failed = additional_indexes(
                         root=rdata.root, workspace=w, doc=doc, node=rdata.node
+                    )
+                    delta = str(
+                        int(
+                            (datetime.datetime.utcnow() - before).total_seconds() * 1000
+                        )
+                    ).ljust(4)
+                    click.secho(
+                        f"ms={delta} workspace={workspace.name} analysis={','.join(success)} path={doc.path}",
+                        fg="red" if len(failed) else "green",
                     )
                     documents.append(doc)
                 payload = indexing_schemas.IndexBulkAdd(

@@ -2,7 +2,7 @@
 Produce sources for indexing given some root
 """
 import posixpath
-from typing import Iterable, List, Optional, Union
+from typing import Generator, Iterable, List, Optional, Tuple, TypeVar, Union
 
 import minio
 
@@ -71,6 +71,7 @@ def minio_transform_object(
         etag=obj.etag,
         path=inner,
         extension=posixpath.splitext(inner)[-1],
+        content_type=obj.content_type,
     )
 
 
@@ -79,8 +80,15 @@ def additional_indexes(
     root: schemas.WorkspaceRootDB,
     workspace: schemas.WorkspaceDB,
     doc: indexing_schemas.IndexDocumentBase,
-) -> bool:
+) -> Tuple[List[str], List[str]]:
     """Produce additional indexes on the document if it is supported"""
+    analyses_succeeded = []
+    analyses_failed = []
     if doc.extension in [".mp4", ".avi", ".mkv", ".webm", ".wmv"]:
-        video.probe(doc=doc, node=node, root=root, workspace=workspace)
-    return True
+        try:
+            video.probe(doc=doc, node=node, root=root, workspace=workspace)
+            analyses_succeeded.append("ffprobe")
+        except RuntimeError:
+            analyses_failed.append("ffprobe")
+    # if doc.extension in ['.csv', '.txt', '.yml', '']
+    return analyses_succeeded, analyses_failed

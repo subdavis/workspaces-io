@@ -163,7 +163,13 @@ def handle_bucket_event(
         )
         if parent_index is None:
             raise ValueError(f"no index for object {object_key}")
-
+        # Find the user who caused this event
+        actor_db: models.User = (
+            db.query(models.User)
+            .join(models.S3Token)
+            .filter(models.S3Token.access_key_id == record.userIdentity.principalId)
+            .first()
+        )
         # Find the workspace
         workspace: Optional[models.Workspace] = None
         workspace_prefix = ""

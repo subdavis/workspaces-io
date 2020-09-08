@@ -15,6 +15,10 @@ from pydantic import BaseModel
 from workspacesio.schemas import DBBaseModel, WorkspaceRootDB
 
 
+class ProducerError(RuntimeError):
+    pass
+
+
 class IndexDocumentBase(BaseModel):
     """
     The main index document.  Any metadata that can apply to an entire object
@@ -28,6 +32,9 @@ class IndexDocumentBase(BaseModel):
     eTag: Optional[str]
     path: str
     extension: str
+    content_type: Optional[str]
+    text: Optional[str]
+    tag: Optional[str]
 
     # Optional Video Metadata
     codec_tag_string: Optional[str]
@@ -38,6 +45,9 @@ class IndexDocumentBase(BaseModel):
     duration_ts: Optional[int]
     duration_sec: Optional[str]
     format_name: Optional[str]
+    # Optional Image Metadata
+    # Optional Tabular Metadata
+    # Optional Audio Metadata
 
 
 class IndexDocument(IndexDocumentBase):
@@ -132,9 +142,15 @@ class ElasticUpsertIndexDocument(BaseModel):
 
 INDEX_DOCUMENT_MAPPING = {
     "properties": {
+        # Base
         "time": {"type": "date"},
         "size": {"type": "double"},
         "eTag": {"type": "text"},
+        "extension": {"type": "keyword"},
+        "content_type": {"type": "keyword"},
+        "text": {"type": "search_as_you_type"},
+        "tag": {"type": "keyword"},
+        # Required
         "workspace_id": {
             "type": "keyword",
         },
@@ -146,7 +162,15 @@ INDEX_DOCUMENT_MAPPING = {
         "root_path": {"type": "text"},
         "root_id": {"type": "keyword"},
         "path": {"type": "search_as_you_type"},
-        "extension": {"type": "keyword"},
         "user_shares": {"type": "keyword"},
+        # Video
+        "codec_tag_string": {"type": "keyword"},
+        "width": {"type": "double"},
+        "height": {"type": "double"},
+        "r_frame_rate": {"type": "keyword"},
+        "bit_rate": {"type": "double"},
+        "duration_ts": {"type": "double"},
+        "duration_sec": {"type": "double"},
+        "format_name": {"type": "keyword"},
     }
 }

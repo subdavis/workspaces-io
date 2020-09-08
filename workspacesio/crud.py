@@ -255,7 +255,7 @@ def root_create(
     return root_db
 
 
-def root_delete(db: Session, user: schemas.UserDB, root_id: str):
+def root_delete(db: Session, user: schemas.UserDB, root_id: uuid.UUID):
     root_db: models.WorkspaceRoot = db.query(models.WorkspaceRoot).get_or_404(root_id)
     if root_db.storage_node.creator_id != user.id:
         raise PermissionError("Only the node creator can delte roots")
@@ -309,7 +309,7 @@ def workspace_search(
 
 
 def workspace_get(
-    db: Session, user: schemas.UserDB, workspace_id: str
+    db: Session, user: schemas.UserDB, workspace_id: uuid.UUID
 ) -> Optional[models.Workspace]:
     ws: models.Workspace = db.query(models.Workspace).get_or_404(workspace_id)
     # TODO: check if user has permissions for workspace
@@ -395,7 +395,7 @@ def workspace_create(
     return db_workspace
 
 
-def workspace_delete(db: Session, user: schemas.UserDB, workspace_id: str):
+def workspace_delete(db: Session, user: schemas.UserDB, workspace_id: uuid.UUID):
     worksapce_db = db.query(models.Workspace).get_or_404(workspace_id)
     # TODO: remove shares and indexes
     db.delete(worksapce_db)

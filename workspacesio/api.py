@@ -55,7 +55,7 @@ def create_node_root(
 
 @router.delete("/node/root/{root_id}", tags=["node"])
 def delete_node_root(
-    root_id: str,
+    root_id: uuid.UUID,
     creator: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
@@ -91,7 +91,7 @@ def list_workspaces(
     tags=["workspace"],
 )
 def get_workspace(
-    workspace_id: str,
+    workspace_id: uuid.UUID,
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
@@ -170,7 +170,7 @@ def search_token(
 
 @router.delete("/token/{token_id}", tags=["token"])
 def revoke_token(
-    token_id: str,
+    token_id: uuid.UUID,
     db: database.SessionLocal = Depends(get_db),
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
 ):
@@ -183,3 +183,12 @@ def revoke_all_tokens(
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
 ):
     return crud.token_revoke_all(db, user)
+
+
+@router.post("/instrument", status_code=201)
+def create_instrument(
+    tag: str,
+    db: database.SessionLocal = Depends(get_db),
+    user: schemas.UserBase = Depends(fastapi_users.get_current_user),
+):
+    return crud.instrument_create(db, user, tag)

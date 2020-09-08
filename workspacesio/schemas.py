@@ -37,6 +37,11 @@ class ServerInfo(BaseModel):
     public_address: str
 
 
+###########################################################
+# User Schemas
+###########################################################
+
+
 class UserBase(fastapi_users_models.BaseUser):
     username: str
 
@@ -54,6 +59,11 @@ class UserUpdate(UserBase, fastapi_users_models.BaseUserUpdate):
 
 class UserDB(UserBase, fastapi_users_models.BaseUserDB):
     pass
+
+
+###########################################################
+# Storage Node Schemas
+###########################################################
 
 
 class StorageNodeBase(BaseModel):
@@ -77,6 +87,11 @@ class StorageNodeOperator(StorageNodeDB):
     secret_access_key: str
 
 
+###########################################################
+# Workspace Root Schemas
+###########################################################
+
+
 class WorkspaceRootBase(BaseModel):
     root_type: RootType
     bucket: str
@@ -91,6 +106,11 @@ class WorkspaceRootDB(DBBaseModel, WorkspaceRootBase):
     node_id: uuid.UUID
 
 
+###########################################################
+# RootImport Schemas
+###########################################################
+
+
 class RootImportCreate(BaseModel):
     root_id: uuid.UUID
 
@@ -98,6 +118,11 @@ class RootImportCreate(BaseModel):
 class RootImport(BaseModel):
     root: WorkspaceRootDB
     node: StorageNodeOperator
+
+
+###########################################################
+# Workspace Schemas
+###########################################################
 
 
 class WorkspaceBase(BaseModel):
@@ -119,6 +144,11 @@ class WorkspaceDB(DBBaseModel, WorkspaceBase):
     root_id: uuid.UUID
     owner: UserBase
     root: WorkspaceRootDB
+
+
+###########################################################
+# S3 Token Schemas
+###########################################################
 
 
 class S3TokenBase(BaseModel):
@@ -154,6 +184,11 @@ class S3TokenSearchResponse(BaseModel):
     workspaces: Dict[str, S3TokenSearchResponseWorkspacePart]
 
 
+###########################################################
+# Share Schemas
+###########################################################
+
+
 class ShareBase(BaseModel):
     workspace_id: uuid.UUID
     permission: ShareType
@@ -174,3 +209,25 @@ class ShareDB(DBBaseModel, ShareBase):
     workspace: WorkspaceDB
     creator: UserBase
     sharee: UserBase
+
+
+###########################################################
+# Instrumentation Schemas
+###########################################################
+
+
+class InstrumentBase(BaseModel):
+    tag: str
+    enabled: bool
+
+
+class InstrumentUpdate(InstrumentBase):
+    pass
+
+
+class InstrumentDB(InstrumentBase, DBBaseModel):
+    last_updated: datetime.datetime
+    pulled_size: int
+    pushed_size: int
+    pulled_count: int
+    pushed_count: int

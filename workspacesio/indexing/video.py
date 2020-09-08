@@ -4,6 +4,7 @@ import urllib.parse
 import ffmpeg
 
 from workspacesio import s3utils, schemas
+
 from . import schemas as indexing_schemas
 
 
@@ -30,17 +31,20 @@ def probe(
     )
     headerstring = "\r\n".join([f"{key}:{val}" for key, val in headers.items()])
     url = urllib.parse.urljoin(endpoint, uri)
-    data = ffmpeg.probe(url, headers=headerstring)
-    if len(data["streams"]):
-        streams = data["streams"][0]
-        doc.codec_tag_string = streams["codec_tag_string"]
-        doc.r_frame_rate = streams["r_frame_rate"]
-        doc.width = streams["width"]
-        doc.height = streams["height"]
-        doc.duration_ts = streams["duration_ts"]
-        try:
-            doc.bit_rate = int(streams["bit_rate"])
-        except:
-            doc.bit_rate = streams["bit_rate"]
-    doc.duration_sec = data["format"]["duration"]
-    doc.format_name = data["format"]["format_name"]
+    try:
+        data = ffmpeg.probe(url, headers=headerstring)
+        if len(data["streams"]):
+            streams = data["streams"][0]
+            doc.codec_tag_string = streams["codec_tag_string"]
+            doc.r_frame_rate = streams["r_frame_rate"]
+            doc.width = streams["width"]
+            doc.height = streams["height"]
+            doc.duration_ts = streams["duration_ts"]
+            try:
+                doc.bit_rate = int(streams["bit_rate"])
+            except:
+                doc.bit_rate = streams["bit_rate"]
+        doc.duration_sec = data["format"]["duration"]
+        doc.format_name = data["format"]["format_name"]
+    except ffmpeg._run.Error as e:
+        raise indexing_schemas.ProducerError(e)
