@@ -75,15 +75,12 @@ def minio_transform_object(
 
 
 def additional_indexes(
+    node: schemas.StorageNodeOperator,
     root: schemas.WorkspaceRootDB,
     workspace: schemas.WorkspaceDB,
     doc: indexing_schemas.IndexDocumentBase,
-    mount: str,
 ) -> bool:
     """Produce additional indexes on the document if it is supported"""
-
-    if doc.extension in ["mp4", "avi", "mkv", "webm", "wmv"]:
-        video.extract_metadata(
-            doc, posixpath.join(mount, s3utils.getWorkspaceKey(workspace, root))
-        )
+    if doc.extension in [".mp4", ".avi", ".mkv", ".webm", ".wmv"]:
+        video.probe(doc=doc, node=node, root=root, workspace=workspace)
     return True

@@ -16,14 +16,36 @@ from workspacesio.schemas import DBBaseModel, WorkspaceRootDB
 
 
 class IndexDocumentBase(BaseModel):
+    """
+    The main index document.  Any metadata that can apply to an entire object
+    probably belongs in this schema.  It is intended as a union of all single-file
+    metadata.  Elastic supports a lot of fields, so this will be fine unless we get into
+    the mid hundreds.
+    """
+
     time: datetime.datetime
     size: Optional[int]
     eTag: Optional[str]
     path: str
     extension: str
 
+    # Optional Video Metadata
+    codec_tag_string: Optional[str]
+    width: Optional[int]
+    height: Optional[int]
+    r_frame_rate: Optional[str]
+    bit_rate: Optional[str]
+    duration_ts: Optional[int]
+    duration_sec: Optional[str]
+    format_name: Optional[str]
+
 
 class IndexDocument(IndexDocumentBase):
+    """
+    Additional tags that every object gets.  These will be assigned by the server
+    if the bulk ingest endpoint is used.
+    """
+
     workspace_id: uuid.UUID
     workspace_name: str
     owner_id: uuid.UUID

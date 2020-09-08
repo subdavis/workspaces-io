@@ -131,10 +131,9 @@ def make(cli: click.Group):
                 documents: List[indexing_schemas.IndexDocumentBase] = []
                 for obj in batch:
                     doc = minio_transform_object(workspace=w, root=rdata.root, obj=obj)
-                    if minio_mount:
-                        additional_indexes(
-                            root=rdata.root, workspace=w, doc=doc, mount=minio_mount
-                        )
+                    additional_indexes(
+                        root=rdata.root, workspace=w, doc=doc, node=rdata.node
+                    )
                     documents.append(doc)
                 payload = indexing_schemas.IndexBulkAdd(
                     documents=documents,
