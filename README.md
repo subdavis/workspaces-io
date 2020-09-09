@@ -1,4 +1,4 @@
-![workspaces logo](docs/images/logo.png)
+![workspaces logo](docs/images/w2.png)
 
 A dead-simple [FastAPI](https://fastapi.tiangolo.com/) service to manage multi-user permissions and indexing for S3 and MinIO.
 
