@@ -25,6 +25,15 @@ def list_nodes(
     return crud.node_search(db)
 
 
+@router.delete("/node/{node_id}", tags=["node"])
+def remove_node(
+    node_id: str,
+    db: database.SessionLocal = Depends(get_db),
+    user: schemas.UserBase = Depends(fastapi_users.get_current_user),
+):
+    return crud.node_delete(db, user, node_id)
+
+
 @router.post("/node", response_model=schemas.StorageNodeDB, tags=["node"])
 def create_node(
     params: schemas.StorageNodeCreate,
@@ -185,7 +194,7 @@ def revoke_all_tokens(
     return crud.token_revoke_all(db, user)
 
 
-@router.post("/instrument", status_code=201)
+@router.put("/instrument", status_code=200)
 def create_instrument(
     tag: str,
     db: database.SessionLocal = Depends(get_db),

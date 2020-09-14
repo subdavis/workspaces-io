@@ -31,9 +31,9 @@ def register_handlers(app: FastAPI):
     async def permissions_exception_handler(r: Request, exc: PermissionError):
         return JSONResponse(status_code=403, content={"message": str(exc)})
 
-    # @app.exception_handler(ValueError)
-    # async def value_exception_handler(r: Request, exc: ValueError):
-    #     return JSONResponse(status_code=400, content={"message": str(exc)})
+    @app.exception_handler(ValueError)
+    async def value_exception_handler(r: Request, exc: ValueError):
+        return JSONResponse(status_code=400, content={"message": str(exc)})
 
 
 def on_after_register(db: Session, user: schemas.UserBase):
@@ -216,6 +216,17 @@ def node_create(
     db.add(storage_node_db)
     db.commit()
     return storage_node_db
+
+
+def node_delete(db: Session, user: schemas.UserDB, node_id: str):
+    storage_node_db: models.StorageNode = db.query(models.StorageNode).get_or_404(
+        node_id
+    )
+    if storage_node_db.creator_id != user.id:
+        raise PermissionError("Only the node creator can delete node")
+    db.delete(storage_node_db)
+    db.commit()
+    return True
 
 
 def root_search(db: Session, node_name: Optional[str]) -> List[models.WorkspaceRoot]:
@@ -421,7 +432,7 @@ def token_create(
     b3: Boto3ClientCache,
     requester: schemas.UserBase,
     token: schemas.S3TokenCreate,
-) -> List[Tuple[models.StorageNode, models.S3Token]]:
+) -> List[schemas.TokenNodeWrapper]:
     """Create s3 sts token for requester if they have permissions"""
     # Find all workspaces in the query
     workspace_query_list: List[models.Workspace] = (
@@ -435,7 +446,7 @@ def token_create(
     if len(workspace_query_list) == 0:
         return []
 
-    tokens: List[Tuple[models.StorageNode, models.S3Token]] = []
+    tokens: List[schemas.TokenNodeWrapper] = []
     groups = group_workspaces_by_node(workspace_query_list)
 
     for node_id, workspaces in groups.items():
@@ -455,9 +466,9 @@ def token_create(
         )
         if existing and existing.expiration > datetime.datetime.utcnow():
             tokens.append(
-                (
-                    storage_node,
-                    existing,
+                schemas.TokenNodeWrapper(
+                    token=existing,
+                    node=storage_node,
                 )
             )
             continue
@@ -474,13 +485,15 @@ def token_create(
                 roots=roots,
                 storage_node_id=node_id,
             )
+            print(storage_node.assume_role_arn, str(requester.id), json.dumps(policy))
             new_token = b3.get_client(
                 "sts", workspaces[0].root.storage_node
             ).assume_role(
-                RoleArn="arn:xxx:xxx:xxx:xxxx",  # Not meaningful for Minio
+                RoleArn=storage_node.assume_role_arn
+                or "arn:xxx:xxx:xxx:xxxx",  # Not meaningful for Minio
                 RoleSessionName=str(requester.id),  # Not meaningful for Minio
                 Policy=json.dumps(policy),
-                DurationSeconds=900,
+                # DurationSeconds=900,
             )
             token_db = existing or models.S3Token(**token_args)
             token_db.access_key_id = new_token["Credentials"]["AccessKeyId"]
@@ -490,9 +503,9 @@ def token_create(
             db.add(token_db)
             db.commit()
             tokens.append(
-                (
-                    storage_node,
-                    token_db,
+                schemas.TokenNodeWrapper(
+                    token=token_db,
+                    node=storage_node,
                 )
             )
     return tokens
@@ -529,7 +542,7 @@ def token_search(
 ) -> schemas.S3TokenSearchResponse:
     """Search for a set of credentials that satisfy the terms"""
     workspaces: Dict[str, schemas.S3TokenSearchResponseWorkspacePart] = {}
-    tokens: List[Tuple[models.StorageNode, models.S3Token]] = []
+    tokens: List[schemas.TokenNodeWrapper] = []
     for path in search.search_terms:
         match, interior_path = match_terms(db, requester, path)
         if match:

@@ -68,14 +68,28 @@ class Boto3ClientCache:
             config = Config()
             if client_type == "s3":
                 config = Config(signature_version="s3v4")
-            client = boto3.client(
-                client_type,
-                region_name=node.region_name,
-                endpoint_url=node.api_url,
-                aws_access_key_id=node.access_key_id,
-                aws_secret_access_key=node.secret_access_key,
-                config=config,
-            )
+                client = boto3.client(
+                    client_type,
+                    region_name=node.region_name,
+                    endpoint_url=node.api_url,
+                    aws_access_key_id=node.access_key_id,
+                    aws_secret_access_key=node.secret_access_key,
+                    config=config,
+                )
+            elif client_type == "sts":
+                is_aws = node.assume_role_arn is not None
+                api_url = node.api_url
+                if is_aws:
+                    api_url = f"https://sts.{node.region_name}.amazonaws.com"
+                client = boto3.client(
+                    client_type,
+                    region_name=node.region_name,
+                    endpoint_url=api_url,
+                    aws_access_key_id=node.access_key_id,
+                    aws_secret_access_key=node.secret_access_key,
+                )
+            else:
+                raise NotImplementedError("Client type not implemented")
             self.cache[primary_key_short_sha256] = client
         return client
 

@@ -60,22 +60,23 @@ def make(cli: click.Group):
         root_contents = minio_list_root_children(node=rdata.node, root=rdata.root)
         workspace_list: List[schemas.WorkspaceDB] = []
         for folder in root_contents:
-            prefix = folder.object_name.rstrip("/")
-            print(prefix)
-            workspace = ctx["session"].post(
-                "workspace",
-                json={
-                    "name": prefix,
-                    "public": False,
-                    "unmanaged": True,
-                    "base_path": prefix,
-                    "node_name": rdata.node.name,
-                    "root_id": str(rdata.root.id),
-                },
-            )
-            if not workspace.ok and workspace.status_code != 409:
-                exit_with(handle_request_error(workspace))
-            workspace_list.append(schemas.WorkspaceDB(**workspace.json()))
+            prefix = folder.object_name.lstrip(rdata.root.base_path).strip("/")
+            if len(prefix) > 0:
+                print(f"Discovered {prefix}")
+                workspace = ctx["session"].post(
+                    "workspace",
+                    json={
+                        "name": prefix,
+                        "public": False,
+                        "unmanaged": True,
+                        "base_path": prefix,
+                        "node_name": rdata.node.name,
+                        "root_id": str(rdata.root.id),
+                    },
+                )
+                if not workspace.ok and workspace.status_code != 409:
+                    exit_with(handle_request_error(workspace))
+                workspace_list.append(schemas.WorkspaceDB(**workspace.json()))
 
     @root.command(
         name="import-workspace", help="Import a particular prefix as a workspace."

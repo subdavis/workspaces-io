@@ -17,8 +17,9 @@ def minio_list_root_children(
     node: schemas.StorageNodeOperator, root: schemas.WorkspaceRootDB
 ) -> dict:
     """Get direct children from a root"""
+    prefix = posixpath.join(root.base_path, "")  # add trailing slash
     return clientCache.get_minio_sdk_client(node).list_objects_v2(
-        root.bucket, prefix=(root.base_path or "")
+        root.bucket, prefix=prefix
     )
 
 

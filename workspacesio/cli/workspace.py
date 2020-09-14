@@ -37,12 +37,11 @@ def make(cli: click.Group):
         r = ctx["session"].get("workspace", params=params)
         if r.ok:
             for ws in r.json():
-                root = ws["root"]["base_path"]
                 scope = ws["root"]["root_type"]
                 click.secho(f"[{ws['created']}] ", fg="green", nl=False)
                 click.secho(f"{ws['id']} ", fg="yellow", nl=False)
                 click.secho(
-                    f"{root}/{ws['owner']['username']}/{ws['name']}/ ",
+                    f"{ws['owner']['username']}/{ws['name']}/ ",
                     fg="cyan",
                     bold=True,
                     nl=False,
@@ -95,7 +94,7 @@ def make(cli: click.Group):
         if expire:
             body["expiration"] = expire
         r = ctx["session"].post(
-            f"share",
+            "workspace/share",
             json=body,
         )
         exit_with(handle_request_error(r))

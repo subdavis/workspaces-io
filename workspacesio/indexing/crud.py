@@ -18,6 +18,13 @@ from . import models as indexing_models
 from . import schemas as indexing_schemas
 
 
+def find_open_instrumentation(user: models.User):
+    """
+    Get any open instrumentation sessions by user
+    """
+    return
+
+
 def make_record_primary_key(
     api_url: str,
     bucket: str,
@@ -164,7 +171,7 @@ def handle_bucket_event(
         if parent_index is None:
             raise ValueError(f"no index for object {object_key}")
         # Find the user who caused this event
-        actor_db: models.User = (
+        actor_db: Union[models.User, None] = (
             db.query(models.User)
             .join(models.S3Token)
             .filter(models.S3Token.access_key_id == record.userIdentity.principalId)

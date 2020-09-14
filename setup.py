@@ -11,6 +11,7 @@ deps = [
     "elasticsearch>=7.0.0,<8.0.0",
     "fastapi",
     "fastapi-users",
+    "fastapi-contrib",
     "ffmpeg-python",
     "gunicorn",
     "jinja2",

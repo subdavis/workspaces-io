@@ -4,8 +4,6 @@ from elasticsearch import Elasticsearch
 from fastapi import Depends
 from fastapi.routing import APIRouter
 from fastapi_users import FastAPIUsers
-from fastapi_users.authentication import JWTAuthentication
-from fastapi_users.db import SQLAlchemyUserDatabase
 
 from workspacesio import database, schemas
 from workspacesio.depends import fastapi_users, get_boto, get_db, get_elastic_client

@@ -27,9 +27,9 @@ def getWorkspaceKey(
     Determine full object prefix for a given workspace
     """
     root_base_path = root.base_path if root else workspace.root.base_path
-    inner_path = workspace.base_path or posixpath.join(
-        workspace.owner.username, sanitize(workspace.name)
-    )
+    inner_path = posixpath.join(workspace.owner.username, sanitize(workspace.name))
+    if workspace.base_path != None:
+        inner_path = workspace.base_path
     return posixpath.join(
         root_base_path,
         inner_path,
@@ -76,9 +76,9 @@ def makePolicy(
     workspace_ids: Set[uuid.UUID] = set()
     statements: List[dict] = [
         {
-            "Action": ["s3:ListAllMyBuckets", "s3:GetBucketLocation"],
+            "Action": "s3:ListAllMyBuckets",
             "Effect": "Allow",
-            "Resource": ["arn:aws:s3:::*"],
+            "Resource": "*",
         }
     ]
     for w in workspaces:
@@ -93,6 +93,14 @@ def makePolicy(
         resourceBase = f"arn:aws:s3:::{bucket}"
         workspacekey = getWorkspaceKey(w)
         usernamekey = workspacekey.rstrip(w.name)
+
+        statements.append(
+            {
+                "Action": "s3:GetBucketLocation",
+                "Effect": "Allow",
+                "Resource": resourceBase,
+            }
+        )
 
         if w.root.root_type == schemas.RootType.PUBLIC:
             basepath = w.root.base_path or ""

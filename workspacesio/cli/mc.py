@@ -82,11 +82,11 @@ def make(cli: click.Group):
                 )
                 assembled = assembled.replace(arg, path)
             if len(response["tokens"]) == 1:
-                token = response["tokens"][0][1]
+                token = response["tokens"][0]["token"]
                 access_key = token["access_key_id"]
                 secret = token["secret_access_key"]
                 session_token = token["session_token"]
-                api_url = response["tokens"][0][0]["api_url"]
+                api_url = response["tokens"][0]["node"]["api_url"]
                 url = urllib.parse.urlparse(api_url)
                 mc_env = (
                     f"{url.scheme}://{access_key}:{secret}:{session_token}@{url.netloc}"

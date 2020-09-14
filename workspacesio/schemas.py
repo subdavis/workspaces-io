@@ -75,6 +75,7 @@ class StorageNodeBase(BaseModel):
 class StorageNodeCreate(StorageNodeBase):
     access_key_id: str
     secret_access_key: str
+    assume_role_arn: Optional[str]
 
 
 class StorageNodeDB(DBBaseModel, StorageNodeBase):
@@ -179,8 +180,13 @@ class S3TokenSearchResponseWorkspacePart(BaseModel):
     workspace: WorkspaceDB
 
 
+class TokenNodeWrapper(BaseModel):
+    token: S3TokenDB
+    node: StorageNodeDB
+
+
 class S3TokenSearchResponse(BaseModel):
-    tokens: List[Tuple[StorageNodeDB, S3TokenDB]]
+    tokens: List[TokenNodeWrapper]
     workspaces: Dict[str, S3TokenSearchResponseWorkspacePart]
 
 

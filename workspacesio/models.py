@@ -65,7 +65,7 @@ class StorageNode(BaseModel):
     """
 
     __tablename__ = "storage_node"
-    __table_args__ = (UniqueConstraint("name"), UniqueConstraint("api_url"))
+    __table_args__ = (UniqueConstraint("name"),)
 
     name = Column(String, nullable=False)
     # The API url that Workspaces Server can reference it as.
@@ -74,6 +74,9 @@ class StorageNode(BaseModel):
     access_key_id = Column(String, nullable=False)
     secret_access_key = Column(String, nullable=False)
     region_name = Column(String, nullable=False, default="us-east-1")
+    # ARN used for STS assume role for temporary credentials
+    # You DEFINITELY want this role to be empty (no permissions)
+    assume_role_arn = Column(String, nullable=True, default=None)
 
     creator: User = relationship(User, back_populates="created_nodes")
     roots = relationship("WorkspaceRoot", back_populates="storage_node")

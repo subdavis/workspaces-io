@@ -23,9 +23,11 @@ def make(cli: click.Group):
         r = ctx["session"].post("token/search", json={"search_terms": workspaces})
         if r.ok:
             response = schemas.S3TokenSearchResponse(**r.json())
-            for node, token in response.tokens:
+            for wrapper in response.tokens:
+                node = wrapper.node
+                token = wrapper.token
                 click.secho(
-                    f"Credentials for {[w.name for w in token.workspaces]} @  {node.api_url}",
+                    f"Credentials for {[w.name for w in token.workspaces]} @ {node.api_url}",
                     fg="green",
                 )
                 click.secho(
