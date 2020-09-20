@@ -10,17 +10,26 @@ RUN yarn build
 
 FROM python:3.8-slim as runtime
 
-EXPOSE 8000
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+ENTRYPOINT ["/tini", "--"]
+
+EXPOSE 8100
 WORKDIR /app
 
 # Install dependencies
 COPY ./setup.py /app/
 RUN pip install --no-cache-dir .
-# Build
-COPY startup.sh /app/startup.sh
+
+# Add init scripts
+COPY docker/startup.sh /app/startup.sh
+
+# Install modules
 COPY ./workspacesio /app/workspacesio
 RUN pip install --no-deps .
 
+# Copy over frontend from builder
 COPY --from=builder /app/dist/ /app/static/
 
 CMD ["/app/startup.sh"]

@@ -34,7 +34,7 @@ class WioSession(BaseUrlSession):
 
 @click.group(cls=ClickAliasedGroup)
 @click.option(
-    "--api-url", default="http://localhost:8000/api", envvar="WIO_ENDPOINT_URL"
+    "--api-url", default="http://localhost:8100/api", envvar="WIO_ENDPOINT_URL"
 )
 @click.option(
     "--config",

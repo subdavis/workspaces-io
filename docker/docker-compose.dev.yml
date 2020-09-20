@@ -1,0 +1,6 @@
+version: '3.1'
+services:
+  workspaces:
+    command: /app/docker/startup.sh --reload
+    volumes:
+      - ..:/app
