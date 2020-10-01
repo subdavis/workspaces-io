@@ -19,7 +19,10 @@ def probe(
     host = parsed.netloc
     headerstring = ""
     uri = posixpath.join(
-        "/", root.bucket, s3utils.getWorkspaceKey(workspace, root), doc.path.lstrip("/")
+        "/",
+        root.bucket,
+        s3utils.getWorkspaceKey(workspace, root),
+        doc.path.lstrip("/"),
     )
     headers = s3utils.get_s3v4_headers(
         access_key=node.access_key_id,

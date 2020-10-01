@@ -54,11 +54,12 @@ services:
     depends_on:
       - db
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: docker/Dockerfile
     ports:
-      - "8000:8000"
+      - "8100:8100"
     environment:
+      WEB_CONCURRENCY: 4
       WIO_DATABASE_URL: postgres://wio:workspaces@db:5432
       WIO_ELASTICSEARCH_NODE_1: http://elastic:9200
     

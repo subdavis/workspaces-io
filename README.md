@@ -1,4 +1,6 @@
-![workspaces logo](docs/images/w2.png)
+<p align="center">
+  <img src="docs/images/workspacesio-logo-circle.png" width="640px">
+</p>
 
 A dead-simple [FastAPI](https://fastapi.tiangolo.com/) service to manage multi-user permissions and indexing for S3 and MinIO.
 
@@ -76,9 +78,10 @@ A workspace root is a prefix inside a bucket where workspaces-io manages all sub
 | ENV Name | Default | description |
 |----------|---------|-------------|
 | `WIO_SECRET` | `fast` | hashing secret for db passwords |
-| `WIO_PUBLIC_NAME` | `http://localhost:8000` | how clients connect to the server |
+| `WIO_PUBLIC_NAME` | `http://localhost:8100` | how clients connect to the server |
 | `WIO_DATABASE_URL` | `postgresql://wio:workspaces@localhost:5555/wio` | postgres connection string |
 | `WIO_ELASTICSEARCH_NODE_1` | `http://localhost:9200` | elasticsearch connection string |
+| `WEB_CONCURRENCY` | none | how many fastapi worker threads to run |
 
 ## Usage
 
@@ -148,7 +151,7 @@ workspaces-create-tables
 
 # run dev server
 # need host arg because minio must be able to post to the server
-uvicorn workspacesio.asgi:app --host 0.0.0.0 --reload
+uvicorn workspacesio.asgi:app --host 0.0.0.0 --port 8100 --reload
 ```
 
 ## Docker

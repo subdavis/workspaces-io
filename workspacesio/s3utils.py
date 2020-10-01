@@ -74,13 +74,7 @@ def makePolicy(
     node_id: Union[uuid.UUID, None] = None
     root_ids: Set[uuid.UUID] = set()
     workspace_ids: Set[uuid.UUID] = set()
-    statements: List[dict] = [
-        {
-            "Action": "s3:ListAllMyBuckets",
-            "Effect": "Allow",
-            "Resource": "*",
-        }
-    ]
+    statements: List[dict] = []
     for w in workspaces:
         if node_id is not None and w.root.storage_node.id != node_id:
             raise ValueError("Multiple nodes found in workspace list")

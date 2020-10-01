@@ -27,13 +27,23 @@ class IndexDocumentBase(BaseModel):
     the mid hundreds.
     """
 
+    # time of last update.  Note that through s3, creation time is not available
     time: datetime.datetime
+    # size in bytes
     size: Optional[int]
+    # minio/s3 eTag
     eTag: Optional[str]
+    # path is the inner path starting at the workspace boundary
     path: str
+    # object name is the file name alone
+    filename: str
+    # extension is the final extension
     extension: str
+    # MIME content type
     content_type: Optional[str]
+    # plaintext object contents if utf-8 encodeable
     text: Optional[str]
+    # tag unused so far
     tag: Optional[str]
 
     # Optional Video Metadata
@@ -63,6 +73,7 @@ class IndexDocument(IndexDocumentBase):
     bucket: str
     server: str
     root_path: str
+    workspace_base_path: str
     root_id: uuid.UUID
     user_shares: List[uuid.UUID]
 
@@ -160,8 +171,10 @@ INDEX_DOCUMENT_MAPPING = {
         "bucket": {"type": "keyword"},
         "server": {"type": "keyword"},
         "root_path": {"type": "text"},
+        "workspace_base_path": {"type": "text"},
         "root_id": {"type": "keyword"},
-        "path": {"type": "search_as_you_type"},
+        "path": {"type": "text"},
+        "filename": {"type": "text"},
         "user_shares": {"type": "keyword"},
         # Video
         "codec_tag_string": {"type": "keyword"},
