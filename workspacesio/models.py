@@ -70,6 +70,8 @@ class StorageNode(BaseModel):
     name = Column(String, nullable=False)
     # The API url that Workspaces Server can reference it as.
     api_url = Column(String, nullable=False)
+    # An optional separate STS api url.
+    sts_api_url = Column(String, nullable=True, default=None)
     creator_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
     access_key_id = Column(String, nullable=False)
     secret_access_key = Column(String, nullable=False)

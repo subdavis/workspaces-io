@@ -39,6 +39,7 @@ def make(cli: click.Group):
     @click.argument("access_key_id", type=click.STRING)
     @click.argument("secret_access_key", type=click.STRING)
     @click.option("--region-name", type=click.STRING, default="us-east-1")
+    @click.option("--sts-api-url", type=click.STRING)
     @click.option(
         "--role-arn",
         type=click.STRING,
@@ -46,7 +47,14 @@ def make(cli: click.Group):
     )
     @click.pass_obj
     def register(
-        ctx, name, api_url, access_key_id, secret_access_key, region_name, role_arn
+        ctx,
+        name,
+        api_url,
+        access_key_id,
+        secret_access_key,
+        region_name,
+        sts_api_url,
+        role_arn,
     ):
         r = ctx["session"].post(
             "node",
@@ -56,6 +64,7 @@ def make(cli: click.Group):
                 "access_key_id": access_key_id,
                 "secret_access_key": secret_access_key,
                 "region_name": region_name,
+                "sts_api_url": sts_api_url,
                 "assume_role_arn": role_arn,
             },
         )

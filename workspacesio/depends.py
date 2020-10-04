@@ -79,7 +79,9 @@ class Boto3ClientCache:
             elif client_type == "sts":
                 is_aws = node.assume_role_arn is not None
                 api_url = node.api_url
-                if is_aws:
+                if node.sts_api_url:
+                    api_url = node.sts_api_url
+                elif is_aws:
                     api_url = f"https://sts.{node.region_name}.amazonaws.com"
                 client = boto3.client(
                     client_type,
