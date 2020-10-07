@@ -43,7 +43,7 @@ def create_node(
     return crud.node_create(db, creator, params)
 
 
-@router.get("/node/root", response_model=List[schemas.WorkspaceRootDB], tags=["node"])
+@router.get("/root", response_model=List[schemas.WorkspaceRootDB], tags=["root"])
 def list_node_roots(
     node_name: Optional[str] = None,
     _: schemas.UserBase = Depends(fastapi_users.get_current_user),
@@ -52,7 +52,7 @@ def list_node_roots(
     return crud.root_search(db, node_name=node_name)
 
 
-@router.post("/node/root", response_model=schemas.WorkspaceRootDB, tags=["node"])
+@router.post("/root", response_model=schemas.WorkspaceRootDB, tags=["root"])
 def create_node_root(
     params: schemas.WorkspaceRootCreate,
     creator: schemas.UserBase = Depends(fastapi_users.get_current_user),
@@ -62,7 +62,7 @@ def create_node_root(
     return crud.root_create(db, boto_s3, creator, params)
 
 
-@router.delete("/node/root/{root_id}", tags=["node"])
+@router.delete("/root/{root_id}", tags=["root"])
 def delete_node_root(
     root_id: uuid.UUID,
     creator: schemas.UserBase = Depends(fastapi_users.get_current_user),
@@ -71,7 +71,7 @@ def delete_node_root(
     return crud.root_delete(db, creator, root_id)
 
 
-@router.post("/node/root/import", response_model=schemas.RootImport, tags=["node"])
+@router.post("/root/import", response_model=schemas.RootImport, tags=["root"])
 def start_root_import(
     params: schemas.RootImportCreate,
     creator: schemas.UserBase = Depends(fastapi_users.get_current_user),

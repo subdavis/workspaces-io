@@ -8,8 +8,8 @@ services:
     ports:
       - "9000:9000"
     environment:
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio1234
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     command: server /data
 
   secondary_minio:
@@ -19,17 +19,34 @@ services:
     ports:
       - "9100:9000"
     environment:
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio1234
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     command: server /data
+
+  keycloak:
+    image: jboss/keycloak
+    ports:
+      - "8200:8080"
+    environment:
+      KEYCLOAK_USER: ${KEYCLOAK_USER}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_PASS}
+      DB_VENDOR: postgres
+      DB_ADDR: db:5432
+      DB_USER: ${KEYCLOAK_DB_USER}
+      DB_DATABASE: ${KEYCLOAK_DB_USER}
+      DB_PASSWORD: ${KEYCLOAK_DB_PASS}
 
   db:
     image: postgres
     environment:
-      POSTGRES_USER: wio
-      POSTGRES_PASSWORD: workspaces
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+      WORKSPACES_DB_USER: ${WORKSPACES_DB_USER}
+      WORKSPACES_DB_PASS: ${WORKSPACES_DB_PASS}
+      KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER}
+      KEYCLOAK_DB_PASS: ${KEYCLOAK_DB_PASS}
     volumes:
       - db:/var/lib/postgresql/data
+      - ./initdb.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     ports:
       - "5555:5432"
 
@@ -60,7 +77,7 @@ services:
       - "8100:8100"
     environment:
       WEB_CONCURRENCY: 4
-      WIO_DATABASE_URL: postgres://wio:workspaces@db:5432
+      WIO_DATABASE_URL: postgres://${WORKSPACES_DB_USER}:${WORKSPACES_DB_PASS}@db:5432
       WIO_ELASTICSEARCH_NODE_1: http://elastic:9200
     
 volumes:

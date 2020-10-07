@@ -5,7 +5,6 @@ from fastapi import Depends, FastAPI, Request
 from sqlalchemy.orm import Session
 
 from . import (
-    __version__,
     api,
     crud,
     database,
@@ -64,7 +63,7 @@ def init_fastapi_users(app: FastAPI):
 def create_app(env: typing.Dict[str, str]) -> FastAPI:
     app = FastAPI(
         title="WorkspacesIO",
-        version=__version__,
+        version="0.1.0",
     )
     app.include_router(api.router, prefix="/api")
     app.include_router(indexing.api.router, prefix="/api")

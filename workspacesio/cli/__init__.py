@@ -9,9 +9,10 @@ from click_aliases import ClickAliasedGroup
 from requests.exceptions import RequestException
 from requests_toolbelt.sessions import BaseUrlSession
 
-from . import auth
 from . import config as conf
-from . import index, mc, node, root, s3token, workspace
+
+# from . import index, mc, node, root, s3token, workspace
+from . import workspace
 
 
 class WioSession(BaseUrlSession):
@@ -61,9 +62,9 @@ def cli(ctx, api_url, config, token):
 
 
 workspace.make(cli)
-auth.make(cli)
-s3token.make(cli)
-mc.make(cli)
-index.make(cli)
-node.make(cli)
-root.make(cli)
+# auth.make(cli)
+# s3token.make(cli)
+# mc.make(cli)
+# index.make(cli)
+# node.make(cli)
+# root.make(cli)

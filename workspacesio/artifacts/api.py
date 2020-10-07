@@ -7,31 +7,34 @@ from workspacesio import database, schemas
 from workspacesio.depends import fastapi_users, get_db
 
 from . import crud
-from . import models as deriv_models
-from . import schemas as deriv_schemas
+from . import models as artifact_models
+from . import schemas as artifact_schemas
 
 router = APIRouter()
-tags = ["derivatives"]
+tags = ["artifacts"]
 
 
 @router.post(
-    "/derivative",
-    response_model=deriv_schemas.DerivativeDB,
+    "/artifact",
+    response_model=artifact_schemas.DerivativeDB,
     status_code=201,
 )
-def create_derivative(
-    params: deriv_schemas.DerviativeCreate,
+def create_artifact(
+    params: artifact_schemas.DerviativeCreate,
     creator: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
-    return crud.deriv_create(db, creator, params)
+    return crud.artifact_create(db, creator, params)
 
 
-@router.get("/derivative", response_model=List[deriv_schemas.DerivativeDB])
-def find_derivatives(
+@router.get("/artifact", response_model=List[artifact_schemas.DerivativeDB])
+def find_artifacts(
     prefix: str,
     name: Optional[str],
     user: schemas.UserBase = Depends(fastapi_users.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
-    return crud.deriv_search(db, user, name, prefix)
+    return crud.artifact_search(db, user, name, prefix)
+
+
+@router.get('/artifact/batch_find', response_model=List[])

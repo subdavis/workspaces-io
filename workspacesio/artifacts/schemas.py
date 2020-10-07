@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from workspacesio.schemas import DBBaseModel, WorkspaceDB
 
 
-class DerivativeBase(BaseModel):
+class ArtifactBase(BaseModel):
     workspace_id: uuid.UUID
     object_path: str
     object_name: str
@@ -15,9 +15,9 @@ class DerivativeBase(BaseModel):
     object_revision_date: datetime.datetime
 
 
-class DerviativeCreate(DerivativeBase):
+class DerviativeCreate(ArtifactBase):
     pass
 
 
-class DerivativeDB(DerivativeBase, DBBaseModel):
+class ArtifactDB(ArtifactBase, DBBaseModel):
     workspace: WorkspaceDB

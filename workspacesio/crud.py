@@ -23,9 +23,9 @@ logger = logging.getLogger("api")
 
 
 def register_handlers(app: FastAPI):
-    @app.exception_handler(IntegrityError)
-    async def integrity_exception_handler(r: Request, exc: IntegrityError):
-        return JSONResponse(status_code=409, content={"message": "Integrity Error"})
+    # @app.exception_handler(IntegrityError)
+    # async def integrity_exception_handler(r: Request, exc: IntegrityError):
+    #     return JSONResponse(status_code=409, content={"message": "Integrity Error"})
 
     @app.exception_handler(PermissionError)
     async def permissions_exception_handler(r: Request, exc: PermissionError):
@@ -516,7 +516,10 @@ def token_revoke(db: Session, token_id: uuid.UUID):
     Remove token from DB.  Outstanding tokens in AWS/MinIO will continue
     to function until they expire naturally
     """
-    db.delete(db.query(models.S3Token).get_or_404(token_id))
+    t = db.query(models.S3Token).get_or_404(token_id)
+    t.workspaces.clear()
+    t.roots.clear()
+    db.delete(t)
     db.commit()
 
 
@@ -529,6 +532,7 @@ def token_revoke_all(db: Session, user: schemas.UserBase) -> int:
     )
     for t in all_tokens:
         t.workspaces.clear()
+        t.roots.clear()
         db.delete(t)
     db.commit()
     return len(all_tokens)

@@ -12,7 +12,46 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from workspacesio.schemas import DBBaseModel, WorkspaceRootDB
+from workspacesio.schemas import DBBaseModel, WorkspaceDB, WorkspaceRootDB
+
+
+INDEX_DOCUMENT_MAPPING = {
+    "properties": {
+        # Base
+        "time": {"type": "date"},
+        "size": {"type": "double"},
+        "eTag": {"type": "text"},
+        "extension": {"type": "keyword"},
+        "content_type": {"type": "keyword"},
+        "text": {"type": "search_as_you_type"},
+        "tag": {"type": "keyword"},
+        # Required
+        "workspace_id": {
+            "type": "keyword",
+        },
+        "workspace_name": {"type": "keyword"},
+        "owner_id": {"type": "keyword"},
+        "owner_name": {"type": "keyword"},
+        "bucket": {"type": "keyword"},
+        "server": {"type": "keyword"},
+        "root_path": {"type": "text"},
+        "workspace_base_path": {"type": "text"},
+        "last_seen_crawl_id": {"type": "keyword"},
+        "root_id": {"type": "keyword"},
+        "path": {"type": "text"},
+        "filename": {"type": "text"},
+        "user_shares": {"type": "keyword"},
+        # Video
+        "codec_tag_string": {"type": "keyword"},
+        "width": {"type": "double"},
+        "height": {"type": "double"},
+        "r_frame_rate": {"type": "keyword"},
+        "bit_rate": {"type": "double"},
+        "duration_ts": {"type": "double"},
+        "duration_sec": {"type": "double"},
+        "format_name": {"type": "keyword"},
+    }
+}
 
 
 class ProducerError(RuntimeError):
@@ -74,6 +113,7 @@ class IndexDocument(IndexDocumentBase):
     server: str
     root_path: str
     workspace_base_path: str
+    last_seen_crawl_id: uuid.UUID
     root_id: uuid.UUID
     user_shares: List[uuid.UUID]
 
@@ -96,6 +136,8 @@ class IndexBulkAdd(BaseModel):
 
     documents: List[IndexDocumentBase]
     workspace_id: uuid.UUID
+    last_indexed_key: str
+    succeeded: Optional[bool]
 
 
 class IndexBulkAddedResponse(BaseModel):
@@ -151,39 +193,15 @@ class ElasticUpsertIndexDocument(BaseModel):
     doc_as_upsert = True
 
 
-INDEX_DOCUMENT_MAPPING = {
-    "properties": {
-        # Base
-        "time": {"type": "date"},
-        "size": {"type": "double"},
-        "eTag": {"type": "text"},
-        "extension": {"type": "keyword"},
-        "content_type": {"type": "keyword"},
-        "text": {"type": "search_as_you_type"},
-        "tag": {"type": "keyword"},
-        # Required
-        "workspace_id": {
-            "type": "keyword",
-        },
-        "workspace_name": {"type": "keyword"},
-        "owner_id": {"type": "keyword"},
-        "owner_name": {"type": "keyword"},
-        "bucket": {"type": "keyword"},
-        "server": {"type": "keyword"},
-        "root_path": {"type": "text"},
-        "workspace_base_path": {"type": "text"},
-        "root_id": {"type": "keyword"},
-        "path": {"type": "text"},
-        "filename": {"type": "text"},
-        "user_shares": {"type": "keyword"},
-        # Video
-        "codec_tag_string": {"type": "keyword"},
-        "width": {"type": "double"},
-        "height": {"type": "double"},
-        "r_frame_rate": {"type": "keyword"},
-        "bit_rate": {"type": "double"},
-        "duration_ts": {"type": "double"},
-        "duration_sec": {"type": "double"},
-        "format_name": {"type": "keyword"},
-    }
-}
+class WorkspaceCrawlRoundBase(BaseModel):
+    worksapce_id: uuid.UUID
+    start_time: datetime.datetime
+    succeeded: bool
+
+
+class WorkspaceCrawlRoundDB(DBBaseModel, WorkspaceCrawlRoundBase):
+    end_time: Optional[datetime.datetime]
+    last_indexed_key: Optional[str]
+    total_objects: int
+    total_size: int
+    workspace: WorkspaceDB

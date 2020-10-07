@@ -16,7 +16,7 @@ def make(cli: click.Group):
     @click.option("--node-name", type=click.STRING)
     @click.pass_obj
     def list_roots(ctx, node_name):
-        r = ctx["session"].get("node/root", params={"node_name": node_name})
+        r = ctx["session"].get("root", params={"node_name": node_name})
         exit_with(handle_request_error(r))
 
     @root.command(name="create", aliases=["c"])
@@ -31,7 +31,7 @@ def make(cli: click.Group):
     @click.pass_obj
     def create_root(ctx, bucket, node_name, base_path, root_type):
         r = ctx["session"].post(
-            "node/root",
+            "root",
             json={
                 "bucket": bucket,
                 "node_name": node_name,
@@ -45,7 +45,7 @@ def make(cli: click.Group):
     @click.argument("root_id", type=click.STRING)
     @click.pass_obj
     def delete_root(ctx, root_id):
-        r = ctx["session"].delete(f"node/root/{root_id}")
+        r = ctx["session"].delete(f"root/{root_id}")
         exit_with(handle_request_error(r))
 
     @root.command(name="import", help="Import all workspaces in a root.")
@@ -53,7 +53,7 @@ def make(cli: click.Group):
     @click.option("--index-all", is_flag=True)
     @click.pass_obj
     def import_all_workspaces(ctx, root_id, index_all):
-        r = ctx["session"].post("node/root/import", json={"root_id": root_id})
+        r = ctx["session"].post("root/import", json={"root_id": root_id})
         if not r.ok:
             exit_with(handle_request_error(r))
         rdata = schemas.RootImport(**r.json())

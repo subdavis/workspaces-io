@@ -6,12 +6,12 @@ from sqlalchemy.schema import UniqueConstraint
 from workspacesio.models import BaseModel, Workspace
 
 
-class Derivative(BaseModel):
+class Artifact(BaseModel):
     """
     An annotation dataset enabled on a workspace
     """
 
-    __tablename__ = "derivative"
+    __tablename__ = "artifact"
     __table_args__ = (UniqueConstraint("workspace_id", "object_path"),)
 
     workspace_id = Column(
@@ -21,5 +21,6 @@ class Derivative(BaseModel):
     object_name = Column(String, nullable=False)
     object_revision_date = Column(DateTime)
     name = Column(String, nullable=False)
+    complete = Column(Boolean, nullable=False, default=False)
 
     workspace = relationship(Workspace, back_populates="annotation_datasets")

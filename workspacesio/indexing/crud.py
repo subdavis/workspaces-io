@@ -1,12 +1,14 @@
+import datetime
 import hashlib
 import json
 import posixpath
 import urllib
+import uuid
 from typing import Optional
 
 import boto3
 import elasticsearch
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
@@ -18,11 +20,9 @@ from . import models as indexing_models
 from . import schemas as indexing_schemas
 
 
-def find_open_instrumentation(user: models.User):
-    """
-    Get any open instrumentation sessions by user
-    """
-    return
+def verify_root_permissions(user: models.User, root: models.WorkspaceRoot):
+    if root.storage_node.creator_id != user.id:
+        raise PermissionError("User must be node operator to create index")
 
 
 def make_record_primary_key(
@@ -35,27 +35,27 @@ def make_record_primary_key(
     return hashlib.sha256(primary_key).hexdigest()[-16:]
 
 
-def index_create(
+def root_index_upsert(
     db: Session,
     es: elasticsearch.Elasticsearch,
     user: schemas.UserDB,
     root_id: str,
 ) -> indexing_schemas.IndexDB:
-    """Setup notifications and indexing for a root
+    """
+    Setup notifications and indexing for a root
     * Verify that the index exists in elasticsearch
     * Insert or update an index record
     """
 
-    index_db: Optional[indexing_models.ElasticIndex] = (
-        db.query(indexing_models.ElasticIndex)
-        .filter(indexing_models.ElasticIndex.root_id == root_id)
+    index_db: Optional[indexing_models.RootIndex] = (
+        db.query(indexing_models.RootIndex)
+        .filter(indexing_models.RootIndex.root_id == root_id)
         .first()
     )
     if index_db is None:
         root: models.WorkspaceRoot = db.query(models.WorkspaceRoot).get_or_404(root_id)
-        if root.storage_node.creator_id != user.id:
-            raise PermissionError("User must be node operator to create index")
-        index_db = indexing_models.ElasticIndex(
+        verify_root_permissions(user, root)
+        index_db = indexing_models.RootIndex(
             root_id=root.id,
             index_type="default",
         )
@@ -70,47 +70,83 @@ def index_create(
     return index_db
 
 
-def index_delete(
+def root_index_delete(
     db: Session,
     es: elasticsearch.Elasticsearch,
     user: schemas.UserDB,
     root_id: str,
 ):
-    index_db: indexing_models.ElasticIndex = (
-        db.query(indexing_models.ElasticIndex)
-        .filter(indexing_models.ElasticIndex.root_id == root_id)
+    index_db: Optional[indexing_models.RootIndex] = (
+        db.query(indexing_models.RootIndex)
+        .filter(indexing_models.RootIndex.root_id == root_id)
         .first()
     )
     if index_db is None:
         raise ValueError("No index with that id")
-    es.indices.delete(index=index_db.index_type, ignore=[404])
+    root: models.WorkspaceRoot = index_db.root
+    verify_root_permissions(user, root)
     db.delete(index_db)
     db.commit()
+    remaining_count = db.query(indexing_models.RootIndex).count()
+    if remaining_count == 0:
+        es.indices.delete(index=index_db.index_type, ignore=[404])
     return index_db
+
+
+def workspace_crawl_create(
+    workspace_id: uuid.UUID,
+    user: schemas.UserDB,
+    db: Session,
+) -> indexing_models.WorkspaceCrawlRound:
+    workspace: models.Workspace = db.query(models.Workspace).get_or_404(workspace_id)
+    verify_root_permissions(user, workspace.root)
+    last_crawl: Optional[indexing_models.WorkspaceCrawlRound] = (
+        db.query(indexing_models.WorkspaceCrawlRound)
+        .filter(indexing_models.WorkspaceCrawlRound.workspace_id == workspace.id)
+        .order_by(desc(indexing_models.WorkspaceCrawlRound.start_time))
+        .first()
+    )
+    if last_crawl is None or last_crawl.succeeded == True:
+        # Create a new crawl
+        last_crawl = indexing_models.WorkspaceCrawlRound(workspace_id=workspace_id)
+        db.add(last_crawl)
+        db.commit()
+    return last_crawl
 
 
 def bulk_index_add(
     db: Session,
     ec: elasticsearch.Elasticsearch,
     user: schemas.UserDB,
+    workspace_id: uuid.UUID,
     docs: indexing_schemas.IndexBulkAdd,
 ):
-    workspace: models.Workspace = db.query(models.Workspace).get_or_404(
-        docs.workspace_id
+    workspace: models.Workspace = db.query(models.Workspace).get_or_404(workspace_id)
+    last_crawl: indexing_models.WorkspaceCrawlRound = (
+        db.query(indexing_models.WorkspaceCrawlRound)
+        .filter(indexing_models.WorkspaceCrawlRound.workspace_id == workspace.id)
+        .order_by(desc(indexing_models.WorkspaceCrawlRound.start_time))
+        .first_or_404()
     )
+    if last_crawl.success == True:
+        raise ValueError(f"no outstanding crawl round for this workspace found")
     root: models.WorkspaceRoot = workspace.root
+    verify_root_permissions(user, root)
     bulk_operations = ""
-    index: indexing_models.ElasticIndex = (
-        db.query(indexing_models.ElasticIndex)
-        .filter(indexing_models.ElasticIndex.root_id == root.id)
+    index: indexing_models.RootIndex = (
+        db.query(indexing_models.RootIndex)
+        .filter(indexing_models.RootIndex.root_id == root.id)
         .first()
     )
     if index is None:
         raise ValueError(
             f"index does not exist for workspace {workspace.name}::{workspace.id}"
         )
+    object_count = len(docs.documents)
+    object_size_sum = 0
     for doc in docs.documents:
         workspacekey = s3utils.getWorkspaceKey(workspace)
+        doc.s
         upsertdoc = indexing_schemas.IndexDocument(
             **doc.dict(),
             workspace_id=workspace.id,
@@ -124,6 +160,7 @@ def bulk_index_add(
             user_shares=[share.sharee.id for share in workspace.shares],
             # TODO: group shares
         )
+        object_size_sum += doc.size
         bulk_operations += (
             json.dumps(
                 {
@@ -143,6 +180,14 @@ def bulk_index_add(
         bulk_operations += (
             indexing_schemas.ElasticUpsertIndexDocument(doc=upsertdoc).json() + "\n"
         )
+    last_crawl.total_objects += object_count
+    last_crawl.total_size += object_size_sum
+    last_crawl.last_indexed_key = docs.documents[-1].path
+    if docs.succeeded:
+        last_crawl.succeeded = True
+        last_crawl.end_time = datetime.datetime.utcnow()
+    db.add(last_crawl)
+    db.commit()
     ec.bulk(bulk_operations)
 
 
@@ -157,8 +202,8 @@ def handle_bucket_event(
         bucket = record.s3.bucket.name
 
         object_key = urllib.parse.unquote(record.s3.object.key)
-        parent_index: indexing_models.ElasticIndex = (
-            db.query(indexing_models.ElasticIndex)
+        parent_index: indexing_models.RootIndex = (
+            db.query(indexing_models.RootIndex)
             .join(models.WorkspaceRoot)
             .filter(
                 and_(

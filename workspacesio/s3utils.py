@@ -85,10 +85,12 @@ def makePolicy(
         root_ids.add(w.root_id)
         bucket = w.root.bucket
         resourceBase = f"arn:aws:s3:::{bucket}"
+        basepath = w.root.base_path or ""
         workspacekey = getWorkspaceKey(w)
         usernamekey = workspacekey.rstrip(w.name)
 
         statements.append(
+            # enables getting region info from bucket
             {
                 "Action": "s3:GetBucketLocation",
                 "Effect": "Allow",
@@ -97,59 +99,58 @@ def makePolicy(
         )
 
         if w.root.root_type == schemas.RootType.PUBLIC:
-            basepath = w.root.base_path or ""
             statements += [
+                # enables listing all public bucket contents
                 {
                     "Action": ["s3:ListBucket"],
                     "Effect": "Allow",
-                    "Resource": [resourceBase],
-                    "Condition": {
-                        "StringLike": {"s3:prefix": posixpath.join(basepath, "*")}
-                    },
-                },
-                {
-                    "Effect": "Allow",
-                    "Action": ["s3:GetObject"],
-                    "Resource": [posixpath.join(resourceBase, basepath, "*")],
-                },
-            ]
-            if w.owner_id == user.id:
-                statements.append(
-                    {
-                        "Effect": "Allow",
-                        "Action": ["s3:*"],
-                        "Resource": [posixpath.join(resourceBase, usernamekey, "*")],
-                    }
-                )
-        elif w.root.root_type == schemas.RootType.PRIVATE:
-            statements += [
-                {
-                    "Action": ["s3:ListBucket"],
-                    "Effect": "Allow",
-                    "Resource": [resourceBase],
+                    "Resource": resourceBase,
                     "Condition": {
                         "StringLike": {
-                            "s3:prefix": usernamekey,
+                            "s3:prefix": posixpath.join(basepath, "*"),
                             "s3:delimiter": "/",
                         }
                     },
                 },
+                # enables fetching all public bucket contents
+                {
+                    "Effect": "Allow",
+                    "Action": ["s3:GetObject"],
+                    "Resource": posixpath.join(resourceBase, basepath, "*"),
+                },
+            ]
+            if w.owner_id == user.id:
+                # enables update and delete of owned bucket contents
+                statements.append(
+                    {
+                        "Effect": "Allow",
+                        "Action": ["s3:*"],
+                        "Resource": [
+                            posixpath.join(resourceBase, basepath, usernamekey, "*")
+                        ],
+                    }
+                )
+        elif w.root.root_type == schemas.RootType.PRIVATE:
+            statements += [
+                # enables listing all owned private buckets
                 {
                     "Action": ["s3:ListBucket"],
                     "Effect": "Allow",
-                    "Resource": [resourceBase],
+                    "Resource": resourceBase,
                     "Condition": {
                         "StringLike": {
-                            "s3:prefix": posixpath.join(usernamekey, "*"),
+                            "s3:prefix": posixpath.join(basepath, usernamekey, "*"),
+                            "s3:delimiter": "/",
                         }
                     },
                 },
+                # enables get, update, delete of all private owned buckets
                 {
                     "Effect": "Allow",
                     "Action": ["s3:*"],
-                    "Resource": [
-                        posixpath.join(resourceBase, usernamekey, "*"),
-                    ],
+                    "Resource": posixpath.join(
+                        resourceBase, basepath, usernamekey, "*"
+                    ),
                 },
             ]
     for w, share in foreign_workspaces:
