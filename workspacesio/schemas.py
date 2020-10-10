@@ -3,7 +3,6 @@ import enum
 import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
-from fastapi_users import models as fastapi_users_models
 from pydantic import BaseModel
 
 
@@ -42,22 +41,11 @@ class ServerInfo(BaseModel):
 ###########################################################
 
 
-class UserBase(fastapi_users_models.BaseUser):
+class UserBase(BaseModel):
     username: str
 
-    class Config:
-        orm_mode = True
 
-
-class UserCreate(UserBase, fastapi_users_models.BaseUserCreate):
-    pass
-
-
-class UserUpdate(UserBase, fastapi_users_models.BaseUserUpdate):
-    pass
-
-
-class UserDB(UserBase, fastapi_users_models.BaseUserDB):
+class UserDB(DBBaseModel, UserBase):
     pass
 
 

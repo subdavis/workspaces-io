@@ -8,7 +8,7 @@ from typing import Optional
 
 import boto3
 import elasticsearch
-from sqlalchemy import and_, func, desc
+from sqlalchemy import and_, desc, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text

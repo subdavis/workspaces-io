@@ -39,7 +39,6 @@ def minio_recursive_generate_objects(
     )
 
 
-
 def minio_buffer_objects(
     objects: List[minio.Object], buffer_size=10
 ) -> Iterable[minio.Object]:

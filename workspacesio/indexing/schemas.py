@@ -14,7 +14,6 @@ from pydantic import BaseModel
 
 from workspacesio.schemas import DBBaseModel, WorkspaceDB, WorkspaceRootDB
 
-
 INDEX_DOCUMENT_MAPPING = {
     "properties": {
         # Base

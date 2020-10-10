@@ -1,9 +1,10 @@
-from sqlalchemy import Column, Enum, ForeignKey, String, Integer
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, Enum, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
 
 from workspacesio.models import BaseModel, Workspace
+
 from .schemas import DatasetType
 
 

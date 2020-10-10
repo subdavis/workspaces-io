@@ -9,9 +9,8 @@ from click_aliases import ClickAliasedGroup
 from requests.exceptions import RequestException
 from requests_toolbelt.sessions import BaseUrlSession
 
-from . import config as conf
-
 # from . import index, mc, node, root, s3token, workspace
+from . import config as conf
 from . import workspace
 
 

@@ -10,26 +10,8 @@ import boto3
 import minio
 from botocore.client import Config
 from elasticsearch import Elasticsearch
-from fastapi_users import FastAPIUsers
-from fastapi_users.authentication import JWTAuthentication
-from fastapi_users.db import SQLAlchemyUserDatabase
 
 from . import database, dbutils, models, schemas, settings
-
-user_db = SQLAlchemyUserDatabase(
-    schemas.UserDB, database.database, models.User.__table__
-)
-jwt_authentication = JWTAuthentication(
-    secret=settings.SECRET, lifetime_seconds=3600, tokenUrl="/auth/jwt/login"
-)
-fastapi_users = FastAPIUsers(
-    user_db,
-    [jwt_authentication],
-    schemas.UserBase,
-    schemas.UserCreate,
-    schemas.UserUpdate,
-    schemas.UserDB,
-)
 
 
 class Boto3ClientCache:

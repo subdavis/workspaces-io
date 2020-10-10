@@ -5,4 +5,4 @@ if [ -n "${0+set}" ]; then
 fi
 
 workspaces-create-tables
-exec uvicorn workspacesio.asgi:app --host 0.0.0.0 --port 8100 $@
+uvicorn workspacesio.asgi:app --host 0.0.0.0 --port 8100 $@

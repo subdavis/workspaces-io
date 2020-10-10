@@ -1,8 +1,7 @@
-from enum import Enum
-
 import datetime
 import uuid
-from typing import List, Optional, Dict, Union
+from enum import Enum
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel
 

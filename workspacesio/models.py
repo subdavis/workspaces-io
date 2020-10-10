@@ -2,7 +2,6 @@ import datetime
 import enum
 import uuid
 
-from fastapi_users.db import SQLAlchemyBaseUserTable
 from sqlalchemy import (
     Boolean,
     Column,
@@ -51,9 +50,9 @@ class BaseModel(AbstractConcreteBase, Base):
     created = Column(DateTime, default=datetime.datetime.utcnow)
 
 
-class User(Base, SQLAlchemyBaseUserTable):
+class User(BaseModel):
     __tablename__ = "user"
-    username = Column(String)
+    username = Column(String, nullable=False)
 
     workspaces = relationship("Workspace", back_populates="owner")
     created_nodes = relationship("StorageNode", back_populates="creator")

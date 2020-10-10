@@ -1,5 +1,6 @@
 from .schemas import Feature
 
+
 # interpolate all features [a, b)
 def interpolate(a: Feature, b: Feature) -> List[Feature]:
     if a.interpolate is False:
