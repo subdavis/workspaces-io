@@ -1,26 +1,25 @@
 import os
+from typing import List
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
+from pydantic import BaseSettings
 
-SECRET = os.environ.get("WIO_SECRET", "fast")
-PUBLIC_NAME = os.environ.get("WIO_PUBLIC_NAME", "http://localhost:8100").rstrip("/")
-SQLALCHEMY_DATABASE_URL = os.environ.get(
-    "WIO_DATABASE_URL",
-    f"postgresql://wio:workspaces@localhost:5555/wio",
-)
-ES_NODE_1 = os.environ.get("WIO_ELASTICSEARCH_NODE_1", "http://localhost:9200")
-ES_NODES = [ES_NODE_1]
 
-KEYCLOAK_REALM = os.environ.get("KEYCLOAK_REALM", "master")
-# URL for clients to access keycloak
-KEYCLOAK_PUBLIC_URL = os.environ.get("KEYCLOAK_PUBLIC_URL", "http://localhost:8200")
-# URL for workspaces to access keycloak directly
-KEYCLOAK_PRIVATE_URL = os.environ.get("KEYCLOAK_PRIVATE_URL", KEYCLOAK_PUBLIC_URL)
-KEYCLOAK_CLIENT_ID = os.environ.get("KEYCLOAK_CLIENT_ID", "wio")
+class Settings(BaseSettings):
+    public_name: str = "http://localhost:8100"
+    database_uri: str = f"postgresql:///wio"
+    secret: str = "secret"
 
-KEYCLOAK_PUBLIC_KEY = (
-    "-----BEGIN PUBLIC KEY-----\n"
-    f"{os.environ.get('KEYCLOAK_PUBLIC_KEY', '')}\n"
-    "-----END PUBLIC KEY-----\n"
-)
+    es_nodes: List[str] = ["http://localhost:9200"]
+
+    oidc_name: str = "auth0"
+    oidc_client_id: str
+    oidc_client_secret: str
+    oidc_well_known_url: str
+    oidc_algos: List[str] = ["RS256"]
+
+    class Config:
+        env_prefix = "wio_"
+        env_file = os.getenv("DOTENV_PATH", ".env")
+
+
+settings = Settings()

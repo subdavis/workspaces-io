@@ -6,8 +6,7 @@ from elasticsearch import Elasticsearch
 from fastapi import Depends
 from fastapi.routing import APIRouter
 
-from workspacesio import database, schemas
-from workspacesio.auth import depends as auth_depends
+from workspacesio import auth, database, schemas
 from workspacesio.depends import get_boto, get_db, get_elastic_client
 
 from . import crud
@@ -25,7 +24,7 @@ router = APIRouter()
 )
 def create_index(
     root_id: uuid.UUID,
-    user: schemas.UserBase = Depends(auth_depends.get_current_user),
+    user: schemas.UserDB = Depends(auth.get_current_user),
     db: database.SessionLocal = Depends(get_db),
     es: Elasticsearch = Depends(get_elastic_client),
 ):
@@ -37,7 +36,7 @@ def create_index(
 )
 def delete_index(
     root_id: uuid.UUID,
-    user: schemas.UserBase = Depends(auth_depends.get_current_user),
+    user: schemas.UserDB = Depends(auth.get_current_user),
     db: database.SessionLocal = Depends(get_db),
     es: Elasticsearch = Depends(get_elastic_client),
 ):
@@ -52,7 +51,7 @@ def delete_index(
 )
 def create_workspace_crawl(
     workspace_id: uuid.UUID,
-    user: schemas.UserBase = Depends(auth_depends.get_current_user),
+    user: schemas.UserDB = Depends(auth.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
     """
@@ -89,7 +88,7 @@ def head_event():
 def bulk_add(
     workspace_id: uuid.UUID,
     body: indexing_schemas.IndexBulkAdd,
-    user: schemas.UserBase = Depends(auth_depends.get_current_user),
+    user: schemas.UserDB = Depends(auth.get_current_user),
     db: database.SessionLocal = Depends(get_db),
     es: Elasticsearch = Depends(get_elastic_client),
 ):

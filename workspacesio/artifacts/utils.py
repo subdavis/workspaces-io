@@ -14,7 +14,7 @@ clientCache = depends.Boto3ClientCache()
 
 
 def get_object_artifacts_for_node(
-    node: schemas.StorageNodeDB,
+    node: schemas.StorageNodeOperator,
     root: schemas.WorkspaceRootDB,
     workspace: schemas.WorkspaceDB,
     obj: minio.Object,

@@ -1,4 +1,4 @@
-# Getting Started
+# User Getting Started Guide
 
 This section is intended as a user guide and assumes you have a running server.  See the server config docs for help getting an instance running.
 

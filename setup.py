@@ -3,6 +3,7 @@ import os
 from setuptools import find_packages, setup
 
 deps = [
+    "authlib",
     "boto3",
     "click",
     "click-aliases",
@@ -23,6 +24,7 @@ deps = [
     "requests",
     "requests-toolbelt",
     "sqlalchemy",
+    "starlette",
     "tqdm",
     "uvicorn",
 ]

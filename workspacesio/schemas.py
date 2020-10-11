@@ -75,6 +75,7 @@ class StorageNodeDB(DBBaseModel, StorageNodeBase):
 class StorageNodeOperator(StorageNodeDB):
     access_key_id: str
     secret_access_key: str
+    assume_role_arn: str
 
 
 ###########################################################

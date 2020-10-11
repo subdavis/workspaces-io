@@ -36,11 +36,11 @@ def register_handlers(app: FastAPI):
         return JSONResponse(status_code=400, content={"message": str(exc)})
 
 
-def on_after_register(db: Session, user: schemas.UserBase):
+def on_after_register(db: Session, user: schemas.UserDB):
     print(f"User {user.id} has registered.")
 
 
-def on_after_forgot_password(db: Session, user: schemas.UserBase):
+def on_after_forgot_password(db: Session, user: schemas.UserDB):
     print(f"User {user.id} has forgot their password")
 
 
@@ -157,7 +157,7 @@ def get_token_for_workspace_constellation(
 
 
 def match_terms(
-    db: Session, requester: schemas.UserBase, term: str, sep: str = "/"
+    db: Session, requester: schemas.UserDB, term: str, sep: str = "/"
 ) -> Tuple[Optional[models.Workspace], Optional[str]]:
     """
     Annoying search criteria.
@@ -286,7 +286,7 @@ def root_start_import(db: Session, creator: schemas.UserDB, root_id: uuid.UUID):
 
 def workspace_search(
     db: Session,
-    requester: schemas.UserBase,
+    requester: schemas.UserDB,
     like: Optional[str] = None,
     name: Optional[str] = None,
     owner_id: Union[str, uuid.UUID, None] = None,
@@ -331,7 +331,7 @@ def workspace_create(
     db: Session,
     b3: Boto3ClientCache,
     workspace: schemas.WorkspaceCreate,
-    owner: schemas.UserBase,
+    owner: schemas.UserDB,
 ) -> models.Workspace:
     """Create a workspace for owner, including an empty root object in s3"""
     db_owner: models.User = db.query(models.User).get_or_404(owner.id)
@@ -413,7 +413,7 @@ def workspace_delete(db: Session, user: schemas.UserDB, workspace_id: uuid.UUID)
     db.commit()
 
 
-def token_list(db: Session, requester: schemas.UserBase) -> List[models.S3Token]:
+def token_list(db: Session, requester: schemas.UserDB) -> List[models.S3Token]:
     """List tokens for requester"""
     return (
         db.query(models.S3Token)
@@ -430,7 +430,7 @@ def token_list(db: Session, requester: schemas.UserBase) -> List[models.S3Token]
 def token_create(
     db: Session,
     b3: Boto3ClientCache,
-    requester: schemas.UserBase,
+    requester: schemas.UserDB,
     token: schemas.S3TokenCreate,
 ) -> List[schemas.TokenNodeWrapper]:
     """Create s3 sts token for requester if they have permissions"""
@@ -523,7 +523,7 @@ def token_revoke(db: Session, token_id: uuid.UUID):
     db.commit()
 
 
-def token_revoke_all(db: Session, user: schemas.UserBase) -> int:
+def token_revoke_all(db: Session, user: schemas.UserDB) -> int:
     """
     Remove all tokens from DB
     """
@@ -541,7 +541,7 @@ def token_revoke_all(db: Session, user: schemas.UserBase) -> int:
 def token_search(
     db: Session,
     b3: Boto3ClientCache,
-    requester: schemas.UserBase,
+    requester: schemas.UserDB,
     search: schemas.S3TokenSearch,
 ) -> schemas.S3TokenSearchResponse:
     """Search for a set of credentials that satisfy the terms"""
@@ -571,7 +571,7 @@ def token_search(
 
 def share_create(
     db: Session,
-    creator: schemas.UserBase,
+    creator: schemas.UserDB,
     share: schemas.ShareCreate,
 ) -> models.Share:
     """
@@ -590,7 +590,7 @@ def share_create(
 
 def share_list(
     db: Session,
-    user: schemas.UserBase,
+    user: schemas.UserDB,
 ) -> List[models.Share]:
     """List shared-by and shared-with user"""
     return (

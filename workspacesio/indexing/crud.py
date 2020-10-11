@@ -4,7 +4,7 @@ import json
 import posixpath
 import urllib
 import uuid
-from typing import Optional
+from typing import Optional, Union
 
 import boto3
 import elasticsearch
@@ -20,7 +20,7 @@ from . import models as indexing_models
 from . import schemas as indexing_schemas
 
 
-def verify_root_permissions(user: models.User, root: models.WorkspaceRoot):
+def verify_root_permissions(user: schemas.UserDB, root: models.WorkspaceRoot):
     if root.storage_node.creator_id != user.id:
         raise PermissionError("User must be node operator to create index")
 
@@ -39,7 +39,7 @@ def root_index_upsert(
     db: Session,
     es: elasticsearch.Elasticsearch,
     user: schemas.UserDB,
-    root_id: str,
+    root_id: uuid.UUID,
 ) -> indexing_schemas.IndexDB:
     """
     Setup notifications and indexing for a root
@@ -160,8 +160,8 @@ def bulk_index_add(
             user_shares=[share.sharee.id for share in workspace.shares],
             # TODO: group shares
         )
-        object_size_sum += doc.size
-        bulk_operations += (
+        object_size_sum = object_size_sum + (doc.size or 0)
+        bulk_operations = bulk_operations.__add__(
             json.dumps(
                 {
                     "update": {
@@ -177,7 +177,7 @@ def bulk_index_add(
             )
             + "\n"
         )
-        bulk_operations += (
+        bulk_operations = bulk_operations.__add__(
             indexing_schemas.ElasticUpsertIndexDocument(doc=upsertdoc).json() + "\n"
         )
     last_crawl.total_objects += object_count

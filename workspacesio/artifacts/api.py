@@ -1,9 +1,9 @@
 from typing import List, Optional
 
+from fastapi import Depends
 from fastapi.routing import APIRouter
 
-from workspacesio import database, schemas
-from workspacesio.auth import depends as auth_depends
+from workspacesio import auth, database, schemas
 from workspacesio.depends import get_db
 
 from . import crud
@@ -21,7 +21,7 @@ tags = ["artifacts"]
 )
 def create_artifact(
     params: artifact_schemas.DerviativeCreate,
-    creator: schemas.UserBase = Depends(auth_depends.get_current_user),
+    creator: schemas.UserDB = Depends(auth.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
     return crud.artifact_create(db, creator, params)
@@ -31,7 +31,7 @@ def create_artifact(
 def find_artifacts(
     prefix: str,
     name: Optional[str],
-    user: schemas.UserBase = Depends(auth_depends.get_current_user),
+    user: schemas.UserDB = Depends(auth.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
     return crud.artifact_search(db, user, name, prefix)

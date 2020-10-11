@@ -14,6 +14,6 @@ def create_app(env: typing.Dict[str, str]) -> FastAPI:
     )
     app.include_router(api.router, prefix="/api")
     app.include_router(indexing.api.router, prefix="/api")
-    app.include_router(auth.views.router)
+    app.include_router(auth.router)
     crud.register_handlers(app)
     return app

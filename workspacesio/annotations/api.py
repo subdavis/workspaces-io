@@ -1,7 +1,9 @@
+from typing import List
+
+from fastapi import Depends
 from fastapi.routing import APIRouter
 
-from workspacesio import database, schemas
-from workspacesio.auth import depends as auth_depends
+from workspacesio import auth, database, schemas
 from workspacesio.depends import get_db
 
 from . import crud
@@ -20,7 +22,7 @@ tags = ["annotation"]
 )
 def create_annotation_dataset(
     args: annotation_schemas.AnnotationDatasetCreate,
-    user: schemas.UserBase = Depends(auth_depends.get_current_user),
+    user: schemas.UserDB = Depends(auth.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
     return crud.annotation_dataset_create(db, user, args)
@@ -32,7 +34,7 @@ def create_annotation_dataset(
     response_model=List[annotation_schemas.AnnotationDatasetDB],
 )
 def list_annotation_datasets(
-    user: schemas.UserBase = Depends(auth_depends.get_current_user),
+    user: schemas.UserDB = Depends(auth.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
     return crud.annotation_dataset_list(db, user)

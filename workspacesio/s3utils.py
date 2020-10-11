@@ -29,7 +29,7 @@ def getWorkspaceKey(
     root_base_path = root.base_path if root else workspace.root.base_path
     inner_path = posixpath.join(workspace.owner.username, sanitize(workspace.name))
     if workspace.base_path != None:
-        inner_path = workspace.base_path
+        inner_path = str(workspace.base_path)
     return posixpath.join(
         root_base_path,
         inner_path,
@@ -37,7 +37,7 @@ def getWorkspaceKey(
 
 
 def makeRoleSessionName(
-    user: schemas.UserBase, workspace: Optional[models.Workspace]
+    user: schemas.UserDB, workspace: Optional[models.Workspace]
 ) -> str:
     return f"{user.id}::{workspace}"
 
@@ -52,7 +52,7 @@ PolicyDoc = TypedDict(
 
 
 def makePolicy(
-    user: schemas.UserBase,
+    user: schemas.UserDB,
     workspaces: List[models.Workspace],
     foreign_workspaces: List[Tuple[models.Workspace, Optional[models.Share]]],
 ) -> PolicyDoc:

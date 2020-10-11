@@ -52,7 +52,13 @@ class BaseModel(AbstractConcreteBase, Base):
 
 class User(BaseModel):
     __tablename__ = "user"
+    __table_args__ = (
+        UniqueConstraint("username"),
+        UniqueConstraint("email"),
+    )
+
     username = Column(String, nullable=False)
+    email = Column(String, nullable=False)
 
     workspaces = relationship("Workspace", back_populates="owner")
     created_nodes = relationship("StorageNode", back_populates="creator")
