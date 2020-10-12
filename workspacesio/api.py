@@ -6,15 +6,16 @@ from elasticsearch import Elasticsearch
 from fastapi import Depends
 from fastapi.routing import APIRouter
 
-from workspacesio import auth, crud, database, schemas, settings
+from workspacesio import auth, crud, database, schemas
 from workspacesio.depends import get_boto, get_db
+from workspacesio.settings import settings
 
 router = APIRouter()
 
 
 @router.get("/info", response_model=schemas.ServerInfo, tags=["info"])
 def get_info():
-    return schemas.ServerInfo(public_address=settings.PUBLIC_NAME)
+    return schemas.ServerInfo(public_address=settings.public_name)
 
 
 @router.get("/node", response_model=List[schemas.StorageNodeDB], tags=["node"])

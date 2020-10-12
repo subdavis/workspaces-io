@@ -2,6 +2,8 @@
   <img src="docs/images/workspacesio-logo-circle.png" width="640px">
 </p>
 
+> It's gonna kill your NAS
+
 A dead-simple [FastAPI](https://fastapi.tiangolo.com/) service to manage multi-user permissions and indexing for S3 and MinIO.
 
 ## Features

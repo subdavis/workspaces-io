@@ -112,7 +112,7 @@ class WorkspaceRoot(BaseModel):
     tokens = relationship(
         "S3Token", secondary=root_s3token_association_table, back_populates="roots"
     )
-    indexes = relationship("ElasticIndex", back_populates="root")
+    indexes = relationship("RootIndex", back_populates="root")
 
 
 class Workspace(BaseModel):

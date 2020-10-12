@@ -25,7 +25,7 @@ class AnnotationDataset(BaseModel):
     media_prefix = Column(String, nullable=False, default="")
     # filename if source type is video
     media_filename = Column(String, nullable=True, default=None)
-    workspace = relationship(Workspace, back_populates="annotation_datasets")
+    workspace = relationship(Workspace, ulates="annotation_datasets")
 
 
 class Track(BaseModel):

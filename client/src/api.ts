@@ -3,20 +3,11 @@
  */
 
 import axios, { AxiosRequestConfig } from 'axios';
-import { reactive } from 'vue';
-
-export const state = reactive({
-  token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiMGEyNTM2NmQtMGY1Mi00MjQ3LTk4YjMtZTE0ODNmYzczNzIyIiwiYXVkIjoiZmFzdGFwaS11c2VyczphdXRoIiwiZXhwIjoxNTk5MzI2OTg0fQ.lpsjyZF25RRaUXueUwsFObd6wRYs9AxkqOCBiux0c3s",
-  user: null,
-});
 
 function config(base: AxiosRequestConfig = {}): AxiosRequestConfig {
   return {
     ...base,
     baseURL: '/api',
-    headers: {
-      'Authorization': `Bearer ${state.token}`,
-    },
   };
 }
 
@@ -26,9 +17,7 @@ interface BaseModel {
 }
 
 interface User extends BaseModel {
-  id: string;
   email: string;
-  is_active: boolean;
   username: string;
 }
 

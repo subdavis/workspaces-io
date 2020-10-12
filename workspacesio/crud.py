@@ -23,9 +23,9 @@ logger = logging.getLogger("api")
 
 
 def register_handlers(app: FastAPI):
-    # @app.exception_handler(IntegrityError)
-    # async def integrity_exception_handler(r: Request, exc: IntegrityError):
-    #     return JSONResponse(status_code=409, content={"message": "Integrity Error"})
+    @app.exception_handler(IntegrityError)
+    async def integrity_exception_handler(r: Request, exc: IntegrityError):
+        return JSONResponse(status_code=409, content={"message": "Integrity Error"})
 
     @app.exception_handler(PermissionError)
     async def permissions_exception_handler(r: Request, exc: PermissionError):

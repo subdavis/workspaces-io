@@ -65,4 +65,4 @@ class WorkspaceCrawlRound(BaseModel):
     total_objects = Column(Integer, nullable=False, default=0)
     total_size = Column(Integer, nullable=False, default=0)
 
-    workspace = relationship(Workspace, back_populates="crawl_rounds")
+    workspace = relationship(Workspace, backref="crawl_rounds")

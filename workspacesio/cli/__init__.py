@@ -9,13 +9,18 @@ from click_aliases import ClickAliasedGroup
 from requests.exceptions import RequestException
 from requests_toolbelt.sessions import BaseUrlSession
 
-# from . import index, mc, node, root, s3token, workspace
+from . import index, mc, node, root, s3token, workspace, auth
 from . import config as conf
-from . import workspace
+
+DEFAULT_ENDPOINT = "http://localhost:8100/api"
 
 
 class WioSession(BaseUrlSession):
-    def __init__(self, base_url: str, token: Optional[str]):
+    def __init__(
+        self,
+        base_url: str,
+        token: Optional[str] = "",
+    ):
         base_url = (
             f'{base_url.rstrip("/")}/'  # tolerate input with or without trailing slash
         )
@@ -33,9 +38,7 @@ class WioSession(BaseUrlSession):
 
 
 @click.group(cls=ClickAliasedGroup)
-@click.option(
-    "--api-url", default="http://localhost:8100/api", envvar="WIO_ENDPOINT_URL"
-)
+@click.option("--api-url", envvar="WIO_ENDPOINT_URL")
 @click.option(
     "--config",
     default=os.path.join(os.path.expanduser("~"), ".config", "wio.json"),
@@ -56,14 +59,18 @@ def cli(ctx, api_url, config, token):
         context["config"] = conf.make()
     if not token:
         token = context["config"].token
-    context["session"] = WioSession(api_url, token)
+    if not api_url:
+        api_url = context["config"].api_url
+    if not api_url:
+        api_url = DEFAULT_ENDPOINT
+    context["session"] = WioSession(api_url, token=token)
     ctx.obj = context
 
 
 workspace.make(cli)
-# auth.make(cli)
-# s3token.make(cli)
-# mc.make(cli)
-# index.make(cli)
-# node.make(cli)
-# root.make(cli)
+auth.make(cli)
+s3token.make(cli)
+mc.make(cli)
+index.make(cli)
+node.make(cli)
+root.make(cli)

@@ -1,5 +1,9 @@
+import binascii
+import os
 import json
 import uuid
+import datetime
+import hashlib
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import jwt
@@ -10,7 +14,7 @@ import uvicorn
 from fastapi import Depends, Header, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRouter
-from fastapi.security import APIKeyCookie
+from fastapi.security import APIKeyCookie, OAuth2PasswordBearer
 from fastapi.security.utils import get_authorization_scheme_param
 from pydantic import BaseModel
 
@@ -24,7 +28,6 @@ from workspacesio.utils import build_url
 
 
 class Token(BaseModel):
-    nickname: str
     email: str
     iat: int
     exp: int
@@ -62,8 +65,8 @@ class OIDCConfig(BaseModel):
 
 
 router = APIRouter()
-
 sessioncookie = APIKeyCookie(name="session", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 oidc_conf: Union[OIDCConfig, None] = None
 
 
@@ -78,8 +81,6 @@ def openid_config():
         keys_resp.raise_for_status()
         keys = OIDCKeys(**keys_resp.json())
 
-        print(keys.to_string())
-        print(wellknown.to_string())
         public_keys: Dict[str, Any] = {}
         for jwk in keys.keys:
             kid = jwk["kid"]
@@ -92,7 +93,7 @@ def openid_config():
     yield oidc_conf
 
 
-def verify_token(token: str, config: OIDCConfig, verify=True) -> Token:
+def verify_jwt(token: str, config: OIDCConfig, verify=True) -> Token:
     kid = jwt.get_unverified_header(token)["kid"]
     key = config.keys.get(kid)
     if key is None:
@@ -124,7 +125,7 @@ def get_session_user(
     """
     if session is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthorized")
-    token = verify_token(session, config)
+    token = verify_jwt(session, config)
     return db.query(models.User).filter(models.User.email == token.email).first_or_404()
 
 
@@ -140,9 +141,9 @@ def maybe_session_user(
         return (None, None)
 
     try:
-        token = verify_token(session, config)
+        token = verify_jwt(session, config)
     except jwt.exceptions.DecodeError as e:
-        token = verify_token(session, config, verify=False)
+        token = verify_jwt(session, config, verify=False)
 
     return (
         token,
@@ -151,10 +152,15 @@ def maybe_session_user(
 
 
 def get_current_user(
-    x_workspaces_token: Optional[str] = Header(None),
+    session_user: Tuple[Optional[Token], Optional[models.User]] = Depends(
+        maybe_session_user
+    ),
+    token: str = Depends(oauth2_scheme),
     db: database.SessionLocal = Depends(depends.get_db),
 ):
-    return None
+    if session_user[0].verified:
+        return session_user[1]
+    raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthorized")
 
 
 def make_redirect(config: OIDCConfig, user: Optional[models.User]) -> RedirectResponse:
@@ -162,6 +168,7 @@ def make_redirect(config: OIDCConfig, user: Optional[models.User]) -> RedirectRe
     args = {
         "response_type": "code",
         "client_id": settings.oidc_client_id,
+        "scope": "openid given_name email picture",
         "redirect_uri": build_url(settings.public_name, "/auth"),
     }
     if user is not None:
@@ -180,15 +187,24 @@ async def login(
     return make_redirect(config, pair[1])
 
 
+@router.get("/logout")
+def logout():
+    response = RedirectResponse(url="/app")
+    response.set_cookie("session", value="", samesite="lax", httponly=True, expires=0)
+    return response
+
+
 @router.get("/auth")
 async def auth(
-    code: str,
-    error: Optional[str],
+    code: Optional[str] = None,
+    error: Optional[str] = None,
     config: OIDCConfig = Depends(openid_config),
     db: database.SessionLocal = Depends(depends.get_db),
 ) -> RedirectResponse:
     if error is not None:
         return make_redirect(config, None)
+    if code is None:
+        raise HTTPException(400, "No error, code missing.")
     # https://auth0.com/docs/api/authentication#get-token
     resp = requests.post(
         config.well_known.token_endpoint,
@@ -202,20 +218,25 @@ async def auth(
     )
     resp.raise_for_status()
     token = OIDCTokenResponse(**resp.json())
-    verified = verify_token(token.id_token, config)
+    verified = verify_jwt(token.id_token, config)
 
     user: schemas.UserDB = (
-        db.query(models.User).filter(username=verified.nickname).first()
+        db.query(models.User).filter(models.User.email == verified.email).first()
     )
-    if user is None:
-        # TODO: make new user
-        pass
 
-    response = RedirectResponse(url="/")
-    response.set_cookie("session", value=token.id_token)
+    if user is None:
+        user = models.User(
+            username=verified.nickname or verified.email,
+            email=verified.email,
+        )
+        db.add(user)
+        db.commit()
+
+    response = RedirectResponse(url="/app")
+    response.set_cookie("session", value=token.id_token, samesite="lax", httponly=True)
     return response
 
 
 @router.get("/")
-async def root(user: schemas.UserDB = Depends(get_session_user)) -> str:
-    return "Hello logged in user"
+def root(session: str = Depends(sessioncookie)) -> RedirectResponse:
+    return session

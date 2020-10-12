@@ -9,11 +9,11 @@ from workspacesio import schemas
 
 class Config(BaseModel):
     token: Optional[str]
-    s3tokens: Dict[str, schemas.S3TokenDB]
+    api_url: Optional[str]
 
 
 def make() -> Config:
-    return Config(s3tokens={})
+    return Config()
 
 
 def save_config(c: Config, p: str):

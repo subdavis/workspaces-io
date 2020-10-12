@@ -11,7 +11,8 @@ import minio
 from botocore.client import Config
 from elasticsearch import Elasticsearch
 
-from . import database, dbutils, models, schemas, settings
+from . import database, dbutils, models, schemas
+from .settings import settings
 
 
 class Boto3ClientCache:
@@ -109,7 +110,7 @@ def get_boto():
 
 
 def get_elastic_client():
-    client = Elasticsearch(settings.ES_NODES)
+    client = Elasticsearch(settings.es_nodes)
     try:
         yield client
     finally:
