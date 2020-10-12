@@ -24,7 +24,7 @@ For whatever reason, [you can't explicitly revoke STS credentials](https://stack
 
 > What's a workspace?
 
-It's just a folder.  Users manage the heirarchy within.  Permissions are managed at the workspace level.  You can search for workspace contents and share individual objects, but these are features of elasticsearch and minio, respectively.
+It's just a folder.  Users manage the hierarchy within.  Permissions are managed at the workspace level.  You can search for workspace contents and share individual objects, but these are features of elasticsearch and minio, respectively.
 
 > Who is this for?
 
@@ -32,7 +32,7 @@ WorkspacesIO is for organizations that need to manage large quantities of slow-m
 
 > What if I want to share a single file?
 
-There's always pre-signed URLs to email a collegue.  But you shouldn't think of this like Google Drive; WorkspacesIO isn't for slide decks.
+There's always pre-signed URLs to email a colleague.  But you shouldn't think of this like Google Drive; WorkspacesIO isn't for slide decks.
 
 > Why not just MinIO?
 
