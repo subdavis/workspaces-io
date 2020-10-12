@@ -8,7 +8,7 @@ A dead-simple [FastAPI](https://fastapi.tiangolo.com/) service to manage multi-u
 
 * **Non-invasive import** and **indexing** of your existing data.  We leave your data just as it is on-disk.
 * Simple permissions management. `wio create` to make new workspaces. `wio share` to share them with others.
-* **Low-friction accesss** to your data.  WorkspacesIO grants **STS credentials** so that users can connect directly to minio for listing, upload, and download operations.  You can even continue to use `minio/mc` or `boto3` , with some caveats.
+* **Low-friction access** to your data.  WorkspacesIO grants **STS credentials** so that users can connect directly to minio for listing, upload, and download operations.  You can even continue to use `minio/mc` or `boto3` , with some caveats.
 * Permissions-aware indexing and aggregation across the system.
 * Hub-and-spoke architecture.  Run a MinIO node wherever you have data, and it will be available through Workspaces.  Even **regular users** can introduce new nodes into the system and retain full control of their data.
 
