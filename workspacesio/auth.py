@@ -1,9 +1,8 @@
-import binascii
-import os
 import json
 import uuid
 import datetime
-import hashlib
+import bcrypt
+import secrets
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import jwt
@@ -27,8 +26,9 @@ from workspacesio.utils import build_url
 ## because they should never be used external to this file
 
 
-class Token(BaseModel):
+class JWToken(BaseModel):
     email: str
+    sub: str  # primary key
     iat: int
     exp: int
 
@@ -38,7 +38,7 @@ class Token(BaseModel):
     verified: bool = False
 
 
-class OIDCTokenResponse(BaseModel):
+class OIDCJWTokenResponse(BaseModel):
     id_token: str
     access_token: str
     expires_in: int
@@ -70,7 +70,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 oidc_conf: Union[OIDCConfig, None] = None
 
 
-def openid_config():
+def _openid_config():
     global oidc_conf
     if oidc_conf is None:
         wellknown_resp = requests.get(settings.oidc_well_known_url)
@@ -93,7 +93,7 @@ def openid_config():
     yield oidc_conf
 
 
-def verify_jwt(token: str, config: OIDCConfig, verify=True) -> Token:
+def _verify_jwt(token: str, config: OIDCConfig, verify=True) -> JWToken:
     kid = jwt.get_unverified_header(token)["kid"]
     key = config.keys.get(kid)
     if key is None:
@@ -111,59 +111,31 @@ def verify_jwt(token: str, config: OIDCConfig, verify=True) -> Token:
         audience=settings.oidc_client_id,
         verify=verify,
     )
-    return Token(**decoded, verified=verify)
+    return JWToken(**decoded, verified=verify)
 
 
-def get_session_user(
+def _verify_token(token, hashed_token):
+    pass
+
+
+def _maybe_session_user(
     session: str = Depends(sessioncookie),
-    config: OIDCConfig = Depends(openid_config),
+    config: OIDCConfig = Depends(_openid_config),
     db: database.SessionLocal = Depends(depends.get_db),
-) -> models.User:
-    """
-    Session user is authenticated statelessly through an OpenID id_token
-    https://github.com/tiangolo/fastapi/issues/754
-    """
-    if session is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthorized")
-    token = verify_jwt(session, config)
-    return db.query(models.User).filter(models.User.email == token.email).first_or_404()
-
-
-def maybe_session_user(
-    session: str = Depends(sessioncookie),
-    config: OIDCConfig = Depends(openid_config),
-    db: database.SessionLocal = Depends(depends.get_db),
-) -> Tuple[Optional[Token], Optional[models.User]]:
+) -> Optional[JWToken]:
     """
     Load user without verifying session.
     """
     if session is None:
-        return (None, None)
+        return None
 
     try:
-        token = verify_jwt(session, config)
+        return _verify_jwt(session, config)
     except jwt.exceptions.DecodeError as e:
-        token = verify_jwt(session, config, verify=False)
-
-    return (
-        token,
-        db.query(models.User).filter(models.User.email == token.email).first(),
-    )
+        return _verify_jwt(session, config, verify=False)
 
 
-def get_current_user(
-    session_user: Tuple[Optional[Token], Optional[models.User]] = Depends(
-        maybe_session_user
-    ),
-    token: str = Depends(oauth2_scheme),
-    db: database.SessionLocal = Depends(depends.get_db),
-):
-    if session_user[0].verified:
-        return session_user[1]
-    raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthorized")
-
-
-def make_redirect(config: OIDCConfig, user: Optional[models.User]) -> RedirectResponse:
+def _make_redirect(config: OIDCConfig, user: Optional[models.User]) -> RedirectResponse:
     # https://auth0.com/docs/api/authentication#dynamic-application-client-registration
     args = {
         "response_type": "code",
@@ -179,12 +151,29 @@ def make_redirect(config: OIDCConfig, user: Optional[models.User]) -> RedirectRe
     )
 
 
+def get_current_user(
+    session_cookie: Optional[JWToken] = Depends(_maybe_session_user),
+    token: str = Depends(oauth2_scheme),
+    db: database.SessionLocal = Depends(depends.get_db),
+) -> models.User:
+
+    if session_cookie is not None and session_cookie.verified:
+        user = (
+            db.query(models.User).filter(models.User.sub == session_cookie.sub).first()
+        )
+        if user is not None:
+            return user
+    raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthorized")
+
+
 @router.get("/login")
 async def login(
-    config: OIDCConfig = Depends(openid_config),
-    pair: Tuple[Optional[Token], Optional[models.User]] = Depends(maybe_session_user),
+    config: OIDCConfig = Depends(_openid_config),
+    pair: Tuple[Optional[JWToken], Optional[models.User]] = Depends(
+        _maybe_session_user
+    ),
 ) -> RedirectResponse:
-    return make_redirect(config, pair[1])
+    return _make_redirect(config, pair[1])
 
 
 @router.get("/logout")
@@ -198,11 +187,11 @@ def logout():
 async def auth(
     code: Optional[str] = None,
     error: Optional[str] = None,
-    config: OIDCConfig = Depends(openid_config),
+    config: OIDCConfig = Depends(_openid_config),
     db: database.SessionLocal = Depends(depends.get_db),
 ) -> RedirectResponse:
     if error is not None:
-        return make_redirect(config, None)
+        return _make_redirect(config, None)
     if code is None:
         raise HTTPException(400, "No error, code missing.")
     # https://auth0.com/docs/api/authentication#get-token
@@ -217,8 +206,8 @@ async def auth(
         },
     )
     resp.raise_for_status()
-    token = OIDCTokenResponse(**resp.json())
-    verified = verify_jwt(token.id_token, config)
+    token = OIDCJWTokenResponse(**resp.json())
+    verified = _verify_jwt(token.id_token, config)
 
     user: schemas.UserDB = (
         db.query(models.User).filter(models.User.email == verified.email).first()

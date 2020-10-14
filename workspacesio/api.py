@@ -146,6 +146,27 @@ def create_workspace_share(
     return crud.share_create(db, user, share)
 
 
+@router.get("/apikey", response_model=List[schemas.ApiKeyDB], tags=["apikey"])
+def list_api_keys(
+    user: schemas.UserDB = Depends(auth.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.apikey_list(db, user)
+
+
+@router.post(
+    "/apikey",
+    response_model=schemas.ApiKeyCreateResponse,
+    tags=["apikey"],
+    status_code=201,
+)
+def create_apikey(
+    user: schemas.UserDB = Depends(auth.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.apikey_create(db, user)
+
+
 @router.get("/token", response_model=List[schemas.S3TokenDB], tags=["token"])
 def list_tokens(
     user: schemas.UserDB = Depends(auth.get_current_user),

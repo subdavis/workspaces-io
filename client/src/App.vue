@@ -5,11 +5,9 @@
         class="w-3/4"
         src="./assets/logo.png"
       >
-      <input
-        class="my-4 shadow appearance-none border outline-none rounded w-full p-2 focus:shadow-outline"
-        type="text"
-        placeholder="search"
-      >
+      <div class="flex flex-row justify-center">
+        <button class="button">Login</button>
+      </div>
       <Workspaces />
     </div>
     <div class="flex flex-col sidebar m-4">
@@ -19,7 +17,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, onMounted } from 'vue'
+
+import useCurrentUser from './use/useCurrentUser';
 import Workspaces from './components/Workspaces.vue'
 import Cli from './components/Cli.vue';
 
@@ -27,6 +27,10 @@ export default defineComponent({
   components: {
     Workspaces,
     Cli,
+  },
+  setup() {
+    const { me } = useCurrentUser();
+    return { me };
   },
 })
 </script>
@@ -37,5 +41,11 @@ export default defineComponent({
 }
 .sidebar {
   width: 300px;
+}
+</style>
+
+<style lang="postcss">
+.button {
+  @apply px-4 py-2 rounded bg-teal-500 inline w-32 text-white;
 }
 </style>

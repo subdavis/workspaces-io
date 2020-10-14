@@ -37,8 +37,19 @@ interface Workspace extends BaseModel {
   root: Root;
 }
 
+interface ApiKey extends BaseModel {
+  key_id: string;
+  secret?: string;
+  user: User;
+}
+
 async function usersMe(): Promise<User> {
   const { data } = await axios.get<User>('users/me', config());
+  return data;
+}
+
+async function apikeyList(): Promise<ApiKey[]> {
+  const { data } = await axios.get<ApiKey[]>('apikey', config());
   return data;
 }
 
@@ -51,9 +62,11 @@ async function workspacesSearch(name?: string, owner_id?: string): Promise<Works
 
 export {
   /* methods */
+  apikeyList,
   usersMe,
   workspacesSearch,
   /* Interfaces */
+  ApiKey,
   User,
   Root,
   Workspace,

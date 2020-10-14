@@ -41,11 +41,11 @@ class ServerInfo(BaseModel):
 ###########################################################
 
 
-class UserBase(BaseModel):
+class UserDB(BaseModel):
     username: str
 
 
-class UserDB(DBBaseModel, UserBase):
+class UserDB(DBBaseModel, UserDB):
     pass
 
 
@@ -69,7 +69,7 @@ class StorageNodeCreate(StorageNodeBase):
 
 class StorageNodeDB(DBBaseModel, StorageNodeBase):
     creator_id: uuid.UUID
-    creator: UserBase
+    creator: UserDB
 
 
 class StorageNodeOperator(StorageNodeDB):
@@ -133,8 +133,34 @@ class WorkspaceDB(DBBaseModel, WorkspaceBase):
     name: str
     owner_id: uuid.UUID
     root_id: uuid.UUID
-    owner: UserBase
+    owner: UserDB
     root: WorkspaceRootDB
+
+
+###########################################################
+# API Key Schemas
+###########################################################
+
+
+class ApiKeyBase(BaseModel):
+    pass
+
+
+class ApiKeyCreate(ApiKeyBase):
+    pass
+
+
+class ApiKeyCreateResponse(DBBaseModel, ApiKeyBase):
+    key_id: str
+    secret: str
+    user_id: uuid.UUID
+
+
+class ApiKeyDB(DBBaseModel, ApiKeyBase):
+    key_id: str
+    user_id: str
+
+    user: UserDB
 
 
 ###########################################################
@@ -161,7 +187,7 @@ class S3TokenDB(DBBaseModel, S3TokenBase):
     secret_access_key: str
     session_token: str
     policy: dict
-    owner: UserBase
+    owner: UserDB
     workspaces: List[WorkspaceDB]
 
 
@@ -203,8 +229,8 @@ class ShareDB(DBBaseModel, ShareBase):
     creator_id: uuid.UUID
     sharee_id: uuid.UUID
     workspace: WorkspaceDB
-    creator: UserBase
-    sharee: UserBase
+    creator: UserDB
+    sharee: UserDB
 
 
 ###########################################################

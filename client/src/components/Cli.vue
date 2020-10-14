@@ -1,8 +1,18 @@
 <script lang="ts">
-import { workspacesSearch, Workspace } from '../api';
+import { ref, watchEffect } from 'vue';
+import { apikeyList, ApiKey } from '../api';
 
 export default {
-  
+  setup() {
+    const keys = ref([] as ApiKey[]);
+
+    /* Fetch workspaces */
+    watchEffect(async () => {
+      keys.value = await apikeyList();
+    });
+
+    return { keys };
+  }
 }
 </script>
 

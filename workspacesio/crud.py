@@ -413,6 +413,20 @@ def workspace_delete(db: Session, user: schemas.UserDB, workspace_id: uuid.UUID)
     db.commit()
 
 
+def apikey_list(db: Session, requester: schemas.UserDB) -> List[models.ApiKey]:
+    return db.query(models.ApiKey).filter(models.ApiKey.user_id == requester.id).all()
+
+
+def apikey_create(
+    db: Session, requester: schemas.UserDB
+) -> schemas.ApiKeyCreateResponse:
+    secret, newkey = models.ApiKey.create(requester)
+    schemad = schemas.ApiKeyDB.from_orm(newkey)
+    db.add(newkey)
+    db.commit()
+    return schemas.ApiKeyCreateResponse(**schemad.dict(), secret=secret)
+
+
 def token_list(db: Session, requester: schemas.UserDB) -> List[models.S3Token]:
     """List tokens for requester"""
     return (
