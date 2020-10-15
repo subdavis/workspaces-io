@@ -53,6 +53,14 @@ async function apikeyList(): Promise<ApiKey[]> {
   return data;
 }
 
+async function apikeyCreate(): Promise<ApiKey> {
+  const { data } = await axios.request<ApiKey>(config({
+    method: 'POST',
+    url: 'apikey',
+  }));
+  return data;
+}
+
 async function workspacesSearch(name?: string, owner_id?: string): Promise<Workspace[]> {
   const { data } = await axios.get<Workspace[]>('workspace', config({
     params: { name, owner_id },
@@ -62,6 +70,7 @@ async function workspacesSearch(name?: string, owner_id?: string): Promise<Works
 
 export {
   /* methods */
+  apikeyCreate,
   apikeyList,
   usersMe,
   workspacesSearch,

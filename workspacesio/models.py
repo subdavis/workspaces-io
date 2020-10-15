@@ -1,10 +1,10 @@
 import datetime
 import enum
-import uuid
 import secrets
-import bcrypt
+import uuid
 from typing import Tuple
 
+import bcrypt
 from sqlalchemy import (
     Boolean,
     Column,
@@ -65,7 +65,7 @@ class User(BaseModel):
     username = Column(String, nullable=False)
     email = Column(String, nullable=False)
 
-    tokens = relationship("Token", back_populates="user")
+    apikeys = relationship("ApiKey", back_populates="user")
     workspaces = relationship("Workspace", back_populates="owner")
     created_nodes = relationship("StorageNode", back_populates="creator")
 
@@ -75,24 +75,13 @@ class ApiKey(BaseModel):
     API Key for command line
     """
 
-    __tablename__ = "token"
+    __tablename__ = "apikey"
 
     key_id = Column(String, nullable=False, default=secrets.token_urlsafe)
     secret_hash = Column(String, nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
 
-    user = relationship(User, back_populates="tokens")
-
-    @classmethod
-    def create(cls, user: User) -> Tuple[str, "ApiKey"]:
-        key_db = cls(user_id=user.id)
-        key_str = secrets.token_urlsafe(32)
-        key_hash = bcrypt.hashpw(key_str.encode("utf-8"), bcrypt.gensalt())
-        key_db.key_hash = key_hash
-        return (
-            key_str,
-            key_db,
-        )
+    user = relationship(User, back_populates="apikeys")
 
     @classmethod
     def verify(cls, apikey: "ApiKey", key: str):

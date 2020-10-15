@@ -1,10 +1,10 @@
-import json
-import uuid
 import datetime
-import bcrypt
+import json
 import secrets
+import uuid
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import bcrypt
 import jwt
 import jwt.algorithms
 import jwt.exceptions
@@ -33,6 +33,7 @@ class JWToken(BaseModel):
     exp: int
 
     given_name: Optional[str]
+    nickname: Optional[str]
     picture: Optional[str]
 
     verified: bool = False
@@ -131,19 +132,19 @@ def _maybe_session_user(
 
     try:
         return _verify_jwt(session, config)
-    except jwt.exceptions.DecodeError as e:
+    except jwt.exceptions.PyJWTError as e:
         return _verify_jwt(session, config, verify=False)
 
 
-def _make_redirect(config: OIDCConfig, user: Optional[models.User]) -> RedirectResponse:
+def _make_redirect(config: OIDCConfig, token: Optional[JWToken]) -> RedirectResponse:
     # https://auth0.com/docs/api/authentication#dynamic-application-client-registration
     args = {
         "response_type": "code",
         "client_id": settings.oidc_client_id,
-        "scope": "openid given_name email picture",
+        "scope": "openid given_name email picture nickname",
         "redirect_uri": build_url(settings.public_name, "/auth"),
     }
-    if user is not None:
+    if token is not None:
         # attempt a silent auth
         args["prompt"] = "none"
     return RedirectResponse(
@@ -169,11 +170,9 @@ def get_current_user(
 @router.get("/login")
 async def login(
     config: OIDCConfig = Depends(_openid_config),
-    pair: Tuple[Optional[JWToken], Optional[models.User]] = Depends(
-        _maybe_session_user
-    ),
+    token: Optional[JWToken] = Depends(_maybe_session_user),
 ) -> RedirectResponse:
-    return _make_redirect(config, pair[1])
+    return _make_redirect(config, token)
 
 
 @router.get("/logout")
@@ -210,13 +209,14 @@ async def auth(
     verified = _verify_jwt(token.id_token, config)
 
     user: schemas.UserDB = (
-        db.query(models.User).filter(models.User.email == verified.email).first()
+        db.query(models.User).filter(models.User.sub == verified.sub).first()
     )
 
     if user is None:
         user = models.User(
             username=verified.nickname or verified.email,
             email=verified.email,
+            sub=verified.sub,
         )
         db.add(user)
         db.commit()

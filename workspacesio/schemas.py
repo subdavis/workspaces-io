@@ -41,11 +41,11 @@ class ServerInfo(BaseModel):
 ###########################################################
 
 
-class UserDB(BaseModel):
+class UserBase(BaseModel):
     username: str
 
 
-class UserDB(DBBaseModel, UserDB):
+class UserDB(DBBaseModel, UserBase):
     pass
 
 
@@ -158,7 +158,7 @@ class ApiKeyCreateResponse(DBBaseModel, ApiKeyBase):
 
 class ApiKeyDB(DBBaseModel, ApiKeyBase):
     key_id: str
-    user_id: str
+    user_id: uuid.UUID
 
     user: UserDB
 

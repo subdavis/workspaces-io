@@ -20,7 +20,7 @@ export default defineComponent({
 
 
 <template>
-  <table class="table">
+  <table class="table" v-show="workspaces.length">
     <thead>
       <tr>
         <th>Name</th>

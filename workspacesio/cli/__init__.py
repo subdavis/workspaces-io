@@ -9,8 +9,9 @@ from click_aliases import ClickAliasedGroup
 from requests.exceptions import RequestException
 from requests_toolbelt.sessions import BaseUrlSession
 
-from . import index, mc, node, root, s3token, workspace, auth
+from . import auth
 from . import config as conf
+from . import index, mc, node, root, s3token, workspace
 
 DEFAULT_ENDPOINT = "http://localhost:8100/api"
 

@@ -4,6 +4,8 @@ import logging
 import os
 import urllib.parse
 import uuid
+import secrets
+import bcrypt
 from typing import Dict, List, Optional, Tuple, Union
 
 import boto3
@@ -417,14 +419,15 @@ def apikey_list(db: Session, requester: schemas.UserDB) -> List[models.ApiKey]:
     return db.query(models.ApiKey).filter(models.ApiKey.user_id == requester.id).all()
 
 
-def apikey_create(
-    db: Session, requester: schemas.UserDB
-) -> schemas.ApiKeyCreateResponse:
-    secret, newkey = models.ApiKey.create(requester)
-    schemad = schemas.ApiKeyDB.from_orm(newkey)
-    db.add(newkey)
+def apikey_create(db: Session, requester: models.User) -> schemas.ApiKeyCreateResponse:
+    key_str = secrets.token_urlsafe(32)
+    key_hash = bcrypt.hashpw(key_str.encode("utf-8"), bcrypt.gensalt())
+    key_db = models.ApiKey(user_id=requester.id, secret_hash=key_hash)
+    db.add(key_db)
+    db.flush()
+    schemad = schemas.ApiKeyDB.from_orm(key_db)
     db.commit()
-    return schemas.ApiKeyCreateResponse(**schemad.dict(), secret=secret)
+    return schemas.ApiKeyCreateResponse(**schemad.dict(), secret=key_str)
 
 
 def token_list(db: Session, requester: schemas.UserDB) -> List[models.S3Token]:
