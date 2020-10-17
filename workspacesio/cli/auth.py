@@ -1,53 +1,34 @@
+import webbrowser
+from typing import cast
+
 import click
 
-from .config import save_config
+from . import config
 from .util import exit_with, handle_request_error
 
 
 def make(cli: click.Group):
     @click.command(name="login")
-    @click.argument("email")
-    @click.option("--password", prompt=True, hide_input=True)
+    @click.option("--access-key", prompt=True)
+    @click.option("--secret-key", prompt=True)
     @click.pass_obj
-    def login(ctx, email, password):
-        conf = ctx["config"]
-        r = ctx["session"].post(
-            "auth/jwt/login",
-            {
-                "username": email,
-                "password": password,
-            },
-        )
+    def login(ctx, access_key, secret_key):
+        ctx = config.getctx(ctx)
+        r = ctx.session.get("users/me", auth=(access_key, secret_key))
         if r.ok:
-            token = r.json()["access_token"]
             click.echo(click.style("Login success", fg="green", bold=True))
-            conf.token = token
-            save_config(conf, ctx["configPath"])
+            ctx.config.access_key = access_key
+            ctx.config.secret_key = secret_key
+            config.save(ctx)
         else:
             exit_with(handle_request_error(r))
-
-    @click.command(name="register")
-    @click.argument("email")
-    @click.argument("username")
-    @click.option("--password", prompt=True, hide_input=True)
-    @click.pass_obj
-    def register(ctx, email, password, username):
-        r = ctx["session"].post(
-            "auth/register",
-            json={
-                "email": email,
-                "username": username,
-                "password": password,
-            },
-        )
-        exit_with(handle_request_error(r))
 
     @click.command(name="info")
     @click.pass_obj
     def me(ctx):
-        r = ctx["session"].get("me")
+        ctx = config.getctx(ctx)
+        r = ctx.session.get("users/me")
         exit_with(handle_request_error(r))
 
     cli.add_command(login)
-    cli.add_command(register)
     cli.add_command(me)

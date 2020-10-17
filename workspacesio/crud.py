@@ -2,10 +2,12 @@ import datetime
 import json
 import logging
 import os
+import secrets
 import urllib.parse
 import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
+import bcrypt
 import boto3
 import elasticsearch
 from botocore.exceptions import ClientError
@@ -16,16 +18,17 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from . import models, s3utils, schemas, settings
-from .depends import Boto3ClientCache
+from workspacesio.common import s3utils, schemas
+
+from . import models, s3policy, settings
 
 logger = logging.getLogger("api")
 
 
 def register_handlers(app: FastAPI):
-    # @app.exception_handler(IntegrityError)
-    # async def integrity_exception_handler(r: Request, exc: IntegrityError):
-    #     return JSONResponse(status_code=409, content={"message": "Integrity Error"})
+    @app.exception_handler(IntegrityError)
+    async def integrity_exception_handler(r: Request, exc: IntegrityError):
+        return JSONResponse(status_code=409, content={"message": "Integrity Error"})
 
     @app.exception_handler(PermissionError)
     async def permissions_exception_handler(r: Request, exc: PermissionError):
@@ -36,11 +39,11 @@ def register_handlers(app: FastAPI):
         return JSONResponse(status_code=400, content={"message": str(exc)})
 
 
-def on_after_register(db: Session, user: schemas.UserBase):
+def on_after_register(db: Session, user: schemas.UserDB):
     print(f"User {user.id} has registered.")
 
 
-def on_after_forgot_password(db: Session, user: schemas.UserBase):
+def on_after_forgot_password(db: Session, user: schemas.UserDB):
     print(f"User {user.id} has forgot their password")
 
 
@@ -157,7 +160,7 @@ def get_token_for_workspace_constellation(
 
 
 def match_terms(
-    db: Session, requester: schemas.UserBase, term: str, sep: str = "/"
+    db: Session, requester: schemas.UserDB, term: str, sep: str = "/"
 ) -> Tuple[Optional[models.Workspace], Optional[str]]:
     """
     Annoying search criteria.
@@ -238,7 +241,7 @@ def root_search(db: Session, node_name: Optional[str]) -> List[models.WorkspaceR
 
 def root_create(
     db: Session,
-    b3: Boto3ClientCache,
+    b3: s3utils.Boto3ClientCache,
     creator: schemas.UserDB,
     params: schemas.WorkspaceRootCreate,
 ) -> models.WorkspaceRoot:
@@ -281,12 +284,12 @@ def root_start_import(db: Session, creator: schemas.UserDB, root_id: uuid.UUID):
     node: models.StorageNode = root.storage_node
     if creator.id != node.creator.id:
         raise PermissionError("Only node owners can run indexing on their own nodes")
-    return schemas.RootImport(root=root, node=node)
+    return schemas.RootCredentials(root=root, node=node)
 
 
 def workspace_search(
     db: Session,
-    requester: schemas.UserBase,
+    requester: schemas.UserDB,
     like: Optional[str] = None,
     name: Optional[str] = None,
     owner_id: Union[str, uuid.UUID, None] = None,
@@ -329,9 +332,9 @@ def workspace_get(
 
 def workspace_create(
     db: Session,
-    b3: Boto3ClientCache,
+    b3: s3utils.Boto3ClientCache,
     workspace: schemas.WorkspaceCreate,
-    owner: schemas.UserBase,
+    owner: schemas.UserDB,
 ) -> models.Workspace:
     """Create a workspace for owner, including an empty root object in s3"""
     db_owner: models.User = db.query(models.User).get_or_404(owner.id)
@@ -413,7 +416,22 @@ def workspace_delete(db: Session, user: schemas.UserDB, workspace_id: uuid.UUID)
     db.commit()
 
 
-def token_list(db: Session, requester: schemas.UserBase) -> List[models.S3Token]:
+def apikey_list(db: Session, requester: schemas.UserDB) -> List[models.ApiKey]:
+    return db.query(models.ApiKey).filter(models.ApiKey.user_id == requester.id).all()
+
+
+def apikey_create(db: Session, requester: models.User) -> schemas.ApiKeyCreateResponse:
+    key_str = secrets.token_urlsafe(32)
+    key_hash = models.ApiKey.make_password_hash(key_str)
+    key_db = models.ApiKey(user_id=requester.id, secret_hash=key_hash)
+    db.add(key_db)
+    db.flush()
+    schemad = schemas.ApiKeyDB.from_orm(key_db)
+    db.commit()
+    return schemas.ApiKeyCreateResponse(**schemad.dict(), secret=key_str)
+
+
+def token_list(db: Session, requester: schemas.UserDB) -> List[models.S3Token]:
     """List tokens for requester"""
     return (
         db.query(models.S3Token)
@@ -429,8 +447,8 @@ def token_list(db: Session, requester: schemas.UserBase) -> List[models.S3Token]
 
 def token_create(
     db: Session,
-    b3: Boto3ClientCache,
-    requester: schemas.UserBase,
+    b3: s3utils.Boto3ClientCache,
+    requester: models.User,
     token: schemas.S3TokenCreate,
 ) -> List[schemas.TokenNodeWrapper]:
     """Create s3 sts token for requester if they have permissions"""
@@ -473,7 +491,7 @@ def token_create(
             )
             continue
         else:
-            policy = s3utils.makePolicy(
+            policy = s3policy.makePolicy(
                 requester,
                 workspaces=my_workspaces,
                 foreign_workspaces=foreign_workspaces,
@@ -523,7 +541,7 @@ def token_revoke(db: Session, token_id: uuid.UUID):
     db.commit()
 
 
-def token_revoke_all(db: Session, user: schemas.UserBase) -> int:
+def token_revoke_all(db: Session, user: schemas.UserDB) -> int:
     """
     Remove all tokens from DB
     """
@@ -540,8 +558,8 @@ def token_revoke_all(db: Session, user: schemas.UserBase) -> int:
 
 def token_search(
     db: Session,
-    b3: Boto3ClientCache,
-    requester: schemas.UserBase,
+    b3: s3utils.Boto3ClientCache,
+    requester: models.User,
     search: schemas.S3TokenSearch,
 ) -> schemas.S3TokenSearchResponse:
     """Search for a set of credentials that satisfy the terms"""
@@ -571,7 +589,7 @@ def token_search(
 
 def share_create(
     db: Session,
-    creator: schemas.UserBase,
+    creator: schemas.UserDB,
     share: schemas.ShareCreate,
 ) -> models.Share:
     """
@@ -590,7 +608,7 @@ def share_create(
 
 def share_list(
     db: Session,
-    user: schemas.UserBase,
+    user: schemas.UserDB,
 ) -> List[models.Share]:
     """List shared-by and shared-with user"""
     return (

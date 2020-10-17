@@ -12,9 +12,9 @@ mc admin user add secondary backend backend1234
 # Give user access to all buckets
 mc admin policy set secondary readwrite user=backend
 
-wio register main@domain.com main --password pass
-wio register other@domain.com other --password pass
-wio login main@domain.com --password pass
+# wio register main@domain.com main --password pass
+# wio register other@domain.com other --password pass
+# wio login main@domain.com --password pass
 
 wio node c default http://varrock:9000 backend backend1234
 wio root c default-private default
@@ -26,11 +26,3 @@ wio root c secondary-private secondary
 wio w c first --public
 wio w c second
 wio w c third
-
-wio login other@domain.com --password pass
-
-wio w c primary --public
-wio w c secondary
-
-wio login main@domain.com --password pass
-

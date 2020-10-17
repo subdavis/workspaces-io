@@ -1,8 +1,10 @@
 import datetime
 import enum
+import secrets
 import uuid
+from typing import Tuple
 
-from fastapi_users.db import SQLAlchemyBaseUserTable
+import bcrypt
 from sqlalchemy import (
     Boolean,
     Column,
@@ -18,8 +20,9 @@ from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
 
+from workspacesio.common.schemas import RootType, ShareType
+
 from .database import Base
-from .schemas import RootType, ShareType
 
 # Many to Many
 # https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html#many-to-many
@@ -51,12 +54,43 @@ class BaseModel(AbstractConcreteBase, Base):
     created = Column(DateTime, default=datetime.datetime.utcnow)
 
 
-class User(Base, SQLAlchemyBaseUserTable):
+class User(BaseModel):
     __tablename__ = "user"
-    username = Column(String)
+    __table_args__ = (
+        UniqueConstraint("username"),
+        UniqueConstraint("email"),
+        UniqueConstraint("sub"),
+    )
 
+    sub = Column(String, nullable=False)
+    username = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+
+    apikeys = relationship("ApiKey", back_populates="user")
     workspaces = relationship("Workspace", back_populates="owner")
     created_nodes = relationship("StorageNode", back_populates="creator")
+
+
+class ApiKey(BaseModel):
+    """
+    API Key for command line
+    """
+
+    __tablename__ = "apikey"
+
+    key_id = Column(String, nullable=False, default=secrets.token_urlsafe)
+    secret_hash = Column(String, nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+
+    user = relationship(User, back_populates="apikeys")
+
+    @staticmethod
+    def make_password_hash(password: str):
+        hashstr = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+        return hashstr.decode("utf-8")
+
+    def verify(self, key: str):
+        return bcrypt.checkpw(key.encode("utf-8"), self.secret_hash.encode("utf-8"))
 
 
 class StorageNode(BaseModel):
@@ -107,7 +141,7 @@ class WorkspaceRoot(BaseModel):
     tokens = relationship(
         "S3Token", secondary=root_s3token_association_table, back_populates="roots"
     )
-    indexes = relationship("ElasticIndex", back_populates="root")
+    indexes = relationship("RootIndex", back_populates="root")
 
 
 class Workspace(BaseModel):

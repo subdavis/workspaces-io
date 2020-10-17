@@ -5,4 +5,5 @@ module.exports = {
       changeOrigin: true,
     },
   },
+  base: '/app',
 };

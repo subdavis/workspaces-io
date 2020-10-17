@@ -3,7 +3,6 @@ import enum
 import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
-from fastapi_users import models as fastapi_users_models
 from pydantic import BaseModel
 
 
@@ -42,22 +41,11 @@ class ServerInfo(BaseModel):
 ###########################################################
 
 
-class UserBase(fastapi_users_models.BaseUser):
+class UserBase(BaseModel):
     username: str
 
-    class Config:
-        orm_mode = True
 
-
-class UserCreate(UserBase, fastapi_users_models.BaseUserCreate):
-    pass
-
-
-class UserUpdate(UserBase, fastapi_users_models.BaseUserUpdate):
-    pass
-
-
-class UserDB(UserBase, fastapi_users_models.BaseUserDB):
+class UserDB(DBBaseModel, UserBase):
     pass
 
 
@@ -81,12 +69,13 @@ class StorageNodeCreate(StorageNodeBase):
 
 class StorageNodeDB(DBBaseModel, StorageNodeBase):
     creator_id: uuid.UUID
-    creator: UserBase
+    creator: UserDB
 
 
 class StorageNodeOperator(StorageNodeDB):
     access_key_id: str
     secret_access_key: str
+    assume_role_arn: Optional[str]
 
 
 ###########################################################
@@ -108,17 +97,22 @@ class WorkspaceRootDB(DBBaseModel, WorkspaceRootBase):
     node_id: uuid.UUID
 
 
+class WorkspaceRootOperator(WorkspaceRootDB):
+    storage_node: StorageNodeDB
+
+
 ###########################################################
-# RootImport Schemas
+# RootCredentials Schemas
 ###########################################################
 
 
-class RootImportCreate(BaseModel):
-    root_id: uuid.UUID
+class RootCredentials(BaseModel):
+    """
+    Only passed out to node operators
+    and administrators
+    """
 
-
-class RootImport(BaseModel):
-    root: WorkspaceRootDB
+    root: WorkspaceRootOperator
     node: StorageNodeOperator
 
 
@@ -144,8 +138,34 @@ class WorkspaceDB(DBBaseModel, WorkspaceBase):
     name: str
     owner_id: uuid.UUID
     root_id: uuid.UUID
-    owner: UserBase
+    owner: UserDB
     root: WorkspaceRootDB
+
+
+###########################################################
+# API Key Schemas
+###########################################################
+
+
+class ApiKeyBase(BaseModel):
+    pass
+
+
+class ApiKeyCreate(ApiKeyBase):
+    pass
+
+
+class ApiKeyCreateResponse(DBBaseModel, ApiKeyBase):
+    key_id: str
+    secret: str
+    user_id: uuid.UUID
+
+
+class ApiKeyDB(DBBaseModel, ApiKeyBase):
+    key_id: str
+    user_id: uuid.UUID
+
+    user: UserDB
 
 
 ###########################################################
@@ -172,7 +192,7 @@ class S3TokenDB(DBBaseModel, S3TokenBase):
     secret_access_key: str
     session_token: str
     policy: dict
-    owner: UserBase
+    owner: UserDB
     workspaces: List[WorkspaceDB]
 
 
@@ -214,8 +234,8 @@ class ShareDB(DBBaseModel, ShareBase):
     creator_id: uuid.UUID
     sharee_id: uuid.UUID
     workspace: WorkspaceDB
-    creator: UserBase
-    sharee: UserBase
+    creator: UserDB
+    sharee: UserDB
 
 
 ###########################################################

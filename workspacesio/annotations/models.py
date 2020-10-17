@@ -1,9 +1,10 @@
-from sqlalchemy import Column, Enum, ForeignKey, String, Integer
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, Enum, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
 
 from workspacesio.models import BaseModel, Workspace
+
 from .schemas import DatasetType
 
 
@@ -24,7 +25,7 @@ class AnnotationDataset(BaseModel):
     media_prefix = Column(String, nullable=False, default="")
     # filename if source type is video
     media_filename = Column(String, nullable=True, default=None)
-    workspace = relationship(Workspace, back_populates="annotation_datasets")
+    workspace = relationship(Workspace, ulates="annotation_datasets")
 
 
 class Track(BaseModel):

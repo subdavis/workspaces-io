@@ -3,10 +3,13 @@ import os
 from setuptools import find_packages, setup
 
 deps = [
+    "aiofiles",
+    "authlib",
     "boto3",
     "click",
     "click-aliases",
     "colorama",
+    "cryptography",
     "databases[postgresql]",
     "elasticsearch>=7.0.0,<8.0.0",
     "fastapi",
@@ -18,9 +21,11 @@ deps = [
     "minio",
     "psycopg2-binary",
     "pydantic",
+    "pyjwt",
     "requests",
     "requests-toolbelt",
     "sqlalchemy",
+    "starlette",
     "tqdm",
     "uvicorn",
 ]

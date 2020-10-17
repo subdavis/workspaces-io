@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple
 
 import click
 
-from workspacesio import s3utils, schemas
+from workspacesio.common import schemas
 
 from .util import exit_with, handle_request_error
 
@@ -58,6 +58,8 @@ def make(cli: click.Group):
     @click.argument("args", nargs=-1)
     @click.pass_obj
     def mc(ctx, args):
+        from workspacesio.common import s3utils
+
         r = ctx["session"].post(
             "token/search",
             json={

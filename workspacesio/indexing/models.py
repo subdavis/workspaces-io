@@ -1,6 +1,15 @@
 import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    BigInteger,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
@@ -62,7 +71,7 @@ class WorkspaceCrawlRound(BaseModel):
     end_time = Column(DateTime, default=None, nullable=True)
     succeeded = Column(Boolean, default=False, nullable=False)
     last_indexed_key = Column(String, nullable=True)
-    total_objects = Column(Integer, nullable=False, default=0)
-    total_size = Column(Integer, nullable=False, default=0)
+    total_objects = Column(BigInteger, nullable=False, default=0)
+    total_size = Column(BigInteger, nullable=False, default=0)
 
-    workspace = relationship(Workspace, back_populates="crawl_rounds")
+    workspace = relationship(Workspace, backref="crawl_rounds")

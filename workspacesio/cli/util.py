@@ -24,6 +24,9 @@ def handle_request_error(r: Response) -> dict:
         except JSONDecodeError:
             pass
 
+        if r.status_code == 401:
+            return {"error": "You are not logged in."}
+
         return {
             "context": {
                 "url": r.url,
@@ -38,7 +41,8 @@ def handle_request_error(r: Response) -> dict:
 
 
 def exit_with(out: dict):
-    click.echo(json.dumps(out, indent=2, sort_keys=True))
     if out.get("error"):
+        click.secho(json.dumps(out, indent=2, sort_keys=True), fg="red")
         exit(1)
+    click.echo(json.dumps(out, indent=2, sort_keys=True))
     exit(0)

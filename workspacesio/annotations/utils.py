@@ -1,4 +1,7 @@
+from typing import List
+
 from .schemas import Feature
+
 
 # interpolate all features [a, b)
 def interpolate(a: Feature, b: Feature) -> List[Feature]:
