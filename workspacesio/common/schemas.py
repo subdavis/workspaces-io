@@ -97,6 +97,10 @@ class WorkspaceRootDB(DBBaseModel, WorkspaceRootBase):
     node_id: uuid.UUID
 
 
+class WorkspaceRootOperator(WorkspaceRootDB):
+    storage_node: StorageNodeDB
+
+
 ###########################################################
 # RootImport Schemas
 ###########################################################
@@ -107,7 +111,7 @@ class RootImportCreate(BaseModel):
 
 
 class RootImport(BaseModel):
-    root: WorkspaceRootDB
+    root: WorkspaceRootOperator
     node: StorageNodeOperator
 
 

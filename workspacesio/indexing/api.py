@@ -6,12 +6,12 @@ from elasticsearch import Elasticsearch
 from fastapi import Depends
 from fastapi.routing import APIRouter
 
-from workspacesio import auth, database, schemas
+from workspacesio import auth, database
+from workspacesio.common import indexing_schemas, schemas
 from workspacesio.depends import get_boto, get_db, get_elastic_client
 
 from . import crud
 from . import models as indexing_models
-from . import schemas as indexing_schemas
 
 router = APIRouter()
 

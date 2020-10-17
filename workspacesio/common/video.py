@@ -3,9 +3,7 @@ import urllib.parse
 
 import ffmpeg
 
-from workspacesio import s3utils, schemas
-
-from . import schemas as indexing_schemas
+from . import indexing_schemas, s3utils, schemas
 
 
 def probe(

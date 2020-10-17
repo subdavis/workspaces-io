@@ -163,3 +163,11 @@ docker-compose up
 ```
 
 Initialize the stack by running through the commands in `initialize.sh` .
+
+# Debugging
+
+https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPROFILEIMPORTTIME
+
+``` 
+PYTHONPROFILEIMPORTTIME=1 wio
+```

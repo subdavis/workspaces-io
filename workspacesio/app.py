@@ -2,12 +2,14 @@ import os
 import typing
 
 from fastapi import Depends, FastAPI, Request
-from fastapi.responses import RedirectResponse
 from fastapi.logger import logger
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
-from . import api, auth, crud, database, depends, indexing, models, schemas, settings
+from workspacesio.common import schemas
+
+from . import api, auth, crud, database, depends, indexing, models, settings
 
 
 def create_app(env: typing.Dict[str, str]) -> FastAPI:

@@ -13,11 +13,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from workspacesio import crud, models, s3utils, schemas
-from workspacesio.depends import Boto3ClientCache
+from workspacesio import crud, models
+from workspacesio.common import indexing_schemas, schemas, s3utils
 
 from . import models as indexing_models
-from . import schemas as indexing_schemas
 
 
 def verify_root_permissions(user: schemas.UserDB, root: models.WorkspaceRoot):
@@ -74,7 +73,7 @@ def root_index_delete(
     db: Session,
     es: elasticsearch.Elasticsearch,
     user: schemas.UserDB,
-    root_id: str,
+    root_id: uuid.UUID,
 ):
     index_db: Optional[indexing_models.RootIndex] = (
         db.query(indexing_models.RootIndex)
@@ -146,7 +145,6 @@ def bulk_index_add(
     object_size_sum = 0
     for doc in docs.documents:
         workspacekey = s3utils.getWorkspaceKey(workspace)
-        doc.s
         upsertdoc = indexing_schemas.IndexDocument(
             **doc.dict(),
             workspace_id=workspace.id,

@@ -1,9 +1,8 @@
 import click
 from click_aliases import ClickAliasedGroup
 
-from workspacesio import schemas
+from workspacesio.common import schemas
 
-from .config import save_config
 from .util import exit_with, handle_request_error
 
 

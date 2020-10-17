@@ -2,7 +2,6 @@ import posixpath
 
 import click
 
-from .config import save_config
 from .util import exit_with, handle_request_error
 
 

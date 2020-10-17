@@ -3,10 +3,9 @@ from typing import Optional
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
-from workspacesio import schemas
+from workspacesio.common import schemas, indexing_schemas
 
 from . import models as indexing_models
-from . import schemas as indexing_schemas
 
 
 def annotation_dataset_create(

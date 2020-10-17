@@ -20,8 +20,9 @@ from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
 
+from workspacesio.common.schemas import RootType, ShareType
+
 from .database import Base
-from .schemas import RootType, ShareType
 
 # Many to Many
 # https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html#many-to-many
@@ -83,9 +84,14 @@ class ApiKey(BaseModel):
 
     user = relationship(User, back_populates="apikeys")
 
-    @classmethod
-    def verify(cls, apikey: "ApiKey", key: str):
-        return bcrypt.checkpw(key.encode("utf-8"), apikey.token_hash)
+    @staticmethod
+    def make_password_hash(password: str):
+        hashstr = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+        return hashstr.decode("utf-8")
+
+    def verify(self, key: str):
+        print(key)
+        return bcrypt.checkpw(key.encode("utf-8"), self.secret_hash.encode("utf-8"))
 
 
 class StorageNode(BaseModel):

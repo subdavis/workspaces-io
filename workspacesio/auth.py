@@ -10,15 +10,16 @@ import jwt.algorithms
 import jwt.exceptions
 import requests
 import uvicorn
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRouter
-from fastapi.security import APIKeyCookie, OAuth2PasswordBearer
+from fastapi.security import APIKeyCookie, HTTPBasic, HTTPBasicCredentials
 from fastapi.security.utils import get_authorization_scheme_param
 from pydantic import BaseModel
+from sqlalchemy import and_
 
-from workspacesio import database, depends, models, schemas
-from workspacesio.depends import get_db
+from workspacesio import database, depends, models
+from workspacesio.common import schemas
 from workspacesio.settings import settings
 from workspacesio.utils import build_url
 
@@ -67,7 +68,7 @@ class OIDCConfig(BaseModel):
 
 router = APIRouter()
 sessioncookie = APIKeyCookie(name="session", auto_error=False)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
+security = HTTPBasic(auto_error=False)
 oidc_conf: Union[OIDCConfig, None] = None
 
 
@@ -154,7 +155,7 @@ def _make_redirect(config: OIDCConfig, token: Optional[JWToken]) -> RedirectResp
 
 def get_current_user(
     session_cookie: Optional[JWToken] = Depends(_maybe_session_user),
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPBasicCredentials = Depends(security),
     db: database.SessionLocal = Depends(depends.get_db),
 ) -> models.User:
 
@@ -164,6 +165,16 @@ def get_current_user(
         )
         if user is not None:
             return user
+    if credentials:
+        apikey: Optional[models.ApiKey] = (
+            db.query(models.ApiKey)
+            .filter(models.ApiKey.key_id == credentials.username)
+            .first()
+        )
+        if apikey is not None:
+            verified = apikey.verify(credentials.password)
+            if verified:
+                return apikey.user
     raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthorized")
 
 
@@ -228,4 +239,4 @@ async def auth(
 
 @router.get("/")
 def root(session: str = Depends(sessioncookie)) -> RedirectResponse:
-    return session
+    return RedirectResponse(url="/app")

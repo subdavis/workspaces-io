@@ -6,7 +6,8 @@ from elasticsearch import Elasticsearch
 from fastapi import Depends
 from fastapi.routing import APIRouter
 
-from workspacesio import auth, crud, database, models, schemas
+from workspacesio import auth, crud, database, models
+from workspacesio.common import schemas
 from workspacesio.depends import get_boto, get_db
 from workspacesio.settings import settings
 
@@ -219,12 +220,3 @@ def revoke_all_tokens(
     user: models.User = Depends(auth.get_current_user),
 ):
     return crud.token_revoke_all(db, user)
-
-
-@router.put("/instrument", status_code=200)
-def create_instrument(
-    tag: str,
-    db: database.SessionLocal = Depends(get_db),
-    user: models.User = Depends(auth.get_current_user),
-):
-    return crud.instrument_create(db, user, tag)

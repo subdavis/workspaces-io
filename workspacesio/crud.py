@@ -2,12 +2,12 @@ import datetime
 import json
 import logging
 import os
+import secrets
 import urllib.parse
 import uuid
-import secrets
-import bcrypt
 from typing import Dict, List, Optional, Tuple, Union
 
+import bcrypt
 import boto3
 import elasticsearch
 from botocore.exceptions import ClientError
@@ -18,8 +18,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from . import models, s3utils, schemas, settings
-from .depends import Boto3ClientCache
+from workspacesio.common import s3utils, schemas
+
+from . import models, s3policy, settings
 
 logger = logging.getLogger("api")
 
@@ -240,7 +241,7 @@ def root_search(db: Session, node_name: Optional[str]) -> List[models.WorkspaceR
 
 def root_create(
     db: Session,
-    b3: Boto3ClientCache,
+    b3: s3utils.Boto3ClientCache,
     creator: schemas.UserDB,
     params: schemas.WorkspaceRootCreate,
 ) -> models.WorkspaceRoot:
@@ -331,7 +332,7 @@ def workspace_get(
 
 def workspace_create(
     db: Session,
-    b3: Boto3ClientCache,
+    b3: s3utils.Boto3ClientCache,
     workspace: schemas.WorkspaceCreate,
     owner: schemas.UserDB,
 ) -> models.Workspace:
@@ -421,7 +422,7 @@ def apikey_list(db: Session, requester: schemas.UserDB) -> List[models.ApiKey]:
 
 def apikey_create(db: Session, requester: models.User) -> schemas.ApiKeyCreateResponse:
     key_str = secrets.token_urlsafe(32)
-    key_hash = bcrypt.hashpw(key_str.encode("utf-8"), bcrypt.gensalt())
+    key_hash = models.ApiKey.make_password_hash(key_str)
     key_db = models.ApiKey(user_id=requester.id, secret_hash=key_hash)
     db.add(key_db)
     db.flush()
@@ -446,8 +447,8 @@ def token_list(db: Session, requester: schemas.UserDB) -> List[models.S3Token]:
 
 def token_create(
     db: Session,
-    b3: Boto3ClientCache,
-    requester: schemas.UserDB,
+    b3: s3utils.Boto3ClientCache,
+    requester: models.User,
     token: schemas.S3TokenCreate,
 ) -> List[schemas.TokenNodeWrapper]:
     """Create s3 sts token for requester if they have permissions"""
@@ -490,7 +491,7 @@ def token_create(
             )
             continue
         else:
-            policy = s3utils.makePolicy(
+            policy = s3policy.makePolicy(
                 requester,
                 workspaces=my_workspaces,
                 foreign_workspaces=foreign_workspaces,
@@ -557,8 +558,8 @@ def token_revoke_all(db: Session, user: schemas.UserDB) -> int:
 
 def token_search(
     db: Session,
-    b3: Boto3ClientCache,
-    requester: schemas.UserDB,
+    b3: s3utils.Boto3ClientCache,
+    requester: models.User,
     search: schemas.S3TokenSearch,
 ) -> schemas.S3TokenSearchResponse:
     """Search for a set of credentials that satisfy the terms"""

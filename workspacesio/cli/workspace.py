@@ -6,14 +6,7 @@ import click
 from click_aliases import ClickAliasedGroup
 from tqdm import tqdm
 
-from workspacesio import schemas
-from workspacesio.indexing import schemas as indexing_schemas
-from workspacesio.indexing.producers import (
-    additional_indexes,
-    minio_buffer_objects,
-    minio_recursive_generate_objects,
-    minio_transform_object,
-)
+from workspacesio.common import indexing_schemas, schemas
 
 from .util import exit_with, handle_request_error
 
@@ -110,6 +103,9 @@ def make(cli: click.Group):
     )
     @click.pass_obj
     def index_workspace(ctx, workspace_id, minio_mount):
+        # Dynamic, expensive imports
+        from workspacesio.common import producers
+
         r = ctx["session"].get(f"workspace/{workspace_id}")
         if not r.ok:
             exit_with(handle_request_error(r))
@@ -122,8 +118,8 @@ def make(cli: click.Group):
         rdata = schemas.RootImport(**r.json())
         pbar = tqdm([workspace])
         for w in pbar:
-            for batch in minio_buffer_objects(
-                minio_recursive_generate_objects(
+            for batch in producers.minio_buffer_objects(
+                producers.minio_recursive_generate_objects(
                     node=rdata.node, root=rdata.root, workspace=w
                 ),
                 buffer_size=100,
@@ -132,8 +128,10 @@ def make(cli: click.Group):
                 for obj in batch:
                     before = datetime.datetime.utcnow()
                     obj.time = "ar"
-                    doc = minio_transform_object(workspace=w, root=rdata.root, obj=obj)
-                    success, failed = additional_indexes(
+                    doc = producers.minio_transform_object(
+                        workspace=w, root=rdata.root, obj=obj
+                    )
+                    success, failed = producers.additional_indexes(
                         root=rdata.root, workspace=w, doc=doc, node=rdata.node
                     )
                     delta = str(

@@ -20,29 +20,39 @@ export default defineComponent({
 
 
 <template>
-  <table class="table" v-show="workspaces.length">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Owner</th>
-        <th>Id</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr
-        v-for="workspace in workspaces"
-        :key="workspace.id"
-      >
-        <td>{{workspace.name}}</td>
-        <td>{{workspace.owner.username}}</td>
-        <td>{{workspace.id}}</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="flex flex-col">
+    <h1>Workspaces</h1>
+    <table
+      class="table"
+      v-show="workspaces.length"
+    >
+      <thead>
+        <tr style="text-align: left;">
+          <th>Name</th>
+          <th>Owner</th>
+          <th>Id</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="workspace in workspaces"
+          :key="workspace.id"
+        >
+          <td>{{workspace.name}}</td>
+          <td>{{workspace.owner.username}}</td>
+          <td>{{workspace.id}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <style scoped lang="postcss">
-.table td {
+.table td,
+.table th {
   @apply px-4 py-1;
+}
+.table tbody tr:nth-child(odd) {
+  @apply bg-gray-200 rounded;
 }
 </style>

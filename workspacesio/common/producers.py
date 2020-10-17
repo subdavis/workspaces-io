@@ -6,11 +6,9 @@ from typing import Generator, Iterable, List, Optional, Tuple, TypeVar, Union
 
 import minio
 
-from workspacesio import depends, s3utils, schemas
-from workspacesio.indexing import schemas as indexing_schemas
-from workspacesio.indexing import video
+from . import indexing_schemas, s3utils, schemas, video
 
-clientCache = depends.Boto3ClientCache()
+clientCache = s3utils.Boto3ClientCache()
 
 
 def minio_list_root_children(

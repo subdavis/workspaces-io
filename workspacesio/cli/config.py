@@ -1,35 +1,47 @@
 import json
-from typing import Dict, List, Optional
+import os
+from typing import Dict, List, Optional, Any, cast
 
 import click
+from requests_toolbelt.sessions import BaseUrlSession
 from pydantic import BaseModel
 
-from workspacesio import schemas
+from workspacesio.common import schemas
 
 
 class Config(BaseModel):
-    token: Optional[str]
-    api_url: Optional[str]
+    access_key: Optional[str]
+    secret_key: Optional[str]
+    api_url: Optional[str] = "http://localhost:8100/api"
+
+
+class Ctx(BaseModel):
+    config: Config
+    configPath: str
+    session: BaseUrlSession
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 def make() -> Config:
     return Config()
 
 
-def save_config(c: Config, p: str):
-    with open(p, "w") as out:
-        out.write(c.json())
+def getctx(ctx: Dict[str, Any]) -> Ctx:
+    return Ctx(**ctx)
 
 
-def load_config(c: str) -> Config:
-    try:
-        return Config(**json.loads(c))
-    except:
-        return make()
+def save(ctx: Ctx):
+    with open(ctx.configPath, "w") as out:
+        out.write(ctx.config.json())
 
 
-def resolve_token(c: Config, query: str) -> Optional[schemas.S3TokenDB]:
-    """
-    validate a workspace string, see if I have it locally
-    """
-    pass
+def load_config(path: str) -> Config:
+    if os.path.exists(path):
+        try:
+            with open(path) as config_file:
+                return Config(**json.loads(config_file.read()))
+        except:
+            return make()
+    return make()

@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from workspacesio.schemas import DBBaseModel, WorkspaceDB, WorkspaceRootDB
+from .schemas import DBBaseModel, WorkspaceDB, WorkspaceRootDB
 
 INDEX_DOCUMENT_MAPPING = {
     "properties": {
@@ -89,7 +89,7 @@ class IndexDocumentBase(BaseModel):
     width: Optional[int]
     height: Optional[int]
     r_frame_rate: Optional[str]
-    bit_rate: Optional[str]
+    bit_rate: Optional[int]
     duration_ts: Optional[int]
     duration_sec: Optional[str]
     format_name: Optional[str]
