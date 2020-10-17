@@ -10,7 +10,7 @@ import jwt.algorithms
 import jwt.exceptions
 import requests
 import uvicorn
-from fastapi import Depends, Header, HTTPException, status, Request
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRouter
 from fastapi.security import APIKeyCookie, HTTPBasic, HTTPBasicCredentials

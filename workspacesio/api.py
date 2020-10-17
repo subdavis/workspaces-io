@@ -78,13 +78,15 @@ def delete_node_root(
     return crud.root_delete(db, creator, root_id)
 
 
-@router.post("/root/import", response_model=schemas.RootImport, tags=["root"])
+@router.post(
+    "/root/{root_id}/import", response_model=schemas.RootCredentials, tags=["root"]
+)
 def start_root_import(
-    params: schemas.RootImportCreate,
+    root_id: uuid.UUID,
     creator: models.User = Depends(auth.get_current_user),
     db: database.SessionLocal = Depends(get_db),
 ):
-    return crud.root_start_import(db, creator, root_id=params.root_id)
+    return crud.root_start_import(db, creator, root_id=root_id)
 
 
 @router.get("/workspace", response_model=List[schemas.WorkspaceDB], tags=["workspace"])

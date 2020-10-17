@@ -23,12 +23,12 @@ export default {
 
 <template>
   <div class="flex flex-col">
-    <h1>API Keys</h1>
+    <h1>API Keys ({{keys.length}})</h1>
     <template v-if="keys.length">
       <div
         v-for="key in keys"
         :key="key.id"
-        class="bg-gray-200 rounded px-4 my-2"
+        class="bg-gray-200 rounded px-3 my-2 py-1"
       >
         <p class="py-2">
           <span class="key-header">Key ID</span>
@@ -44,6 +44,20 @@ export default {
         <p class="py-2">
           <span class="key-header">Created</span>
           <span>{{ (new Date(key.created)).toLocaleString() }}</span>
+        </p>
+        <p
+          class="code"
+          v-if="key.secret"
+        >
+          wio login \
+          <br>--access-key {{ key.key_id }} \
+          <br>--secret-key {{ key.secret }}
+        </p>
+        <p
+          class="bg-red-600 text-white rounded p-2"
+          v-if="key.secret"
+        >
+          Record your secret key now. It will never be shown again.
         </p>
       </div>
     </template>
@@ -63,7 +77,9 @@ export default {
     <p>With pipx</p>
     <p class="code">pipx install workspacesio</p>
     <p>Configure for the server </p>
-    <p class="code">wio login {token}</p>
+    <p class="code">wio login
+      --access-key {accesskey}
+      --secret-key {secretkey}</p>
   </div>
 </template>
 

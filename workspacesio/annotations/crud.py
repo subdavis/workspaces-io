@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
-from workspacesio.common import schemas, indexing_schemas
+from workspacesio.common import indexing_schemas, schemas
 
 from . import models as indexing_models
 

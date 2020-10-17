@@ -10,9 +10,7 @@ from click_aliases import ClickAliasedGroup
 from requests.exceptions import RequestException
 from requests_toolbelt.sessions import BaseUrlSession
 
-from . import auth
-from . import config
-from . import index, mc, node, root, s3token, workspace
+from . import auth, config, index, mc, node, root, s3token, workspace
 
 
 class WioSession(BaseUrlSession):

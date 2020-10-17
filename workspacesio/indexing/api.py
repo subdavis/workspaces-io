@@ -3,7 +3,7 @@ import uuid
 import boto3
 from botocore.client import Config
 from elasticsearch import Elasticsearch
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.routing import APIRouter
 
 from workspacesio import auth, database
@@ -47,7 +47,7 @@ def delete_index(
     "/workspace/{workspace_id}/crawl",
     tags=["workspace"],
     status_code=201,
-    response_model=indexing_schemas.WorkspaceCrawlRoundDB,
+    response_model=indexing_schemas.WorkspaceCrawlRoundResponse,
 )
 def create_workspace_crawl(
     workspace_id: uuid.UUID,
@@ -74,9 +74,10 @@ def create_event(
 
 
 @router.head("/minio/events", tags=["hooks"], status_code=200)
-def head_event():
+def head_event(r: Request):
     """MinIO issues HEAD on startup"""
-    pass
+    print(r.headers)
+    return "SURE"
 
 
 @router.post(

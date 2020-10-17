@@ -1,10 +1,10 @@
 import json
 import os
-from typing import Dict, List, Optional, Any, cast
+from typing import Any, Dict, List, Optional, cast
 
 import click
-from requests_toolbelt.sessions import BaseUrlSession
 from pydantic import BaseModel
+from requests_toolbelt.sessions import BaseUrlSession
 
 from workspacesio.common import schemas
 

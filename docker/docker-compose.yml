@@ -63,6 +63,7 @@ services:
     environment:
       WEB_CONCURRENCY: 4
       WIO_DATABASE_URI: postgres://${WORKSPACES_DB_USER}:${WORKSPACES_DB_PASS}@db:5432
+      WIO_ES_NODES: '["elastic:9200"]'
     env_file: '.env'
 volumes:
   db:

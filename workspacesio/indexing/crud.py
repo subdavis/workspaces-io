@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from workspacesio import crud, models
-from workspacesio.common import indexing_schemas, schemas, s3utils
+from workspacesio.common import indexing_schemas, s3utils, schemas
 
 from . import models as indexing_models
 
@@ -93,10 +93,10 @@ def root_index_delete(
 
 
 def workspace_crawl_create(
-    workspace_id: uuid.UUID,
-    user: schemas.UserDB,
     db: Session,
-) -> indexing_models.WorkspaceCrawlRound:
+    user: schemas.UserDB,
+    workspace_id: uuid.UUID,
+) -> indexing_schemas.WorkspaceCrawlRoundResponse:
     workspace: models.Workspace = db.query(models.Workspace).get_or_404(workspace_id)
     verify_root_permissions(user, workspace.root)
     last_crawl: Optional[indexing_models.WorkspaceCrawlRound] = (
@@ -105,12 +105,22 @@ def workspace_crawl_create(
         .order_by(desc(indexing_models.WorkspaceCrawlRound.start_time))
         .first()
     )
+    root: models.WorkspaceRoot = db.query(models.WorkspaceRoot).get_or_404(
+        workspace.root.id
+    )
+    node: models.StorageNode = root.storage_node
+    root_credentials = schemas.RootCredentials(root=root, node=node)
     if last_crawl is None or last_crawl.succeeded == True:
         # Create a new crawl
+        print(last_crawl)
         last_crawl = indexing_models.WorkspaceCrawlRound(workspace_id=workspace_id)
         db.add(last_crawl)
+        print(last_crawl)
         db.commit()
-    return last_crawl
+    return indexing_schemas.WorkspaceCrawlRoundResponse(
+        crawl_round=last_crawl,
+        root_credentials=root_credentials,
+    )
 
 
 def bulk_index_add(
@@ -127,7 +137,7 @@ def bulk_index_add(
         .order_by(desc(indexing_models.WorkspaceCrawlRound.start_time))
         .first_or_404()
     )
-    if last_crawl.success == True:
+    if last_crawl.succeeded == True:
         raise ValueError(f"no outstanding crawl round for this workspace found")
     root: models.WorkspaceRoot = workspace.root
     verify_root_permissions(user, root)
@@ -149,6 +159,8 @@ def bulk_index_add(
             **doc.dict(),
             workspace_id=workspace.id,
             workspace_name=workspace.name,
+            workspace_base_path=workspace.base_path,
+            last_seen_crawl_id=last_crawl.id,
             owner_id=workspace.owner_id,
             owner_name=workspace.owner.username,
             bucket=root.bucket,
@@ -178,15 +190,18 @@ def bulk_index_add(
         bulk_operations = bulk_operations.__add__(
             indexing_schemas.ElasticUpsertIndexDocument(doc=upsertdoc).json() + "\n"
         )
+
     last_crawl.total_objects += object_count
     last_crawl.total_size += object_size_sum
-    last_crawl.last_indexed_key = docs.documents[-1].path
+    if len(docs.documents):
+        last_crawl.last_indexed_key = docs.last_indexed_key
     if docs.succeeded:
         last_crawl.succeeded = True
         last_crawl.end_time = datetime.datetime.utcnow()
     db.add(last_crawl)
+    if len(bulk_operations):
+        ec.bulk(bulk_operations)
     db.commit()
-    ec.bulk(bulk_operations)
 
 
 def handle_bucket_event(

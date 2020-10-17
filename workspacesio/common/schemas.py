@@ -75,7 +75,7 @@ class StorageNodeDB(DBBaseModel, StorageNodeBase):
 class StorageNodeOperator(StorageNodeDB):
     access_key_id: str
     secret_access_key: str
-    assume_role_arn: str
+    assume_role_arn: Optional[str]
 
 
 ###########################################################
@@ -102,15 +102,16 @@ class WorkspaceRootOperator(WorkspaceRootDB):
 
 
 ###########################################################
-# RootImport Schemas
+# RootCredentials Schemas
 ###########################################################
 
 
-class RootImportCreate(BaseModel):
-    root_id: uuid.UUID
+class RootCredentials(BaseModel):
+    """
+    Only passed out to node operators
+    and administrators
+    """
 
-
-class RootImport(BaseModel):
     root: WorkspaceRootOperator
     node: StorageNodeOperator
 

@@ -284,7 +284,7 @@ def root_start_import(db: Session, creator: schemas.UserDB, root_id: uuid.UUID):
     node: models.StorageNode = root.storage_node
     if creator.id != node.creator.id:
         raise PermissionError("Only node owners can run indexing on their own nodes")
-    return schemas.RootImport(root=root, node=node)
+    return schemas.RootCredentials(root=root, node=node)
 
 
 def workspace_search(

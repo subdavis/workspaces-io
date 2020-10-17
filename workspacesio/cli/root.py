@@ -3,6 +3,7 @@ from click_aliases import ClickAliasedGroup
 
 from workspacesio.common import schemas
 
+from . import config
 from .util import exit_with, handle_request_error
 
 
@@ -55,10 +56,11 @@ def make(cli: click.Group):
         # Dynamic, expensive imports
         from workspacesio.common import producers
 
-        r = ctx["session"].post("root/import", json={"root_id": root_id})
+        ctx = config.getctx(ctx)
+        r = ctx.session.post(f"root/{root_id}/import")
         if not r.ok:
             exit_with(handle_request_error(r))
-        rdata = schemas.RootImport(**r.json())
+        rdata = schemas.RootCredentials(**r.json())
         root_contents = producers.minio_list_root_children(
             node=rdata.node, root=rdata.root
         )
@@ -67,7 +69,7 @@ def make(cli: click.Group):
             prefix = folder.object_name.lstrip(rdata.root.base_path).strip("/")
             if len(prefix) > 0:
                 print(f"Discovered {prefix}")
-                workspace = ctx["session"].post(
+                workspace = ctx.session.post(
                     "workspace",
                     json={
                         "name": prefix,

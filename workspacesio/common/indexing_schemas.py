@@ -10,9 +10,9 @@ import datetime
 import uuid
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
-from .schemas import DBBaseModel, WorkspaceDB, WorkspaceRootDB
+from . import schemas
 
 INDEX_DOCUMENT_MAPPING = {
     "properties": {
@@ -126,8 +126,8 @@ class IndexCreate(IndexBase):
     pass
 
 
-class IndexDB(DBBaseModel, IndexBase):
-    root: WorkspaceRootDB
+class IndexDB(schemas.DBBaseModel, IndexBase):
+    root: schemas.WorkspaceRootDB
 
 
 class IndexBulkAdd(BaseModel):
@@ -135,8 +135,15 @@ class IndexBulkAdd(BaseModel):
 
     documents: List[IndexDocumentBase]
     workspace_id: uuid.UUID
-    last_indexed_key: str
+    last_indexed_key: Optional[str]
     succeeded: Optional[bool]
+
+    @validator("last_indexed_key")
+    def validate_last_indexed_key(cls, v, values):
+        if len((values["documents"])):
+            if v is None:
+                raise ValueError("Must specify last_indexed_key when docs are sent")
+        return v
 
 
 class IndexBulkAddedResponse(BaseModel):
@@ -193,14 +200,19 @@ class ElasticUpsertIndexDocument(BaseModel):
 
 
 class WorkspaceCrawlRoundBase(BaseModel):
-    worksapce_id: uuid.UUID
+    workspace_id: uuid.UUID
     start_time: datetime.datetime
     succeeded: bool
 
 
-class WorkspaceCrawlRoundDB(DBBaseModel, WorkspaceCrawlRoundBase):
+class WorkspaceCrawlRoundDB(schemas.DBBaseModel, WorkspaceCrawlRoundBase):
     end_time: Optional[datetime.datetime]
     last_indexed_key: Optional[str]
     total_objects: int
     total_size: int
-    workspace: WorkspaceDB
+    workspace: schemas.WorkspaceDB
+
+
+class WorkspaceCrawlRoundResponse(BaseModel):
+    crawl_round: WorkspaceCrawlRoundDB
+    root_credentials: schemas.RootCredentials

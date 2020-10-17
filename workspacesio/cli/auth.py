@@ -1,7 +1,8 @@
-import click
+import webbrowser
 from typing import cast
 
-import webbrowser
+import click
+
 from . import config
 from .util import exit_with, handle_request_error
 

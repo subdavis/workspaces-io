@@ -90,7 +90,6 @@ class ApiKey(BaseModel):
         return hashstr.decode("utf-8")
 
     def verify(self, key: str):
-        print(key)
         return bcrypt.checkpw(key.encode("utf-8"), self.secret_hash.encode("utf-8"))
 
 

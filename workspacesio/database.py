@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from workspacesio.common.schemas import UserDB
+
 from .settings import settings
 
 database = databases.Database(settings.database_uri)

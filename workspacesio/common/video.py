@@ -33,7 +33,7 @@ def probe(
     headerstring = "\r\n".join([f"{key}:{val}" for key, val in headers.items()])
     url = urllib.parse.urljoin(endpoint, uri)
     try:
-        data = ffmpeg.probe(url, headers=headerstring)
+        data = ffmpeg.probe(url, headers=headerstring, show_streams=True)
         if len(data["streams"]):
             streams = data["streams"][0]
             doc.codec_tag_string = streams["codec_tag_string"]
@@ -42,6 +42,7 @@ def probe(
             doc.height = streams["height"]
             doc.duration_ts = streams["duration_ts"]
             try:
+                print(streams)
                 doc.bit_rate = int(streams["bit_rate"])
             except:
                 doc.bit_rate = streams["bit_rate"]

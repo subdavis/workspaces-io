@@ -22,37 +22,32 @@ export default defineComponent({
 <template>
   <div class="flex flex-col">
     <h1>Workspaces</h1>
-    <table
-      class="table"
+    <div
+      class="workspace-list"
       v-show="workspaces.length"
     >
-      <thead>
-        <tr style="text-align: left;">
-          <th>Name</th>
-          <th>Owner</th>
-          <th>Id</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
+      <ul>
+        <li
           v-for="workspace in workspaces"
           :key="workspace.id"
         >
-          <td>{{workspace.name}}</td>
-          <td>{{workspace.owner.username}}</td>
-          <td>{{workspace.id}}</td>
-        </tr>
-      </tbody>
-    </table>
+          <span class="text-gray-800">
+            {{workspace.owner.username}}/</span><span class="font-bold">{{workspace.name}}
+          </span>
+          <span class="text-gray-500 pl-3">
+            ({{ workspace.root.root_type }})
+          </span>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <style scoped lang="postcss">
-.table td,
-.table th {
-  @apply px-4 py-1;
+.workspace-list li {
+  @apply px-2 py-1;
 }
-.table tbody tr:nth-child(odd) {
+.workspace-list li:nth-child(odd) {
   @apply bg-gray-200 rounded;
 }
 </style>

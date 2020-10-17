@@ -2,6 +2,7 @@ import posixpath
 
 import click
 
+from . import config
 from .util import exit_with, handle_request_error
 
 
@@ -14,15 +15,16 @@ def make(cli: click.Group):
     @click.argument("root_id", type=click.STRING)
     @click.pass_obj
     def delete(ctx, root_id):
-        r = ctx["session"].delete(f"root/{root_id}/index")
+        r = config.getctx(ctx).session.delete(f"root/{root_id}/index")
         exit_with(handle_request_error(r))
 
     @index.command(name="create")
     @click.argument("root_id", type=click.STRING)
     @click.pass_obj
     def create(ctx, root_id):
-        r = ctx["session"].post(f"root/{root_id}/index")
-        r2 = ctx["session"].get("info")
+        ctx = config.getctx(ctx)
+        r = ctx.session.post(f"root/{root_id}/index")
+        r2 = ctx.session.get("info")
         if r.ok and r2.ok:
             data = r.json()
             infodata = r2.json()
