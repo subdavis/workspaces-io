@@ -14,6 +14,16 @@ A dead-simple [FastAPI](https://fastapi.tiangolo.com/) service to manage multi-u
 * Permissions-aware indexing and aggregation across the system.
 * Hub-and-spoke architecture.  Run a MinIO node wherever you have data, and it will be available through Workspaces.  Even **regular users** can introduce new nodes into the system and retain full control of their data.
 
+## Screenshots
+
+![Images in a directory](docs/images/screen-images.png)
+
+![directory of directories](docs/images/screen-dirs.png)
+
+![minio client ls](docs/images/term.png)
+
+![nodes](docs/images/node.png)
+
 ## Philosophy
 
 Data management should come to users and the places they already have data.  If your team wants to use powerful industry-standard tools like MinIO and ElasticSearch, but needs permissions management, WorkspacesIO might be an option.
@@ -26,7 +36,7 @@ For whatever reason, [you can't explicitly revoke STS credentials](https://stack
 
 > What's a workspace?
 
-It's just a folder.  Users manage the hierarchy within.  Permissions are managed at the workspace level.  You can search for workspace contents and share individual objects, but these are features of elasticsearch and minio, respectively.
+It's just a folder.  Users manage the heirarchy within.  Permissions are managed at the workspace level.  You can search for workspace contents and share individual objects, but these are features of elasticsearch and minio, respectively.
 
 > Who is this for?
 
@@ -34,7 +44,7 @@ WorkspacesIO is for organizations that need to manage large quantities of slow-m
 
 > What if I want to share a single file?
 
-There's always pre-signed URLs to email a colleague.  But you shouldn't think of this like Google Drive; WorkspacesIO isn't for slide decks.
+There's always pre-signed URLs to email a collegue.  But you shouldn't think of this like Google Drive; WorkspacesIO isn't for slide decks.
 
 > Why not just MinIO?
 
@@ -168,6 +178,10 @@ Initialize the stack by running through the commands in `initialize.sh` .
 
 https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPROFILEIMPORTTIME
 
-``` 
+``` bash
 PYTHONPROFILEIMPORTTIME=1 wio
 ```
+
+# Credit
+
+Credit to [Filestash.app](https://github.com/mickael-kerjean/filestash) for the frontend file browser. Integration into workspacesio is ongong and can be found at [subdavis/filestash](https://github.com/subdavis/filestash)
