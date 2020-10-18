@@ -20,9 +20,33 @@ A dead-simple [FastAPI](https://fastapi.tiangolo.com/) service to manage multi-u
 
 ![directory of directories](docs/images/screen-dirs.png)
 
-![minio client ls](docs/images/term.png)
+``` bash
+# List user workspaces
+~$ wio workspace ls
+[2020-10-17T21:07:18.996866] admin@subdavis.com/meva/ (unmanaged)
+[2020-10-17T21:06:11.048850] admin@subdavis.com/second/ (private)
+[2020-10-17T21:06:11.470730] admin@subdavis.com/third/ (private)
+[2020-10-17T21:07:18.188769] admin@subdavis.com/kobodls/ (unmanaged)
+[2020-10-17T21:07:18.720848] admin@subdavis.com/metabolomics/ (unmanaged)
+[2020-10-17T21:06:10.623132] admin@subdavis.com/first/ (public)
+[2020-10-17T21:07:17.911934] dmin@subdavis.com/_samples/ (unmanaged)
+[2020-10-17T21:07:19.575340] admin@subdavis.com/viame-web/ (unmanaged)
 
-![nodes](docs/images/node.png)
+# List instances of MinIO
+~$ wio node ls
+[2020-10-17T21:06:08.480801] ddb915fb-d911-4a8a-8971-b2fccd4e4ea8 http://hostname:9000 default
+[2020-10-17T21:06:09.803527] 6a4cf079-6c2f-4f09-abb0-abe39379e168 http://hostname:9100 secondary
+
+# List contens of workspace using MinIO client
+~$ wio mc ls viame-web/NOAAWorkshop2020/
+[2020-10-18 17:47:33 EDT]      0B Aerial Footage/
+[2020-10-18 17:47:33 EDT]      0B Completed Pipelines/
+[2020-10-18 17:47:33 EDT]      0B Fish Test Set/
+[2020-10-18 17:47:33 EDT]      0B Fish Training/
+[2020-10-18 17:47:33 EDT]      0B Scallop Test Set/
+[2020-10-18 17:47:33 EDT]      0B Sea Lion Test Set/
+[2020-10-18 17:47:33 EDT]      0B Sea Lion Training/
+```
 
 ## Philosophy
 
