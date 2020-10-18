@@ -39,14 +39,6 @@ def register_handlers(app: FastAPI):
         return JSONResponse(status_code=400, content={"message": str(exc)})
 
 
-def on_after_register(db: Session, user: schemas.UserDB):
-    print(f"User {user.id} has registered.")
-
-
-def on_after_forgot_password(db: Session, user: schemas.UserDB):
-    print(f"User {user.id} has forgot their password")
-
-
 def group_workspaces_by_node(
     workspaces: List[models.Workspace],
 ) -> Dict[uuid.UUID, List[models.Workspace]]:
@@ -431,6 +423,14 @@ def apikey_create(db: Session, requester: models.User) -> schemas.ApiKeyCreateRe
     return schemas.ApiKeyCreateResponse(**schemad.dict(), secret=key_str)
 
 
+def apikey_delete_all(db: Session, requester: models.User):
+    keys: List[models.ApiKey] = (
+        db.query(models.ApiKey).filter(models.ApiKey.user_id == requester.id).all()
+    )
+    [db.delete(key) for key in keys]
+    db.commit()
+
+
 def token_list(db: Session, requester: schemas.UserDB) -> List[models.S3Token]:
     """List tokens for requester"""
     return (
@@ -503,7 +503,6 @@ def token_create(
                 roots=roots,
                 storage_node_id=node_id,
             )
-            print(storage_node.assume_role_arn, str(requester.id), json.dumps(policy))
             new_token = b3.get_client(
                 "sts", workspaces[0].root.storage_node
             ).assume_role(

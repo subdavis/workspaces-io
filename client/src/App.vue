@@ -4,7 +4,9 @@
       <Nav />
     </div>
     <div class="flex flex-col container m-4">
-      <router-view />
+      <keep-alive>
+        <router-view />
+      </keep-alive>
     </div>
   </div>
 </template>

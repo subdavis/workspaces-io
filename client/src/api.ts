@@ -43,6 +43,24 @@ interface ApiKey extends BaseModel {
   user: User;
 }
 
+interface SearchResult {
+  hits: {
+    max_score: number;
+    total: {
+      value: number;
+      relationship: string;
+    };
+    took: number;
+    hits: {
+      _source: {
+        workspace_name: string;
+        owner_name: string;
+        path: string;
+      };
+    }[];
+  };
+}
+
 async function usersMe(): Promise<User> {
   const { data } = await axios.get<User>('users/me', config());
   return data;
@@ -61,6 +79,17 @@ async function apikeyCreate(): Promise<ApiKey> {
   return data;
 }
 
+async function apikeyRevokeAll(): Promise<void> {
+  return await axios.delete('apikey', config());
+}
+
+async function search(query: string): Promise<SearchResult> {
+  const { data } = await axios.get<SearchResult>('search', config({
+    params: { q: query },
+  }));
+  return data;
+}
+
 async function workspacesSearch(name?: string, owner_id?: string): Promise<Workspace[]> {
   const { data } = await axios.get<Workspace[]>('workspace', config({
     params: { name, owner_id },
@@ -71,12 +100,15 @@ async function workspacesSearch(name?: string, owner_id?: string): Promise<Works
 export {
   /* methods */
   apikeyCreate,
+  apikeyRevokeAll,
   apikeyList,
+  search,
   usersMe,
   workspacesSearch,
   /* Interfaces */
   ApiKey,
   User,
   Root,
+  SearchResult,
   Workspace,
 };

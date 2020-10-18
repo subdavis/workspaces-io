@@ -112,10 +112,8 @@ def workspace_crawl_create(
     root_credentials = schemas.RootCredentials(root=root, node=node)
     if last_crawl is None or last_crawl.succeeded == True:
         # Create a new crawl
-        print(last_crawl)
         last_crawl = indexing_models.WorkspaceCrawlRound(workspace_id=workspace_id)
         db.add(last_crawl)
-        print(last_crawl)
         db.commit()
     return indexing_schemas.WorkspaceCrawlRoundResponse(
         crawl_round=last_crawl,
@@ -351,3 +349,16 @@ def handle_bucket_event(
                 f"Bucket notification type unsupported: {record.eventName}"
             )
     ec.bulk(bulk_operations)
+
+
+def search(query: str, ec: elasticsearch.Elasticsearch):
+    query_dict = {
+        "query": {
+            "multi_match": {
+                "query": query,
+                "fields": ["workspace_name", "owner_name", "path"],
+                "type": "best_fields",
+            },
+        }
+    }
+    return ec.search(body=json.dumps(query_dict), index="default")

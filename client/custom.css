@@ -1,0 +1,13 @@
+img.component_icon {
+  filter: hue-rotate(336deg);
+}
+.breadcrumb {
+  border: 0 !important;
+  box-shadow: 0 0 black !important;
+}
+body { 
+  background-color: white !important;
+}
+.scroll-y {
+  overflow-y: auto !important;
+}

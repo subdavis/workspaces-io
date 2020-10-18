@@ -162,6 +162,14 @@ def list_api_keys(
     return crud.apikey_list(db, user)
 
 
+@router.delete("/apikey", tags=["apikey"])
+def delete_all_keys(
+    user: models.User = Depends(auth.get_current_user),
+    db: database.SessionLocal = Depends(get_db),
+):
+    return crud.apikey_delete_all(db, user)
+
+
 @router.post(
     "/apikey",
     response_model=schemas.ApiKeyCreateResponse,

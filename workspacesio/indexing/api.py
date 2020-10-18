@@ -76,8 +76,12 @@ def create_event(
 @router.head("/minio/events", tags=["hooks"], status_code=200)
 def head_event(r: Request):
     """MinIO issues HEAD on startup"""
-    print(r.headers)
-    return "SURE"
+    return ""
+
+
+@router.get("/search", tags=["search"])
+def search(q: str, ec: Elasticsearch = Depends(get_elastic_client)):
+    return crud.search(q, ec)
 
 
 @router.post(

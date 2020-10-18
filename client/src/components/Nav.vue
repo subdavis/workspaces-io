@@ -8,6 +8,8 @@ export default defineComponent({
     const disabled = computed(() => me.value === null);
     const publicRoutes = [
       { name: 'workspaces', title: 'Workspaces' },
+      { name: 'browse', title: 'Browse' },
+      { name: 'search', title: 'Search' },
       { name: 'token', title: 'Tokens' },
     ];
     return { me, disabled, publicRoutes };

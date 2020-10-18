@@ -10,7 +10,7 @@ from click_aliases import ClickAliasedGroup
 from requests.exceptions import RequestException
 from requests_toolbelt.sessions import BaseUrlSession
 
-from . import auth, config, index, mc, node, root, s3token, workspace
+from . import auth, config, index, mc, node, root, s3token, search, workspace
 
 
 class WioSession(BaseUrlSession):
@@ -23,13 +23,17 @@ class WioSession(BaseUrlSession):
         auth = None
         if cfg.access_key and cfg.secret_key:
             auth = (cfg.access_key, cfg.secret_key)
+            self.headers.update(
+                {
+                    "Authorization": requests.auth._basic_auth_str(
+                        cfg.access_key, cfg.secret_key
+                    ),
+                }
+            )
         self.headers.update(
             {
                 "User-agent": f"wio",
                 "Accept": "application/json",
-                "Authorization": requests.auth._basic_auth_str(
-                    cfg.access_key, cfg.secret_key
-                ),
             }
         )
 
@@ -62,3 +66,4 @@ mc.make(cli)
 index.make(cli)
 node.make(cli)
 root.make(cli)
+search.make(cli)

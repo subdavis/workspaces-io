@@ -12,7 +12,7 @@ from workspacesio.common import schemas
 class Config(BaseModel):
     access_key: Optional[str]
     secret_key: Optional[str]
-    api_url: Optional[str] = "http://localhost:8100/api"
+    api_url: str = "http://localhost:8100/api"
 
 
 class Ctx(BaseModel):

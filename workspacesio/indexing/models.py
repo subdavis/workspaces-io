@@ -1,6 +1,7 @@
 import datetime
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -8,7 +9,6 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    BigInteger,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
