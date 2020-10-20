@@ -1,7 +1,7 @@
 <template>
   <iframe
     id="filestash"
-    src="http://localhost:8334"
+    src="http://lumbridge.lan:8334"
   />
 </template>
 
