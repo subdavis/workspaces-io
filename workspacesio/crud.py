@@ -11,7 +11,7 @@ import bcrypt
 import boto3
 import elasticsearch
 from botocore.exceptions import ClientError
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import and_, any_, func, or_
 from sqlalchemy.exc import IntegrityError
@@ -198,6 +198,37 @@ def match_terms(
             elif len(matches) > 1:
                 raise RuntimeError(f"Multiple workspace matches for {term_parts[0]}")
     return None, None
+
+
+def get_user_by(
+    db: Session, id: Optional[uuid.UUID] = None, username: Optional[str] = None
+) -> models.User:
+    if id is not None:
+        return db.query(models.User).first_or_404(id)
+    if username is not None:
+        user_db: Optional[models.User] = (
+            db.query(models.User).filter(models.User.username == username).first()
+        )
+        if user_db is None:
+            raise HTTPException(status_code=404)
+        return user_db
+    raise HTTPException(status_code=404)
+
+
+def get_workspace_by(
+    db: Session,
+    requester: models.User,
+    id: Optional[uuid.UUID] = None,
+    name: Optional[str] = None,
+) -> models.Workspace:
+    if id is not None:
+        return db.query(models.Workspace).first_or_404(id)
+    if name is not None:
+        workspace_db, path = match_terms(db, requester, name)
+        if workspace_db is None:
+            raise HTTPException(status_code=404)
+        return workspace_db
+    raise HTTPException(status_code=404)
 
 
 def node_search(db: Session) -> List[models.StorageNode]:
@@ -588,18 +619,24 @@ def token_search(
 
 def share_create(
     db: Session,
-    creator: schemas.UserDB,
+    creator: models.User,
     share: schemas.ShareCreate,
 ) -> models.Share:
-    """
-    Share share.workspace_id with share.sharee_id if creator has permission"""
-    workspace_db: models.Workspace = db.query(models.Workspace).get_or_404(
-        share.workspace_id
+    """Share share.workspace_id with share.sharee_id if creator has permission"""
+    sharee_db = get_user_by(db, id=share.sharee_id, username=share.sharee)
+    workspace_db = get_workspace_by(
+        db, creator, id=share.workspace_id, name=share.workspace
     )
     if workspace_db.owner_id != creator.id:
-        raise PermissionError("Only the owner can share a workspace")
-    # TODO: check if creator has an owner-type share themselves for workspace
-    share_db = models.Share(**share.dict(), creator_id=creator.id)
+        # TODO: check if creator has an owner-type share themselves for workspace
+        raise PermissionError("Only the owner can share a workspace for now")
+    share_db = models.Share(
+        permission=share.permission,
+        expiration=share.expiration,
+        creator_id=creator.id,
+        workspace_id=workspace_db.id,
+        sharee_id=sharee_db.id,
+    )
     db.add(share_db)
     db.commit()
     return share_db
@@ -627,3 +664,7 @@ def share_revoke(db: Session, share: schemas.ShareDB):
 def share_update(db: Session, share: schemas.ShareUpdate):
     # TODO: delete any tokens that depend on this share.
     pass
+
+
+def user_list(db: Session):
+    return db.query(models.User).all()

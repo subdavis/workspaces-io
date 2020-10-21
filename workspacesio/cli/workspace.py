@@ -70,8 +70,8 @@ def make(cli: click.Group):
         exit_with(handle_request_error(r))
 
     @workspace.command(name="share", aliases=["s"])
-    @click.argument("workspace_id")
-    @click.argument("sharee_id")
+    @click.argument("workspace", type=click.STRING)
+    @click.argument("sharee", type=click.STRING)
     @click.option(
         "--permission",
         type=click.Choice(schemas.ShareType),
@@ -79,10 +79,11 @@ def make(cli: click.Group):
     )
     @click.option("--expire", type=click.DateTime())
     @click.pass_obj
-    def create_workspace_share(ctx, workspace_id, sharee_id, permission, expire):
+    def create_workspace_share(ctx, workspace, sharee, permission, expire):
+
         body = {
-            "workspace_id": workspace_id,
-            "sharee_id": sharee_id,
+            "workspace": workspace,
+            "sharee": sharee,
             "permission": permission,
         }
         if expire:

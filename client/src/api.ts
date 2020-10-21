@@ -62,7 +62,7 @@ interface SearchResult {
 }
 
 async function usersMe(): Promise<User> {
-  const { data } = await axios.get<User>('users/me', config());
+  const { data } = await axios.get<User>('user/me', config());
   return data;
 }
 
