@@ -19,7 +19,12 @@ def get_info():
     return schemas.ServerInfo(public_address=settings.public_name)
 
 
-@router.get("/users/me", response_model=schemas.UserDB, tags=["user"])
+@router.get("/user", response_model=List[schemas.UserDB], tags=["user"])
+def list_users(db: database.SessionLocal = Depends(get_db)):
+    return crud.user_list(db)
+
+
+@router.get("/user/me", response_model=schemas.UserDB, tags=["user"])
 def get_users_me(me: models.User = Depends(auth.get_current_user)):
     return me
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { ref, watchEffect } from 'vue';
-import { apikeyList, apikeyCreate, ApiKey } from '../api';
+import { apikeyList, apikeyCreate, apikeyRevokeAll, ApiKey } from '../api';
 
 export default {
   setup() {
@@ -16,7 +16,12 @@ export default {
       keys.value.push(newkey);
     }
 
-    return { keys, newKey };
+    async function revokeAll() {
+      await apikeyRevokeAll();
+      keys.value = await apikeyList();
+    }
+
+    return { keys, newKey, revokeAll };
   }
 }
 </script>
@@ -69,7 +74,12 @@ export default {
         class="button"
         @click="newKey"
       >Generate New API Key</button>
-      <button class="button warning mx-2">Revoke All</button>
+      <button
+        class="button warning mx-2"
+        @click="revokeAll"
+      >
+        Revoke All
+      </button>
     </div>
     <h1>Install the CLI</h1>
     <p>With pip</p>

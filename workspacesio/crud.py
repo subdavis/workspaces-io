@@ -631,7 +631,8 @@ def share_create(
         # TODO: check if creator has an owner-type share themselves for workspace
         raise PermissionError("Only the owner can share a workspace for now")
     share_db = models.Share(
-        **share.dict(),
+        permission=share.permission,
+        expiration=share.expiration,
         creator_id=creator.id,
         workspace_id=workspace_db.id,
         sharee_id=sharee_db.id,
@@ -663,3 +664,7 @@ def share_revoke(db: Session, share: schemas.ShareDB):
 def share_update(db: Session, share: schemas.ShareUpdate):
     # TODO: delete any tokens that depend on this share.
     pass
+
+
+def user_list(db: Session):
+    return db.query(models.User).all()
