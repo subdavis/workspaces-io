@@ -11,7 +11,7 @@ import bcrypt
 import boto3
 import elasticsearch
 from botocore.exceptions import ClientError
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import and_, any_, func, or_
 from sqlalchemy.exc import IntegrityError
