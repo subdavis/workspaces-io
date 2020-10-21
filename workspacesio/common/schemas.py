@@ -217,13 +217,15 @@ class S3TokenSearchResponse(BaseModel):
 
 
 class ShareBase(BaseModel):
-    workspace_id: uuid.UUID
     permission: ShareType
     expiration: Optional[datetime.datetime]
 
 
 class ShareCreate(ShareBase):
-    sharee_id: uuid.UUID
+    sharee_id: Optional[uuid.UUID]
+    workspace_id: Optional[uuid.UUID]
+    sharee: Optional[str]
+    workspace: Optional[str]
 
 
 class ShareUpdate(ShareBase):
@@ -232,6 +234,7 @@ class ShareUpdate(ShareBase):
 
 class ShareDB(DBBaseModel, ShareBase):
     creator_id: uuid.UUID
+    workspace_id: uuid.UUID
     sharee_id: uuid.UUID
     workspace: WorkspaceDB
     creator: UserDB
