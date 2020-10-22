@@ -4,3 +4,4 @@ venv
 **/__pycache__
 mc
 pip-wheel-metadata/
+site/

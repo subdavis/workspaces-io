@@ -1,0 +1,18 @@
+site_name: WorkspacesIO
+site_url: https://workspacesio.app
+site_description: Documentation for WorkspacesIO
+site_author: Brandon Davis
+
+repo_url: https://github.com/subdavis/workspaces-io
+
+theme:
+    name: material
+    highlightjs: true
+
+nav:
+  - Home: index.md
+  - Server Configuration: administrator-guide.md
+  - User Guide:
+    - Getting Started: user-guide.md
+    - Authentication: auth.md
+  - Advanced: design.md

@@ -2,3 +2,5 @@ isort
 black
 mypy
 twine
+mkdocs
+mkdocs-material
