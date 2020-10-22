@@ -132,7 +132,7 @@
     
       <div class="md-header-nav__source">
         
-<a href="https://github.com/subdavis/workspacesio/" title="Go to repository" class="md-source">
+<a href="https://github.com/subdavis/workspaces-io/" title="Go to repository" class="md-source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
@@ -173,7 +173,7 @@
   
     <div class="md-nav__source">
       
-<a href="https://github.com/subdavis/workspacesio/" title="Go to repository" class="md-source">
+<a href="https://github.com/subdavis/workspaces-io/" title="Go to repository" class="md-source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
@@ -283,13 +283,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#common-commands" class="md-nav__link">
-    Common commands
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -363,13 +356,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#common-commands" class="md-nav__link">
-    Common commands
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -382,52 +368,31 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/subdavis/workspacesio/edit/master/docs/user-guide.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/subdavis/workspaces-io/edit/master/docs/user-guide.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
                 <h1 id="user-getting-started-guide">User Getting Started Guide</h1>
-<p>This section is intended as a user guide and assumes you have a <strong>running server</strong>.  See the server config docs for help getting an instance running.</p>
+<p>This section is intended as a user guide and assumes you have a running server.  See the server config docs for help getting an instance running.</p>
 <ul>
 <li>WorkspacesIO has a web app for file browsing, search, etc.</li>
-<li>All administrative tasks and config are done through the <code>wio</code> cli.</li>
+<li>All admin tasks and config are done through the <code>wio</code> cli.</li>
 </ul>
 <h2 id="installation">Installation</h2>
 <pre><code class="language-bash"># with pip
-pip install workspacesio-cli
+pip install workspacesio
 
 # with pipx
-pipx install workspacesio-cli
+pipx install workspacesio
 
 # verify installation
 wio --version
 </code></pre>
 <h2 id="client-configuration">Client configuration</h2>
-<p>To get an API token for the cli, visit <strong>http(s)://yourserver.com/app/</strong> and visit the token section.</p>
-<pre><code class="language-bash">wio --api-url http://yourserver.com/api \
-    login \
-    --access-key {access_key} \
-    --secret-key {secret_key}
+<p>Set you</p>
+<pre><code class="language-bash">wio config
 </code></pre>
-<p>Verify the login.</p>
-<pre><code class="language-bash">wio info
-</code></pre>
-<p>Note the location of your configuration file.  Your credentials are stored unencrypted.</p>
-<h2 id="common-commands">Common commands</h2>
-<pre><code class="language-bash"># Show the help
-wio --help
-
-# Show subcommand help
-wio &lt;command&gt; --help
-
-# List your workspaces
-wio workspace ls
-
-# List your nodes
-wio node ls
-</code></pre>
-<h1 id="managing-workspaces">Managing workspaces</h1>
                 
               
               
