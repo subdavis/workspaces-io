@@ -1,0 +1,60 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::fastapi-minio-workspaces",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": "public"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::fastapi-minio-workspaces",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": "public/*"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::fastapi-minio-workspaces",
+      "Condition": {
+        "StringEquals": {
+          "s3:delimiter": "/",
+          "s3:prefix": "private/foo"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::fastapi-minio-workspaces",
+      "Condition": {
+        "StringEquals": {
+          "s3:prefix": "private/foo/*"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::fastapi-minio-workspaces/public/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::fastapi-minio-workspaces/private/foo/*"
+    }
+  ]
+}
