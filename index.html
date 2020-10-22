@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#workspaces-io" class="md-skip">
+        <a href="#workspacesio" class="md-skip">
           Skip to content
         </a>
       
@@ -200,9 +200,38 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Home
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
     <a href="." class="md-nav__link md-nav__link--active">
       Home
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    Key Features
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -298,6 +327,21 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    Key Features
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -313,7 +357,23 @@
                   </a>
                 
                 
-                <h1 id="workspaces-io">workspaces-io</h1>
+                <h1 id="workspacesio">WorkspacesIO</h1>
+<p><img alt="Workspace" src="images/workspacesio-logo-circle.png" /></p>
+<blockquote>
+<p>Better than your NAS, probably</p>
+</blockquote>
+<hr />
+<p><strong>Documentation</strong>: <a href="https://workspacesio.app/">https://workspacesio.app/</a></p>
+<p><strong>Source Code</strong>: <a href="https://github.com/subdavis/workspaces-io">https://github.com/subdavis/workspacesio</a></p>
+<hr />
+<h2 id="key-features">Key Features</h2>
+<ul>
+<li><strong>Non-invasive import</strong> and <strong>indexing</strong> of your existing data.  We leave your data just as it is on-disk.</li>
+<li>Simple permissions management. <code>wio create</code> to make new workspaces. <code>wio share</code> to share them with others.</li>
+<li><strong>Low-friction access</strong> to your data.  WorkspacesIO grants <strong>STS credentials</strong> so that users can connect directly to minio for listing, upload, and download operations.  You can even continue to use <code>minio/mc</code> or <code>boto3</code> , with some caveats.</li>
+<li>Permissions-aware indexing and aggregation across the system.</li>
+<li>Hub-and-spoke architecture.  Run a MinIO node wherever you have data, and it will be available through Workspaces.  Even <strong>regular users</strong> can introduce new nodes into the system and retain full control of their data.</li>
+</ul>
                 
               
               

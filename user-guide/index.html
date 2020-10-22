@@ -283,6 +283,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#common-commands" class="md-nav__link">
+    Common commands
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -356,6 +363,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#common-commands" class="md-nav__link">
+    Common commands
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -374,25 +388,46 @@
                 
                 
                 <h1 id="user-getting-started-guide">User Getting Started Guide</h1>
-<p>This section is intended as a user guide and assumes you have a running server.  See the server config docs for help getting an instance running.</p>
+<p>This section is intended as a user guide and assumes you have a <strong>running server</strong>.  See the server config docs for help getting an instance running.</p>
 <ul>
 <li>WorkspacesIO has a web app for file browsing, search, etc.</li>
-<li>All admin tasks and config are done through the <code>wio</code> cli.</li>
+<li>All administrative tasks and config are done through the <code>wio</code> cli.</li>
 </ul>
 <h2 id="installation">Installation</h2>
 <pre><code class="language-bash"># with pip
-pip install workspacesio
+pip install workspacesio-cli
 
 # with pipx
-pipx install workspacesio
+pipx install workspacesio-cli
 
 # verify installation
 wio --version
 </code></pre>
 <h2 id="client-configuration">Client configuration</h2>
-<p>Set you</p>
-<pre><code class="language-bash">wio config
+<p>To get an API token for the cli, visit <strong>http(s)://yourserver.com/app/</strong> and visit the token section.</p>
+<pre><code class="language-bash">wio --api-url http://yourserver.com/api \
+    login \
+    --access-key {access_key} \
+    --secret-key {secret_key}
 </code></pre>
+<p>Verify the login.</p>
+<pre><code class="language-bash">wio info
+</code></pre>
+<p>Note the location of your configuration file.  Your credentials are stored unencrypted.</p>
+<h2 id="common-commands">Common commands</h2>
+<pre><code class="language-bash"># Show the help
+wio --help
+
+# Show subcommand help
+wio &lt;command&gt; --help
+
+# List your workspaces
+wio workspace ls
+
+# List your nodes
+wio node ls
+</code></pre>
+<h1 id="managing-workspaces">Managing workspaces</h1>
                 
               
               
