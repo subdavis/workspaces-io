@@ -6,7 +6,7 @@
 
 -----------
 
-**Documentation**: [https://workspacesio.app/](https://workspacesio.app/)
+**Documentation**: [https://workspacesio.subdavis.com/](https://workspacesio.subdavis.com/)
 
 **Source Code**: [https://github.com/subdavis/workspacesio](https://github.com/subdavis/workspaces-io)
 
