@@ -9,24 +9,24 @@
         <meta name="description" content="Documentation for WorkspacesIO">
       
       
-        <link rel="canonical" href="https://workspacesio.app/administrator-guide/">
+        <link rel="canonical" href="https://workspacesio.subdavis.com/admin/s3/">
       
       
         <meta name="author" content="Brandon Davis">
       
-      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.1.0">
     
     
       
-        <title>Server Configuration - WorkspacesIO</title>
+        <title>S3 guide - WorkspacesIO</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.bc7e593a.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bc7e593a.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab28b872.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab28b872.min.css">
         
       
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#server-administrator-guide" class="md-skip">
+        <a href="#aws-s3-workspaces" class="md-skip">
           Skip to content
         </a>
       
@@ -75,7 +75,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href="https://workspacesio.app" title="WorkspacesIO" class="md-header-nav__button md-logo" aria-label="WorkspacesIO">
+    <a href="https://workspacesio.subdavis.com" title="WorkspacesIO" class="md-header-nav__button md-logo" aria-label="WorkspacesIO">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -92,7 +92,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Server Configuration
+              S3 guide
             
           </span>
         </div>
@@ -162,7 +162,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://workspacesio.app" title="WorkspacesIO" class="md-nav__button md-logo" aria-label="WorkspacesIO">
+    <a href="https://workspacesio.subdavis.com" title="WorkspacesIO" class="md-nav__button md-logo" aria-label="WorkspacesIO">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -192,7 +192,7 @@
 
 
   <li class="md-nav__item">
-    <a href=".." class="md-nav__link">
+    <a href="../.." class="md-nav__link">
       Home
     </a>
   </li>
@@ -205,6 +205,41 @@
   
 
 
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
+    
+    <label class="md-nav__link" for="nav-2">
+      Server Configuration
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Server Configuration" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        <span class="md-nav__icon md-icon"></span>
+        Server Configuration
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../administrator-guide/" class="md-nav__link">
+      Administrator Guide
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
   <li class="md-nav__item md-nav__item--active">
     
     <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
@@ -213,12 +248,12 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Server Configuration
+        S3 guide
         <span class="md-nav__icon md-icon"></span>
       </label>
     
     <a href="./" class="md-nav__link md-nav__link--active">
-      Server Configuration
+      S3 guide
     </a>
     
       
@@ -235,15 +270,15 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
-    Getting Started
+  <a href="#aws-console-config" class="md-nav__link">
+    AWS Console config
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#docker-compose" class="md-nav__link">
-    Docker Compose
+  <a href="#node-configuration" class="md-nav__link">
+    Node configuration
   </a>
   
 </li>
@@ -252,6 +287,11 @@
   
 </nav>
     
+  </li>
+
+        
+      </ul>
+    </nav>
   </li>
 
     
@@ -282,7 +322,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../user-guide/" class="md-nav__link">
+    <a href="../../user-guide/" class="md-nav__link">
       Getting Started
     </a>
   </li>
@@ -294,7 +334,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../auth/" class="md-nav__link">
+    <a href="../../auth/" class="md-nav__link">
       Authentication
     </a>
   </li>
@@ -311,7 +351,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../design/" class="md-nav__link">
+    <a href="../../design/" class="md-nav__link">
       Advanced
     </a>
   </li>
@@ -341,15 +381,15 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
-    Getting Started
+  <a href="#aws-console-config" class="md-nav__link">
+    AWS Console config
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#docker-compose" class="md-nav__link">
-    Docker Compose
+  <a href="#node-configuration" class="md-nav__link">
+    Node configuration
   </a>
   
 </li>
@@ -366,21 +406,159 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/subdavis/workspaces-io/edit/master/docs/administrator-guide.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/subdavis/workspaces-io/edit/master/docs/admin/s3.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="server-administrator-guide">Server Administrator Guide</h1>
-<h2 id="getting-started">Getting Started</h2>
-<p>WorkspacesIO is an OpenID Oauth2 application.  It should support most OpenID auth providers.</p>
+                <h1 id="aws-s3-workspaces">AWS S3 Workspaces</h1>
+<p>This section will only cover the parts of node and root configuration that are different from MinIO.</p>
+<p>S3 is more complicated than MinIO because some configuration must be done in AWS Console before you configure your root.</p>
+<h2 id="aws-console-config">AWS Console config</h2>
+<p>You will need</p>
 <ul>
-<li>Auth0 (recommended)</li>
-<li>Google (tested)</li>
+<li>An aws account</li>
+<li>An s3 bucket</li>
+<li>An IAM user with... </li>
+<li>full permissions to your bucket</li>
+<li>permissions to perfor STS assume role.</li>
+<li>AWS credentials for <strong>that user</strong>, not your root account.</li>
 </ul>
-<p>You'll need to create an OAuth app if you intend to use more than the defalt root admin user.</p>
-<h2 id="docker-compose">Docker Compose</h2>
-<p>This is the easiest way to get started</p>
+<p>Your IAM policy for STS should look something like this.</p>
+<pre><code class="language-json">{
+    &quot;Version&quot;: &quot;2012-10-17&quot;,
+    &quot;Statement&quot;: [
+        {
+            &quot;Sid&quot;: &quot;VisualEditor0&quot;,
+            &quot;Effect&quot;: &quot;Allow&quot;,
+            &quot;Action&quot;: [
+                &quot;sts:GetSessionToken&quot;,
+                &quot;sts:DecodeAuthorizationMessage&quot;,
+                &quot;sts:GetAccessKeyInfo&quot;,
+                &quot;sts:GetCallerIdentity&quot;,
+                &quot;sts:GetServiceBearerToken&quot;
+            ],
+            &quot;Resource&quot;: &quot;*&quot;
+        },
+        {
+            &quot;Sid&quot;: &quot;VisualEditor1&quot;,
+            &quot;Effect&quot;: &quot;Allow&quot;,
+            &quot;Action&quot;: &quot;sts:*&quot;,
+            &quot;Resource&quot;: [
+                &quot;arn:aws:iam::*:user/*&quot;,
+                &quot;&lt;ROLE_ARN&gt;&quot;
+            ]
+        }
+    ]
+}
+</code></pre>
+<p>Your IAM policy for S3 should look something like this</p>
+<pre><code class="language-json">{
+    &quot;Version&quot;: &quot;2012-10-17&quot;,
+    &quot;Statement&quot;: [
+        {
+            &quot;Sid&quot;: &quot;VisualEditor0&quot;,
+            &quot;Effect&quot;: &quot;Allow&quot;,
+            &quot;Action&quot;: [
+                &quot;s3:PutAnalyticsConfiguration&quot;,
+                &quot;s3:GetObjectVersionTagging&quot;,
+                &quot;s3:DeleteAccessPoint&quot;,
+                &quot;s3:CreateBucket&quot;,
+                &quot;s3:ReplicateObject&quot;,
+                &quot;s3:GetObjectAcl&quot;,
+                &quot;s3:GetBucketObjectLockConfiguration&quot;,
+                &quot;s3:DeleteBucketWebsite&quot;,
+                &quot;s3:PutLifecycleConfiguration&quot;,
+                &quot;s3:GetObjectVersionAcl&quot;,
+                &quot;s3:HeadBucket&quot;,
+                &quot;s3:DeleteObject&quot;,
+                &quot;s3:GetBucketPolicyStatus&quot;,
+                &quot;s3:GetObjectRetention&quot;,
+                &quot;s3:GetBucketWebsite&quot;,
+                &quot;s3:GetJobTagging&quot;,
+                &quot;s3:ListJobs&quot;,
+                &quot;s3:PutReplicationConfiguration&quot;,
+                &quot;s3:PutObjectLegalHold&quot;,
+                &quot;s3:GetObjectLegalHold&quot;,
+                &quot;s3:GetBucketNotification&quot;,
+                &quot;s3:PutBucketCORS&quot;,
+                &quot;s3:GetReplicationConfiguration&quot;,
+                &quot;s3:ListMultipartUploadParts&quot;,
+                &quot;s3:PutObject&quot;,
+                &quot;s3:GetObject&quot;,
+                &quot;s3:PutBucketNotification&quot;,
+                &quot;s3:DescribeJob&quot;,
+                &quot;s3:PutBucketLogging&quot;,
+                &quot;s3:GetAnalyticsConfiguration&quot;,
+                &quot;s3:PutBucketObjectLockConfiguration&quot;,
+                &quot;s3:GetObjectVersionForReplication&quot;,
+                &quot;s3:CreateJob&quot;,
+                &quot;s3:CreateAccessPoint&quot;,
+                &quot;s3:GetLifecycleConfiguration&quot;,
+                &quot;s3:GetAccessPoint&quot;,
+                &quot;s3:GetInventoryConfiguration&quot;,
+                &quot;s3:GetBucketTagging&quot;,
+                &quot;s3:PutAccelerateConfiguration&quot;,
+                &quot;s3:DeleteObjectVersion&quot;,
+                &quot;s3:GetBucketLogging&quot;,
+                &quot;s3:ListBucketVersions&quot;,
+                &quot;s3:RestoreObject&quot;,
+                &quot;s3:ListBucket&quot;,
+                &quot;s3:GetAccelerateConfiguration&quot;,
+                &quot;s3:GetBucketPolicy&quot;,
+                &quot;s3:PutEncryptionConfiguration&quot;,
+                &quot;s3:GetEncryptionConfiguration&quot;,
+                &quot;s3:GetObjectVersionTorrent&quot;,
+                &quot;s3:AbortMultipartUpload&quot;,
+                &quot;s3:GetBucketRequestPayment&quot;,
+                &quot;s3:GetAccessPointPolicyStatus&quot;,
+                &quot;s3:UpdateJobPriority&quot;,
+                &quot;s3:GetObjectTagging&quot;,
+                &quot;s3:GetMetricsConfiguration&quot;,
+                &quot;s3:DeleteBucket&quot;,
+                &quot;s3:PutBucketVersioning&quot;,
+                &quot;s3:GetBucketPublicAccessBlock&quot;,
+                &quot;s3:ListBucketMultipartUploads&quot;,
+                &quot;s3:ListAccessPoints&quot;,
+                &quot;s3:PutMetricsConfiguration&quot;,
+                &quot;s3:UpdateJobStatus&quot;,
+                &quot;s3:GetBucketVersioning&quot;,
+                &quot;s3:GetBucketAcl&quot;,
+                &quot;s3:PutInventoryConfiguration&quot;,
+                &quot;s3:GetObjectTorrent&quot;,
+                &quot;s3:GetAccountPublicAccessBlock&quot;,
+                &quot;s3:PutBucketWebsite&quot;,
+                &quot;s3:ListAllMyBuckets&quot;,
+                &quot;s3:PutBucketRequestPayment&quot;,
+                &quot;s3:PutObjectRetention&quot;,
+                &quot;s3:GetBucketCORS&quot;,
+                &quot;s3:GetBucketLocation&quot;,
+                &quot;s3:GetAccessPointPolicy&quot;,
+                &quot;s3:ReplicateDelete&quot;,
+                &quot;s3:GetObjectVersion&quot;
+            ],
+            &quot;Resource&quot;: &quot;*&quot;
+        }
+    ]
+}
+</code></pre>
+<h2 id="node-configuration">Node configuration</h2>
+<pre><code class="language-bash">wio node create &lt;node_name&gt; \
+    --sts-api-url https://sts.amazonaws.com \
+    --region-name &lt;region&gt; \
+    --role-arn &lt;role-ARN&gt; \
+    https://s3.us-east-1.amazonaws.com \
+    ACCESS_KEY_ID \
+    SECRET_KEY_ID
+</code></pre>
+<p>Next, we configure buckets to act as workspace roots.</p>
+<pre><code class="language-bash">wio root create \
+    --root-type public
+    --base-path public_base_path/ \
+    &lt;bucket_name&gt; &lt;node_name&gt;
+</code></pre>
+<p>Base path is optional but necessary if you want to put multiple roots into the same bucket, such as both public and private.</p>
+<p>If you want to map existing S3 data into workspaces, the process is the same as in MinIO.</p>
                 
               
               
@@ -399,7 +577,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href=".." class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../administrator-guide/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -408,13 +586,13 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Home
+                Administrator Guide
               </div>
             </div>
           </a>
         
         
-          <a href="../user-guide/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../../user-guide/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
@@ -447,15 +625,15 @@
       
     </div>
     
-      <script src="../assets/javascripts/vendor.6a3d08fc.min.js"></script>
-      <script src="../assets/javascripts/bundle.71201edf.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      <script src="../../assets/javascripts/vendor.6a3d08fc.min.js"></script>
+      <script src="../../assets/javascripts/bundle.71201edf.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
       
       <script>
         app = initialize({
-          base: "..",
+          base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../assets/javascripts/worker/search.4ac00218.min.js"
+            worker: "../../assets/javascripts/worker/search.4ac00218.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

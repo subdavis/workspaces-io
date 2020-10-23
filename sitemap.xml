@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
-     <loc>https://workspacesio.app/</loc>
-     <lastmod>2020-10-22</lastmod>
+     <loc>https://workspacesio.subdavis.com/</loc>
+     <lastmod>2020-10-23</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
-     <loc>https://workspacesio.app/administrator-guide/</loc>
-     <lastmod>2020-10-22</lastmod>
+     <loc>https://workspacesio.subdavis.com/admin/administrator-guide/</loc>
+     <lastmod>2020-10-23</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
-     <loc>https://workspacesio.app/user-guide/</loc>
-     <lastmod>2020-10-22</lastmod>
+     <loc>https://workspacesio.subdavis.com/admin/s3/</loc>
+     <lastmod>2020-10-23</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
-     <loc>https://workspacesio.app/auth/</loc>
-     <lastmod>2020-10-22</lastmod>
+     <loc>https://workspacesio.subdavis.com/user-guide/</loc>
+     <lastmod>2020-10-23</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
-     <loc>https://workspacesio.app/design/</loc>
-     <lastmod>2020-10-22</lastmod>
+     <loc>https://workspacesio.subdavis.com/auth/</loc>
+     <lastmod>2020-10-23</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://workspacesio.subdavis.com/design/</loc>
+     <lastmod>2020-10-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
