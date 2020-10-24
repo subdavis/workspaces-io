@@ -202,19 +202,43 @@
       
       
 
+
+  <li class="md-nav__item">
+    <a href="../../concepts/" class="md-nav__link">
+      Concepts
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../design/" class="md-nav__link">
+      Design
+    </a>
+  </li>
+
+    
+      
+      
+      
+
   
 
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" checked>
     
-    <label class="md-nav__link" for="nav-2">
+    <label class="md-nav__link" for="nav-4">
       Server Configuration
       <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Server Configuration" data-md-level="1">
-      <label class="md-nav__title" for="nav-2">
+      <label class="md-nav__title" for="nav-4">
         <span class="md-nav__icon md-icon"></span>
         Server Configuration
       </label>
@@ -265,8 +289,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#docker-compose" class="md-nav__link">
-    Docker Compose
+  <a href="#minio-setup" class="md-nav__link">
+    MinIO Setup
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-config" class="md-nav__link">
+    Server Config
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker" class="md-nav__link">
+    Docker
   </a>
   
 </li>
@@ -302,14 +340,14 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
     
-    <label class="md-nav__link" for="nav-3">
+    <label class="md-nav__link" for="nav-5">
       User Guide
       <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="User Guide" data-md-level="1">
-      <label class="md-nav__title" for="nav-3">
+      <label class="md-nav__title" for="nav-5">
         <span class="md-nav__icon md-icon"></span>
         User Guide
       </label>
@@ -322,38 +360,14 @@
 
 
   <li class="md-nav__item">
-    <a href="../../user-guide/" class="md-nav__link">
+    <a href="../../user-guide/getting-started/" class="md-nav__link">
       Getting Started
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../../auth/" class="md-nav__link">
-      Authentication
     </a>
   </li>
 
         
       </ul>
     </nav>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../../design/" class="md-nav__link">
-      Advanced
-    </a>
   </li>
 
     
@@ -388,8 +402,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#docker-compose" class="md-nav__link">
-    Docker Compose
+  <a href="#minio-setup" class="md-nav__link">
+    MinIO Setup
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-config" class="md-nav__link">
+    Server Config
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker" class="md-nav__link">
+    Docker
   </a>
   
 </li>
@@ -419,8 +447,83 @@
 <li>Google (tested)</li>
 </ul>
 <p>You'll need to create an OAuth app if you intend to use more than the defalt root admin user.</p>
-<h2 id="docker-compose">Docker Compose</h2>
-<p>This is the easiest way to get started</p>
+<h2 id="minio-setup">MinIO Setup</h2>
+<p>A minio root account cannot be used to create a Storage because it cannot be used for STS assume role.  Create a new user.</p>
+<pre><code class="language-sh"># Create alias
+mc alias set mybackend http://localhost:9000 minio minio1234
+# Create user
+mc admin user add mybackend backend backend1234
+# Give user access to all buckets
+mc admin policy set mybackend readwrite user=backend
+</code></pre>
+<h2 id="server-config">Server Config</h2>
+<p>Place an <code>.env</code> file in <code>docker/</code> with these variables.</p>
+<table>
+<thead>
+<tr>
+<th>ENV Name</th>
+<th>Default</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WIO_PUBLIC_NAME</code></td>
+<td><code>http://localhost:8100/</code></td>
+<td>The public name of the workspaces server that clients can use</td>
+</tr>
+<tr>
+<td><code>WIO_DATABASE_URL</code></td>
+<td><code>postgresql:///wio</code></td>
+<td>postgres connection string</td>
+</tr>
+<tr>
+<td><code>WIO_SECRET</code></td>
+<td><code>fast</code></td>
+<td>hashing secret for sessions and other needs</td>
+</tr>
+<tr>
+<td><code>WIO_ES_NODES</code></td>
+<td><code>["http://localhost:9200"]</code></td>
+<td>JSON array of elasticsearch nodes</td>
+</tr>
+<tr>
+<td><code>WIO_OIDC_NAME</code></td>
+<td><code>auth0</code></td>
+<td>OpenID Connect provider</td>
+</tr>
+<tr>
+<td><code>WIO_OIDC_CLIENT_ID</code></td>
+<td>none</td>
+<td>OpenID Connect client id</td>
+</tr>
+<tr>
+<td><code>WIO_OIDC_CLIENT_SECRET</code></td>
+<td>none</td>
+<td>OpenID Connect client secret</td>
+</tr>
+<tr>
+<td><code>WIO_OIDC_WELL_KNOWN</code></td>
+<td>none</td>
+<td>OpenID Connect well known discovery endpoint</td>
+</tr>
+<tr>
+<td><code>WIO_OIDC_ALGOS</code></td>
+<td><code>["RS256"]</code></td>
+<td>JSON array of algos to use</td>
+</tr>
+</tbody>
+</table>
+<p>...plus any configuration that FastAPI takes by default.</p>
+<h2 id="docker">Docker</h2>
+<pre><code class="language-sh">cd docker/
+docker-compose up -d
+</code></pre>
+<p>Initialize the stack by running through the commands in <code>initialize.sh</code> .</p>
+<h1 id="debugging">Debugging</h1>
+<p>https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPROFILEIMPORTTIME</p>
+<pre><code class="language-bash">PYTHONPROFILEIMPORTTIME=1 wio
+</code></pre>
                 
               
               
@@ -439,7 +542,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../.." class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../design/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -448,7 +551,7 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Home
+                Design
               </div>
             </div>
           </a>

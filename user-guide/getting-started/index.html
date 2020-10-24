@@ -9,24 +9,24 @@
         <meta name="description" content="Documentation for WorkspacesIO">
       
       
-        <link rel="canonical" href="https://workspacesio.subdavis.com/auth/">
+        <link rel="canonical" href="https://workspacesio.subdavis.com/user-guide/getting-started/">
       
       
         <meta name="author" content="Brandon Davis">
       
-      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.1.0">
     
     
       
-        <title>Authentication - WorkspacesIO</title>
+        <title>Getting Started - WorkspacesIO</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.bc7e593a.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bc7e593a.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab28b872.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab28b872.min.css">
         
       
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#auth-implementation-details" class="md-skip">
+        <a href="#user-getting-started-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +92,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Authentication
+              Getting Started
             
           </span>
         </div>
@@ -192,8 +192,32 @@
 
 
   <li class="md-nav__item">
-    <a href=".." class="md-nav__link">
+    <a href="../.." class="md-nav__link">
       Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../concepts/" class="md-nav__link">
+      Concepts
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../design/" class="md-nav__link">
+      Design
     </a>
   </li>
 
@@ -205,14 +229,14 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
     
-    <label class="md-nav__link" for="nav-2">
+    <label class="md-nav__link" for="nav-4">
       Server Configuration
       <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Server Configuration" data-md-level="1">
-      <label class="md-nav__title" for="nav-2">
+      <label class="md-nav__title" for="nav-4">
         <span class="md-nav__icon md-icon"></span>
         Server Configuration
       </label>
@@ -225,7 +249,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../admin/administrator-guide/" class="md-nav__link">
+    <a href="../../admin/administrator-guide/" class="md-nav__link">
       Administrator Guide
     </a>
   </li>
@@ -237,7 +261,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../admin/s3/" class="md-nav__link">
+    <a href="../../admin/s3/" class="md-nav__link">
       S3 guide
     </a>
   </li>
@@ -257,31 +281,19 @@
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" checked>
     
-    <label class="md-nav__link" for="nav-3">
+    <label class="md-nav__link" for="nav-5">
       User Guide
       <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="User Guide" data-md-level="1">
-      <label class="md-nav__title" for="nav-3">
+      <label class="md-nav__title" for="nav-5">
         <span class="md-nav__icon md-icon"></span>
         User Guide
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
         
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../user-guide/" class="md-nav__link">
-      Getting Started
-    </a>
-  </li>
-
         
           
           
@@ -298,12 +310,12 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Authentication
+        Getting Started
         <span class="md-nav__icon md-icon"></span>
       </label>
     
     <a href="./" class="md-nav__link md-nav__link--active">
-      Authentication
+      Getting Started
     </a>
     
       
@@ -320,8 +332,22 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#openid-flow" class="md-nav__link">
-    OpenID Flow
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-configuration" class="md-nav__link">
+    Client configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-commands" class="md-nav__link">
+    Common commands
   </a>
   
 </li>
@@ -335,18 +361,6 @@
         
       </ul>
     </nav>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../design/" class="md-nav__link">
-      Advanced
-    </a>
   </li>
 
     
@@ -374,8 +388,22 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#openid-flow" class="md-nav__link">
-    OpenID Flow
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-configuration" class="md-nav__link">
+    Client configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-commands" class="md-nav__link">
+    Common commands
   </a>
   
 </li>
@@ -392,15 +420,52 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/subdavis/workspaces-io/edit/master/docs/auth.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/subdavis/workspaces-io/edit/master/docs/user-guide/getting-started.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="auth-implementation-details">Auth implementation details</h1>
-<h2 id="openid-flow">OpenID Flow</h2>
-<p><code>/login</code> triggers an openID flow that ends on <code>/auth</code></p>
-<p>Once the JWT is validated, a session token is created and written to </p>
+                <h1 id="user-getting-started-guide">User Getting Started Guide</h1>
+<p>This section is intended as a user guide and assumes you have a <strong>running server</strong>.  See the server config docs for help getting an instance running.</p>
+<ul>
+<li>WorkspacesIO has a web app for file browsing, search, etc.</li>
+<li>All administrative tasks and config are done through the <code>wio</code> cli.</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<pre><code class="language-bash"># with pip
+pip install workspacesio-cli
+
+# with pipx
+pipx install workspacesio-cli
+
+# verify installation
+wio --version
+</code></pre>
+<h2 id="client-configuration">Client configuration</h2>
+<p>To get an API token for the cli, visit <strong>http(s)://yourserver.com/app/</strong> and visit the token section.</p>
+<pre><code class="language-bash">wio --api-url http://yourserver.com/api \
+    login \
+    --access-key {access_key} \
+    --secret-key {secret_key}
+</code></pre>
+<p>Verify the login.</p>
+<pre><code class="language-bash">wio info
+</code></pre>
+<p>Note the location of your configuration file.  Your credentials are stored unencrypted.</p>
+<h2 id="common-commands">Common commands</h2>
+<pre><code class="language-bash"># Show the help
+wio --help
+
+# Show subcommand help
+wio &lt;command&gt; --help
+
+# List your workspaces
+wio workspace ls
+
+# List your nodes
+wio node ls
+</code></pre>
+<h1 id="managing-workspaces">Managing workspaces</h1>
                 
               
               
@@ -419,7 +484,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../user-guide/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../admin/s3/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -428,25 +493,11 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Getting Started
+                S3 guide
               </div>
             </div>
           </a>
         
-        
-          <a href="../design/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Advanced
-              </div>
-            </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
         
       </nav>
     </div>
@@ -467,15 +518,15 @@
       
     </div>
     
-      <script src="../assets/javascripts/vendor.6a3d08fc.min.js"></script>
-      <script src="../assets/javascripts/bundle.71201edf.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      <script src="../../assets/javascripts/vendor.6a3d08fc.min.js"></script>
+      <script src="../../assets/javascripts/bundle.71201edf.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
       
       <script>
         app = initialize({
-          base: "..",
+          base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../assets/javascripts/worker/search.4ac00218.min.js"
+            worker: "../../assets/javascripts/worker/search.4ac00218.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

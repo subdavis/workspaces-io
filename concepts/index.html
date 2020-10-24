@@ -9,7 +9,7 @@
         <meta name="description" content="Documentation for WorkspacesIO">
       
       
-        <link rel="canonical" href="https://workspacesio.subdavis.com/user-guide/">
+        <link rel="canonical" href="https://workspacesio.subdavis.com/concepts/">
       
       
         <meta name="author" content="Brandon Davis">
@@ -19,7 +19,7 @@
     
     
       
-        <title>Getting Started - WorkspacesIO</title>
+        <title>Concepts - WorkspacesIO</title>
       
     
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#user-getting-started-guide" class="md-skip">
+        <a href="#concepts" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +92,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Getting Started
+              Concepts
             
           </span>
         </div>
@@ -202,17 +202,120 @@
       
       
 
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Concepts
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
+      Concepts
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#models" class="md-nav__link">
+    Models
+  </a>
+  
+    <nav class="md-nav" aria-label="Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#storage-node" class="md-nav__link">
+    Storage Node
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workspace-root" class="md-nav__link">
+    Workspace Root
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workspace" class="md-nav__link">
+    Workspace
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authorization-process" class="md-nav__link">
+    Authorization process
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roadmap" class="md-nav__link">
+    Roadmap
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../design/" class="md-nav__link">
+      Design
+    </a>
+  </li>
+
+    
+      
+      
+      
+
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
     
-    <label class="md-nav__link" for="nav-2">
+    <label class="md-nav__link" for="nav-4">
       Server Configuration
       <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="Server Configuration" data-md-level="1">
-      <label class="md-nav__title" for="nav-2">
+      <label class="md-nav__title" for="nav-4">
         <span class="md-nav__icon md-icon"></span>
         Server Configuration
       </label>
@@ -252,19 +355,17 @@
       
       
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
     
-    <label class="md-nav__link" for="nav-3">
+    <label class="md-nav__link" for="nav-5">
       User Guide
       <span class="md-nav__icon md-icon"></span>
     </label>
     <nav class="md-nav" aria-label="User Guide" data-md-level="1">
-      <label class="md-nav__title" for="nav-3">
+      <label class="md-nav__title" for="nav-5">
         <span class="md-nav__icon md-icon"></span>
         User Guide
       </label>
@@ -275,92 +376,16 @@
           
           
 
-  
-
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-      <label class="md-nav__link md-nav__link--active" for="__toc">
-        Getting Started
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-    
-    <a href="./" class="md-nav__link md-nav__link--active">
-      Getting Started
-    </a>
-    
-      
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    Installation
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#client-configuration" class="md-nav__link">
-    Client configuration
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-commands" class="md-nav__link">
-    Common commands
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-    
-  </li>
-
-        
-          
-          
-          
-
 
   <li class="md-nav__item">
-    <a href="../auth/" class="md-nav__link">
-      Authentication
+    <a href="../user-guide/getting-started/" class="md-nav__link">
+      Getting Started
     </a>
   </li>
 
         
       </ul>
     </nav>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../design/" class="md-nav__link">
-      Advanced
-    </a>
   </li>
 
     
@@ -388,22 +413,49 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    Installation
+  <a href="#models" class="md-nav__link">
+    Models
+  </a>
+  
+    <nav class="md-nav" aria-label="Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#storage-node" class="md-nav__link">
+    Storage Node
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workspace-root" class="md-nav__link">
+    Workspace Root
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workspace" class="md-nav__link">
+    Workspace
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authorization-process" class="md-nav__link">
+    Authorization process
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#client-configuration" class="md-nav__link">
-    Client configuration
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-commands" class="md-nav__link">
-    Common commands
+  <a href="#roadmap" class="md-nav__link">
+    Roadmap
   </a>
   
 </li>
@@ -420,52 +472,51 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/subdavis/workspaces-io/edit/master/docs/user-guide.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/subdavis/workspaces-io/edit/master/docs/concepts.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="user-getting-started-guide">User Getting Started Guide</h1>
-<p>This section is intended as a user guide and assumes you have a <strong>running server</strong>.  See the server config docs for help getting an instance running.</p>
+                <h1 id="concepts">Concepts</h1>
+<p>WorkspacesIO provides web and command-line data management.</p>
 <ul>
-<li>WorkspacesIO has a web app for file browsing, search, etc.</li>
-<li>All administrative tasks and config are done through the <code>wio</code> cli.</li>
+<li>MinIO (or S3) store data.</li>
+<li>Elasticsearch + a python crawler provide indexing</li>
+<li><a href="https://filestash.app">Filestash</a> provides web based data management</li>
+<li>A FastAPI + SQLAlchemy service keeps track of permissions and acts as a broker for STS credentials.</li>
 </ul>
-<h2 id="installation">Installation</h2>
-<pre><code class="language-bash"># with pip
-pip install workspacesio-cli
-
-# with pipx
-pipx install workspacesio-cli
-
-# verify installation
-wio --version
+<h2 id="models">Models</h2>
+<h3 id="storage-node">Storage Node</h3>
+<p>A storage node is a storage backend, such as a single MinIO instance or AWS S3 account.  Any system user can add a new storage node.</p>
+<h3 id="workspace-root">Workspace Root</h3>
+<p>A workspace root is a bucket (and optional prefix) within a storage backend where WorkspacesIO is responsible for managing data.</p>
+<ul>
+<li>public and private type roots <strong>must be used exclusively with workspaces</strong>.  They rely on a prefix naming convention that is primarily an optimization for IAM Policy generation.</li>
+<li>A user's private workspaces can be placed in any private root.</li>
+<li>A user's public workspaces can be placed in any public root.</li>
+<li>unmanaged roots, which are ideal for mapping existing data into workspaces.  Unmanaged roots can contain workspaces as well as data not managed by WorkspacesIO.  Workspaces inside of unmanaged roots have no special properties: they can be shared and edited.</li>
+</ul>
+<h3 id="workspace">Workspace</h3>
+<p>A workspace is location (prefix) in an s3 bucket managed by WorkspacesIO.  Users can create workspaces, upload data to them, share them, and index them.  Individual objects can be shared read-only using pre-signed URLs, but WorkspacesIO is intended primarily for managing permissions for data collections, not individual data objects, similar to seafile.</p>
+<h2 id="authorization-process">Authorization process</h2>
+<p>What happens when you try to list a directory or upload a file?</p>
+<pre><code>wio mc ls workspacename/
 </code></pre>
-<h2 id="client-configuration">Client configuration</h2>
-<p>To get an API token for the cli, visit <strong>http(s)://yourserver.com/app/</strong> and visit the token section.</p>
-<pre><code class="language-bash">wio --api-url http://yourserver.com/api \
-    login \
-    --access-key {access_key} \
-    --secret-key {secret_key}
-</code></pre>
-<p>Verify the login.</p>
-<pre><code class="language-bash">wio info
-</code></pre>
-<p>Note the location of your configuration file.  Your credentials are stored unencrypted.</p>
-<h2 id="common-commands">Common commands</h2>
-<pre><code class="language-bash"># Show the help
-wio --help
-
-# Show subcommand help
-wio &lt;command&gt; --help
-
-# List your workspaces
-wio workspace ls
-
-# List your nodes
-wio node ls
-</code></pre>
-<h1 id="managing-workspaces">Managing workspaces</h1>
+<ul>
+<li>A request is made to the WorkspacesIO backend token search endpoint, containing the arguments to <code>ls</code></li>
+<li>WorkspacesIO identifies <code>workspacename/</code> as a valid workspace name, and searches for matching STS credentials.</li>
+<li>If valid credentials aren't found, the backend issues an STS <code>AssumeRole</code> to the storage node backend, which results in an <code>AccessKey</code>, <code>SecretKey</code>, and <code>SessionToken</code>.</li>
+<li>The backend caches these credentials, which were generated specially for <code>workspacename/</code>, and passes them back to the client</li>
+<li>The client passes these credentials to MinIO Client (<code>mc</code>) through environment variables.</li>
+</ul>
+<h2 id="roadmap">Roadmap</h2>
+<ul>
+<li>I still don't know how root-permissions will work.  What determines which users are permitted create privileges on a particular root?  How can a group of users all be root managers?  For now, all public and private roots have global create permissions.  Unmanaged roots have no create permissions, and workspaces in these roots must be crated or imported by the root's node operator.</li>
+<li>Implement <code>indexes</code> at the root level.   Workspaces are only indexed by virtue of which root they're in.   A server could theoretically have different levels of indexing on different roots, allowing users to allocate their workspaces based on the level of indexing they need.</li>
+<li>Implement <code>quotas</code> at multiple levels.  Users have an overall quota, a root-specific quota, and a workspace quota.  Quotas could be unique to individual users.  <strong>QUOTAS are not enforceable</strong> while a user holds a token.  If a user exceeds their quota, this will be noticed later by the notifier and future credentials requests will be blocked.  If it's not obvious by now, this system has a low tolerence/defense for bad faith actors.  Quotas are tools for systems administrators to prevent users from accidentally crippling resourcs.</li>
+<li>To <em>really</em> implement quotas and share revokes, some kind of layer 7 middleware would be necessary in front of minio.  You'd literall have to implement an http proxy to inspect every request's token headers.  That sounds exhausting.</li>
+<li>I'd do it with something like https://github.com/elazarl/goproxy</li>
+</ul>
                 
               
               
@@ -484,7 +535,7 @@ wio node ls
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../admin/s3/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href=".." class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -493,19 +544,19 @@ wio node ls
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                S3 guide
+                Home
               </div>
             </div>
           </a>
         
         
-          <a href="../auth/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../design/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Authentication
+                Design
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">
