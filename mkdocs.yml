@@ -17,4 +17,4 @@ nav:
     - Administrator Guide: admin/administrator-guide.md
     - S3 guide: admin/s3.md
   - User Guide:
-    - Getting Started: user-guide/user-guide.md
+    - Getting Started: user-guide/getting-started.md
