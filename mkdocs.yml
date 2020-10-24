@@ -11,10 +11,10 @@ theme:
 
 nav:
   - Home: index.md
+  - Concepts: concepts.md
+  - Design: design.md
   - Server Configuration:
     - Administrator Guide: admin/administrator-guide.md
     - S3 guide: admin/s3.md
   - User Guide:
-    - Getting Started: user-guide.md
-    - Authentication: auth.md
-  - Advanced: design.md
+    - Getting Started: user-guide/user-guide.md
